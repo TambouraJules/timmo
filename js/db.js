@@ -1,29 +1,33 @@
 /* ============================================================
-   Timmo — data access layer (TiDB)
+   Timmo — couche d'accès aux données (TiDB)
    ------------------------------------------------------------
-   Every read/write in the app goes through the TiDB object below
-   instead of touching localStorage directly. That means swapping
-   the storage backend for a real database is a matter of
-   rewriting the function bodies in ONE of the two adapters below
-   — no changes needed in any page's UI code.
+   Toute lecture/écriture dans l'application passe par l'objet TiDB
+   ci-dessous plutôt que de toucher directement au localStorage. Cela
+   signifie que changer de backend de stockage pour une vraie base de
+   données consiste à réécrire le corps des fonctions dans UN des deux
+   adaptateurs ci-dessous — aucun changement nécessaire dans le code
+   d'interface d'une quelconque page.
 
-   ADAPTER 1 (active by default): localStorage
-     Works fully offline, no setup. Good for demoing the product.
+   ADAPTATEUR 1 (actif par défaut) : localStorage
+     Fonctionne entièrement hors ligne, sans configuration. Idéal pour
+     faire une démonstration du produit.
 
-   ADAPTER 2 (ready to activate): Firebase Firestore
-     1. Create a project at https://console.firebase.google.com
-     2. Enable Firestore + Authentication (Email/Password).
-     3. Paste your web app config into js/firebase-config.js
-     4. Include the Firebase SDK script tags (see comment at the
-        top of firebase-config.js) in every HTML page, BEFORE
-        js/db.js.
-     5. Set TI_BACKEND = "firebase" below.
+   ADAPTATEUR 2 (prêt à activer) : Firebase Firestore
+     1. Créez un projet sur https://console.firebase.google.com
+     2. Activez Firestore + Authentication (E-mail/Mot de passe).
+     3. Collez la configuration de votre application web dans
+        js/firebase-config.js
+     4. Incluez les balises script du SDK Firebase (voir le
+        commentaire en haut de firebase-config.js) dans chaque page
+        HTML, AVANT js/db.js.
+     5. Définissez TI_BACKEND = "firebase" ci-dessous.
 
-   ADAPTER 3 (ready to activate): Node.js / Express + MongoDB API
-     A working scaffold is provided in /server (server.js,
-     routes/*.js). Run it with `npm install && npm start` inside
-     /server, then set TI_BACKEND = "api" below and TI_API_BASE
-     to the server's URL (defaults to http://localhost:4000/api).
+   ADAPTATEUR 3 (prêt à activer) : API Node.js / Express + MongoDB
+     Une base fonctionnelle est fournie dans /server (server.js,
+     routes/*.js). Lancez-la avec `npm install && npm start` dans
+     /server, puis définissez TI_BACKEND = "api" ci-dessous et
+     TI_API_BASE avec l'URL du serveur (par défaut
+     http://localhost:4000/api).
    ============================================================ */
 
 const TI_BACKEND = "local"; // "local" | "firebase" | "api"
@@ -39,13 +43,15 @@ function tiSave(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-/* ---- one-time seed of the local "database" ----
-   TI_SCHEMA_VERSION bumps whenever the shape of TI_PROPERTIES or
-   TI_AGENCIES changes (new fields, etc.). On a version mismatch we
-   refresh the demo data from the current seed so a browser that
-   visited an older build never gets stuck with records missing a
-   field the UI now expects — while leaving the user's own bookings,
-   messages, reviews, payments and favorites untouched. */
+/* ---- initialisation ponctuelle de la « base de données » locale ----
+   TI_SCHEMA_VERSION augmente chaque fois que la structure de
+   TI_PROPERTIES ou TI_AGENCIES change (nouveaux champs, etc.). En cas de
+   différence de version, on régénère les données de démo depuis les
+   données initiales actuelles, pour qu'un navigateur ayant visité une
+   version antérieure ne se retrouve jamais bloqué avec des enregistrements
+   auxquels il manque un champ désormais attendu par l'interface — tout en
+   laissant intacts les réservations, messages, avis, paiements et favoris
+   propres à l'utilisateur. */
 const TI_SCHEMA_VERSION = "7";
 
 (function tiSeedLocalDb() {
@@ -56,7 +62,7 @@ const TI_SCHEMA_VERSION = "7";
   }
 
   if (!seededVersion) {
-    // brand new browser: seed everything
+    // tout nouveau navigateur : on initialise tout
     tiSave("ti_users", [
       { id: "u_client", role: "client", name: "Awa Diop", email: "client@demo.sn", password: "demo1234" },
       { id: "u_agency", role: "agency", agentRole: "supervisor", name: "Sahel Habitat", agencyId: "ag001", email: "agence@demo.sn", password: "demo1234" },
@@ -73,10 +79,11 @@ const TI_SCHEMA_VERSION = "7";
     tiSave("ti_properties", TI_PROPERTIES);
     tiSave("ti_agencies", TI_AGENCIES.map(a => ({ status: "active", ...a })));
   } else {
-    // returning browser on an older schema: refresh only the demo
-    // catalogs (agency-published listings / admin-added agencies from
-    // TiDB already carry the current shape, so merge those back in) —
-    // bookings/messages/reviews/payments/favorites are left as-is.
+    // navigateur déjà utilisé, sur un schéma plus ancien : on ne
+    // rafraîchit que les catalogues de démo (les annonces publiées par les
+    // agences / agences ajoutées par l'admin ont déjà la structure actuelle
+    // via TiDB, donc on les réintègre) — réservations/messages/avis/
+    // paiements/favoris restent inchangés.
     const existingProps = tiLoad("ti_properties", []);
     const seedPropIds = new Set(TI_PROPERTIES.map(p => p.id));
     const agencyAddedProps = existingProps.filter(p => !seedPropIds.has(p.id))
@@ -92,10 +99,11 @@ const TI_SCHEMA_VERSION = "7";
     });
     tiSave("ti_agencies", [...mergedSeedAgencies, ...adminAddedAgencies]);
 
-    // Retrofit the supervisor/agent hierarchy onto existing installs:
-    // give every pre-existing agency login "supervisor" rank (they were
-    // full-access agency owners before agents existed) and add the demo
-    // agent account so the feature is visible right away.
+    // Rétablit la hiérarchie superviseur/agent sur les installations
+    // existantes : donne le rang « superviseur » à chaque compte agence
+    // préexistant (ils étaient propriétaires d'agence à accès complet
+    // avant l'existence des agents) et ajoute le compte agent de démo pour
+    // que la fonctionnalité soit visible immédiatement.
     const existingUsers = tiLoad("ti_users", []);
     let usersChanged = false;
     existingUsers.forEach(u => {
@@ -112,9 +120,10 @@ const TI_SCHEMA_VERSION = "7";
   tiSyncAgenciesFromStorage();
 })();
 
-/* TI_AGENCIES stays a plain in-memory array (many synchronous helpers
-   like tiAgencyName() read it directly), but its contents are kept in
-   sync with the persisted copy so admin edits survive a reload. */
+/* TI_AGENCIES reste un simple tableau en mémoire (de nombreux utilitaires
+   synchrones comme tiAgencyName() le lisent directement), mais son contenu
+   est maintenu synchronisé avec la copie persistée pour que les modifications
+   de l'admin survivent à un rechargement. */
 function tiSyncAgenciesFromStorage() {
   const stored = tiLoad("ti_agencies", null);
   if (!stored) return;
@@ -123,13 +132,14 @@ function tiSyncAgenciesFromStorage() {
 }
 
 /**
- * TiDB — unified async data access API.
- * Every method returns a Promise so callers already read correctly
- * regardless of which backend adapter is active.
+ * TiDB — API unifiée d'accès asynchrone aux données.
+ * Chaque méthode renvoie une Promise pour que les appelants soient déjà
+ * corrects quel que soit l'adaptateur de backend actif.
  */
-/** Mirrors the agency dashboard's client-pipeline staging logic, so the
- *  welcome sequence fires from any code path that can complete a booking
- *  (confirmation, dossier approval, or contract signature). */
+/** Reflète la logique de progression du pipeline clients du tableau de bord
+ *  agence, pour que la séquence de bienvenue se déclenche depuis n'importe
+ *  quel chemin de code menant à finaliser une réservation (confirmation,
+ *  validation du dossier, ou signature du contrat). */
 function tiComputeBookingStage(b) {
   if (b.status === "pending") return "requests";
   if (b.status !== "confirmed") return null;
@@ -138,13 +148,15 @@ function tiComputeBookingStage(b) {
   return "active";
 }
 
-/** Baseline screening documents automatically requested when an agency confirms
- *  a booking that never had a dossier started — every booking request must go
- *  through document verification before becoming an active client. */
-/** Default welcome-kit documents — auto-attached to every tenant's dossier
- *  once their booking goes active, unless the agency has customized or
- *  disabled them. Snapshotted per-booking at activation time so later
- *  edits don't retroactively change documents already issued to a tenant. */
+/** Documents de vérification de base demandés automatiquement quand une
+ *  agence confirme une réservation sans dossier déjà entamé — toute demande
+ *  de réservation doit passer par la vérification de documents avant de
+ *  devenir un client actif. */
+/** Documents du kit de bienvenue par défaut — attachés automatiquement au
+ *  dossier de chaque locataire dès que sa réservation devient active, sauf
+ *  si l'agence les a personnalisés ou désactivés. Figés par réservation au
+ *  moment de l'activation, pour que des modifications ultérieures
+ *  n'affectent pas rétroactivement les documents déjà remis à un locataire. */
 function tiDefaultWelcomeKit() {
   return [
     {
@@ -208,9 +220,10 @@ const TiDB = {
     return prop;
   },
   async nextPropertyReference(agencyId) {
-    // A realistic, professional listing reference (e.g. SH-2026-00038) — the prefix
-    // is the owning agency's code, so references are visibly distinct from one
-    // agency to another and never collide across agencies.
+    // Une référence d'annonce réaliste et professionnelle (ex. SH-2026-00038) —
+    // le préfixe est le code de l'agence propriétaire, pour que les références
+    // soient visiblement distinctes d'une agence à l'autre et ne se
+    // chevauchent jamais entre agences.
     const agency = await this.getAgency(agencyId);
     const code = (agency && agency.code) || tiDeriveAgencyCode(agency ? agency.name : agencyId);
     const year = new Date().getFullYear();
@@ -226,12 +239,13 @@ const TiDB = {
     tiSave("ti_ref_counters", counters);
     return `${code}-${year}-${String(next).padStart(5, "0")}`;
   },
-  /* ---- Deletion review workflow ----
-     Agencies never delete a property or an agent account outright — the
-     action is recorded as a pending request with a reason, the item is
-     hidden from normal use, and only a platform administrator can turn it
-     into a real, permanent deletion after reviewing it (or reject it,
-     restoring the item). Either outcome notifies the requesting agency. */
+  /* ---- Circuit de validation des suppressions ----
+     Les agences ne suppriment jamais directement un bien ou un compte
+     agent — l'action est enregistrée comme une demande en attente avec un
+     motif, l'élément est masqué de l'usage normal, et seul un administrateur
+     de la plateforme peut la transformer en suppression réelle et définitive
+     après examen (ou la refuser, ce qui restaure l'élément). Dans les deux
+     cas, l'agence demandeuse est notifiée. */
   async requestPropertyDeletion(id, reason, requestedByName) {
     const all = tiLoad("ti_properties", TI_PROPERTIES);
     const p = all.find(p => p.id === id);
@@ -595,7 +609,7 @@ const TiDB = {
   async deleteAgent(id) {
     const users = tiLoad("ti_users", []);
     tiSave("ti_users", users.filter(u => u.id !== id));
-    // unassign any properties that were this agent's responsibility
+    // désassocie tous les biens qui relevaient de cet agent
     const props = tiLoad("ti_properties", TI_PROPERTIES);
     let changed = false;
     props.forEach(p => { if (p.assignedAgentId === id) { p.assignedAgentId = null; changed = true; } });
@@ -643,9 +657,9 @@ const TiDB = {
     return b;
   },
 
-  /* ---- Dossier workflow: agency requests documents, client submits, agency reviews ---- */
+  /* ---- Circuit du dossier : l'agence demande des documents, le client les soumet, l'agence les examine ---- */
   async requestDocuments(bookingId, docs) {
-    // docs: [{ key, label, labelEn }]
+    // docs : [{ key, label, labelEn }]
     const dueAt = new Date(Date.now() + 5 * 86400000).toISOString(); // 5 days to submit
     const b = await this.updateBooking(bookingId, {
       documentRequests: docs.map(d => ({ ...d, status: "pending", fileName: null, note: null, submittedAt: null })),
@@ -671,7 +685,7 @@ const TiDB = {
     try {
       tiSave("ti_bookings", all);
     } catch (err) {
-      // Storage quota exceeded — keep the metadata (filename/date), drop the preview data.
+      // Quota de stockage dépassé — on garde les métadonnées (nom de fichier/date), on jette l'aperçu.
       b.contracts[b.contracts.length - 1].fileData = null;
       tiSave("ti_bookings", all);
       return { ...b, _storageFallback: true };
@@ -700,7 +714,7 @@ const TiDB = {
     try {
       tiSave("ti_bookings", all);
     } catch (err) {
-      // Storage quota exceeded (large file as base64) — keep the metadata, drop the preview data.
+      // Quota de stockage dépassé (fichier volumineux en base64) — on garde les métadonnées, on jette l'aperçu.
       if (doc) doc.fileData = null;
       tiSave("ti_bookings", all);
       return { ...b, _storageFallback: true };
@@ -708,7 +722,7 @@ const TiDB = {
     return b;
   },
   async reviewDocument(bookingId, docKey, status, note) {
-    // status: "approved" | "rejected"
+    // status : "approved" | "rejected"
     const all = tiLoad("ti_bookings", []);
     const b = all.find(b => b.id === bookingId);
     if (!b || !b.documentRequests) return null;
@@ -733,10 +747,10 @@ const TiDB = {
     return b;
   },
 
-  /* ---- Rental ledger: deposit, monthly rent schedule, utility charges ----
-     Generated once a monthly-rental booking is confirmed. Charges (water,
-     electricity, internet...) start disabled — the agency turns on the ones
-     that apply to this lease and sets their monthly amount. */
+  /* ---- Grand livre locatif : dépôt de garantie, échéancier mensuel, charges ----
+     Généré dès qu'une réservation de location mensuelle est confirmée. Les
+     charges (eau, électricité, internet...) démarrent désactivées — l'agence
+     active celles qui s'appliquent à ce bail et fixe leur montant mensuel. */
   async ensureRentalLedger(bookingId) {
     const all = tiLoad("ti_bookings", []);
     const b = all.find(b => b.id === bookingId);
@@ -822,11 +836,12 @@ const TiDB = {
     if (tiComputeBookingStage(b) !== "active") return;
     b.welcomed = true;
 
-    // The client is now fully onboarded — the property is no longer
-    // available. Reflect that automatically instead of relying on the
-    // agency to remember a manual "mark as sold/rented" click; this also
-    // triggers the existing favorited-listing notification. Short-stay
-    // properties stay bookable by future guests, so they're excluded.
+    // Le client est maintenant pleinement intégré — le bien n'est plus
+    // disponible. On le reflète automatiquement plutôt que de compter sur
+    // l'agence pour se rappeler de cliquer manuellement sur « marquer vendu/
+    // loué » ; cela déclenche aussi la notification existante pour les
+    // annonces mises en favori. Les biens en séjour court restent
+    // réservables par de futurs voyageurs, donc ils sont exclus.
     const property = await this.getProperty(b.propertyId);
     if (property && !property.shortStay) {
       await this.setListingStatus(b.propertyId, property.forSale ? "sold" : "rented");
@@ -834,10 +849,11 @@ const TiDB = {
     const agency = await this.getAgency(b.agencyId);
     const agencyName = agency ? agency.name : "";
 
-    // Snapshot the agency's currently-enabled welcome-kit documents onto
-    // this booking's dossier, with merge variables substituted for this
-    // specific tenant — later edits to the agency's kit template won't
-    // retroactively change documents already issued to this tenant.
+    // Fige les documents du kit de bienvenue actuellement activés par
+    // l'agence sur le dossier de cette réservation, avec les variables de
+    // fusion substituées pour ce locataire précis — des modifications
+    // ultérieures du modèle de kit de l'agence n'affecteront pas
+    // rétroactivement les documents déjà remis à ce locataire.
     const kit = await this.getWelcomeKit(b.agencyId);
     const mergeVars = { client_name: (b.name || "").split(" ")[0], property_title: b.propertyTitle, agency_name: agencyName };
     b.documents = kit.filter(d => d.enabled).map(d => ({
@@ -905,7 +921,7 @@ const TiDB = {
       timestamp: new Date().toISOString(),
       ...entry,
     });
-    // Cap the log so localStorage doesn't grow unbounded in this client-side demo.
+    // Plafonne le journal pour que le localStorage ne grossisse pas indéfiniment dans cette démo côté client.
     const MAX_LOG_ENTRIES = 500;
     if (log.length > MAX_LOG_ENTRIES) log.splice(0, log.length - MAX_LOG_ENTRIES);
     tiSave("ti_audit_log", log);
@@ -939,8 +955,8 @@ const TiDB = {
     if (!agency) return [];
     const stored = tiLoad("ti_agency_invoices", {});
     if (stored[agencyId]) return stored[agencyId];
-    // Generate a realistic invoice history on first access (deterministic per
-    // agency, persisted afterward so it stays stable across reloads).
+    // Génère un historique de facturation réaliste au premier accès
+    // (déterministe par agence, puis persisté pour rester stable entre rechargements).
     const tier = TI_AGENCY_TIERS.find(t2 => t2.id === agency.tier) || TI_AGENCY_TIERS[0];
     const methods = ["wave", "om", "card"];
     const months = 6;

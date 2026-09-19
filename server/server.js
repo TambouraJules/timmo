@@ -1,6 +1,6 @@
 /* ============================================================
-   Timmo API — Node.js / Express / MongoDB
-   Optional real backend. See ../README.md for setup steps.
+   API Timmo — Node.js / Express / MongoDB
+   Backend réel optionnel. Voir ../README.md pour les étapes d'installation.
    ============================================================ */
 
 require("dotenv").config();

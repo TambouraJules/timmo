@@ -1,13 +1,14 @@
 /* ============================================================
-   Timmo — shared UI helpers used across every page
+   Timmo — utilitaires d'interface partagés sur toutes les pages
    ============================================================ */
 
-/* ---------- Global safety net ----------
-   If something unexpected throws anywhere on the site, don't leave
-   the person staring at a blank or half-loaded page. Show a small
-   recoverable banner with a reload/reset option instead of failing
-   silently. This is a last resort — it never replaces fixing the
-   actual bug, but it means a bug can no longer "brick" a page. */
+/* ---------- Filet de sécurité global ----------
+   Si quelque chose d'inattendu plante quelque part sur le site, ne pas
+   laisser la personne face à une page blanche ou à moitié chargée.
+   Afficher une petite bannière récupérable avec une option de
+   rechargement/réinitialisation plutôt que d'échouer silencieusement.
+   C'est un dernier recours — cela ne remplace jamais la correction du
+   vrai bug, mais cela évite qu'un bug ne « bloque » complètement une page. */
 window.addEventListener("error", (e) => tiShowCrashBanner(e.error || e.message));
 window.addEventListener("unhandledrejection", (e) => tiShowCrashBanner(e.reason));
 
@@ -65,7 +66,7 @@ const TI_ICONS = {
   grid: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
 };
 
-/* ---------- Header / Footer ---------- */
+/* ---------- En-tête / Pied de page ---------- */
 function tiRenderHeader(active, subsite) {
   const mount = document.getElementById("ti-header");
   if (!mount) return;
@@ -78,7 +79,7 @@ function tiRenderHeader(active, subsite) {
          <img src="assets/brand/timmo-logo-primary.svg" alt="Timmo" class="ti-brand-logo">
        </a>`;
   mount.innerHTML = `
-    <div class="ti-demo-banner" data-i18n="db_banner">${t("db_banner")}</div>
+    ${TI_BACKEND === "local" ? `<div class="ti-demo-banner" data-i18n="db_banner">${t("db_banner")}</div>` : ""}
     ${subsite ? `<div class="ti-subsite-banner"><span>${t('subsite_banner_text')} <strong>${tiEscapeHtml(subsite.name)}</strong></span><a href="index.html">${t('subsite_return_link')} →</a></div>` : ""}
     <div class="ti-header-inner">
       ${brandHtml}
@@ -321,26 +322,28 @@ function tiHorizonSvg(flip) {
   </svg>`;
 }
 
-/* ---------- Toast ---------- */
-/** URL-friendly slug from an agency name — e.g. "Sahel Habitat" -> "sahel-habitat". */
-/** The one place all user-supplied text gets escaped before it's injected into
- *  the DOM. Every spot that renders a name, message, or label a user typed
- *  (not text we wrote ourselves) must wrap it in this — one point of truth
- *  instead of a fix applied ad hoc in each place. */
+/* ---------- Notification toast ---------- */
+/** Identifiant compatible URL à partir d'un nom d'agence — ex. « Sahel Habitat » -> « sahel-habitat ». */
+/** Le seul endroit où tout texte fourni par un utilisateur est échappé avant
+ *  d'être injecté dans le DOM. Chaque endroit qui affiche un nom, un
+ *  message, ou un libellé tapé par un utilisateur (pas un texte que nous
+ *  avons écrit nous-mêmes) doit passer par ici — un seul point de vérité
+ *  plutôt qu'un correctif appliqué au cas par cas à chaque endroit. */
 function tiEscapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-/* ---------- Reusable rich message editor ----------
-   A lightweight, safe message composer meant to be reused anywhere an
-   agency authors a message template a client will later see personalized
-   — the welcome kit today, potentially announcements or other templates
-   later. Deliberately a plain textarea with a toolbar that inserts
-   markdown-lite syntax (bold/italic/lists) and merge variables, rather
-   than a full contenteditable WYSIWYG — far more predictable, and every
-   character that reaches the page still goes through tiEscapeHtml before
-   the handful of patterns this recognizes are turned into tags. */
+/* ---------- Éditeur de message enrichi réutilisable ----------
+   Un compositeur de message léger et sûr, conçu pour être réutilisé
+   partout où une agence rédige un modèle de message qu'un client verra
+   ensuite personnalisé — le kit de bienvenue aujourd'hui, potentiellement
+   des annonces ou d'autres modèles plus tard. Volontairement une simple
+   zone de texte avec une barre d'outils qui insère une syntaxe
+   markdown-lite (gras/italique/listes) et des variables de fusion, plutôt
+   qu'un éditeur WYSIWYG contenteditable complet — bien plus prévisible, et
+   chaque caractère qui atteint la page passe toujours par tiEscapeHtml
+   avant que la poignée de motifs reconnus ici ne soit transformée en balises. */
 const TI_RICH_EDITOR_SAMPLES = {};
 const TI_RICH_EDITOR_EXTRA_CALLBACKS = {};
 function tiRichEditorHtml(fieldId, variables, initialValue, sampleVars, extraOnInput) {
@@ -412,16 +415,17 @@ function tiRichEditorPromptLink(fieldId) {
   el.selectionStart = el.selectionEnd = start + markup.length;
   tiRichEditorSyncPreview(fieldId);
 }
-/** Turns markdown-lite + {{variables}} into safe HTML. Everything is
- *  escaped first; only the handful of patterns below are then turned
- *  into tags, so this is safe to feed straight to innerHTML. */
+/** Transforme le markdown-lite + {{variables}} en HTML sûr. Tout est
+ *  d'abord échappé ; seule la poignée de motifs ci-dessous est ensuite
+ *  transformée en balises, ce qui rend ce résultat sûr à injecter
+ *  directement dans innerHTML. */
 function tiRenderMiniMarkdown(text, vars) {
   let html = tiEscapeHtml(text || "");
   Object.keys(vars || {}).forEach(key => {
     html = html.split(tiEscapeHtml(`{{${key}}}`)).join(`<span class="ti-rich-var">${tiEscapeHtml(vars[key])}</span>`);
   });
-  // Links: only http(s) URLs are ever turned into a real tag — anything
-  // else (e.g. a javascript: scheme) is left as inert literal text.
+  // Liens : seules les URL http(s) sont jamais transformées en vraie balise — tout
+  // le reste (ex. un schéma javascript:) reste du texte littéral inerte.
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, label, url) =>
     /^https?:/i.test(url) ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>` : m);
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -444,9 +448,9 @@ function tiRichEditorSyncPreview(fieldId) {
   const extraCb = TI_RICH_EDITOR_EXTRA_CALLBACKS[fieldId];
   if (extraCb && typeof window[extraCb] === "function") window[extraCb]();
 }
-/** Substitutes {{variables}} with real values — used when a template is
- *  actually issued to a specific client, as opposed to the sample data
- *  shown in the editor's live preview. */
+/** Remplace les {{variables}} par de vraies valeurs — utilisé quand un
+ *  modèle est réellement transmis à un client précis, par opposition aux
+ *  données d'exemple affichées dans l'aperçu en direct de l'éditeur. */
 function tiSubstituteVars(text, vars) {
   let out = text || "";
   Object.keys(vars || {}).forEach(key => { out = out.split(`{{${key}}}`).join(vars[key] || ""); });
@@ -457,14 +461,15 @@ function tiSlugify(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
-/** QR code image URL for a given piece of text (a free, no-key-required
- *  generation service — no server-side QR encoding needed for this). */
-/** Resolves an amenity's stored `icon` value to a displayable character.
- *  Older/seed properties store a short lookup key (e.g. "security"),
- *  resolved via TI_AMENITY_ICONS; newer properties (built from the
- *  admin-managed catalog) already store the raw emoji directly. This
- *  handles both without needing to know which one a given property used. */
-/* ---------- Shared row-actions overflow menu ----------
+/** URL d'image de QR code pour un texte donné (un service de génération
+ *  gratuit, sans clé — aucun encodage QR côté serveur n'est nécessaire ici). */
+/** Résout la valeur `icon` stockée d'une caractéristique en un caractère
+ *  affichable. Les biens plus anciens/initiaux stockent une courte clé de
+ *  correspondance (ex. "security"), résolue via TI_AMENITY_ICONS ; les
+ *  biens plus récents (construits depuis le catalogue géré par l'admin)
+ *  stockent déjà directement l'emoji brut. Ceci gère les deux cas sans
+ *  avoir besoin de savoir lequel un bien donné utilise. */
+/* ---------- Menu déroulant partagé pour actions de ligne ----------
    A "..." kebab menu for secondary row actions, so a list row shows only
    its one or two most common actions directly plus a menu for the rest —
    the standard pattern in modern SaaS tables (Linear, Notion, Airtable)
@@ -476,9 +481,10 @@ function tiRowMenuHtml(itemsHtml) {
       <div class="ti-row-menu">${itemsHtml}</div>
     </div>`;
 }
-/** Copies a generated temporary password to the clipboard — shared by
- *  the admin's agency-detail reset flow and the agency's agent-detail
- *  reset flow, both of which use the same modal/input pattern. */
+/** Copie un mot de passe temporaire généré dans le presse-papiers — partagé
+ *  par le flux de réinitialisation de la fiche détail agence côté admin, et
+ *  celui de la fiche détail agent côté agence, qui utilisent tous deux le
+ *  même schéma de fenêtre modale/champ. */
 function tiCopyTempPassword() {
   const input = document.getElementById("temp-password-value");
   input.select();
@@ -486,13 +492,14 @@ function tiCopyTempPassword() {
   tiToast(t("copied_label"));
 }
 
-/** A property is publicly discoverable (search, browse, featured sections)
- *  when it's active and not in the middle of a pending deletion review —
- *  a listing awaiting an admin's deletion decision shouldn't be
- *  bookable by new visitors in the meantime. */
-/** Turns a due-date ISO string into a display label and urgency tier —
- *  shared by the client's dossier stepper and the agency's booking
- *  request review, so both sides show the same deadline consistently. */
+/** Un bien est visible publiquement (recherche, parcours, sections mises en
+ *  avant) quand il est actif et pas en cours d'examen pour suppression — une
+ *  annonce en attente d'une décision de suppression par l'admin ne doit pas
+ *  pouvoir être réservée par de nouveaux visiteurs entre-temps. */
+/** Transforme une date d'échéance ISO en libellé affichable et en niveau
+ *  d'urgence — partagé par le parcours de dossier du client et l'examen des
+ *  demandes de réservation de l'agence, pour que les deux affichent la même
+ *  échéance de façon cohérente. */
 function tiDueDateInfo(dueAt) {
   if (!dueAt) return null;
   const due = new Date(dueAt);
@@ -502,10 +509,11 @@ function tiDueDateInfo(dueAt) {
   return { label, diffDays, urgency };
 }
 
-/** Shared by both the agency's and admin's listings views — previously two
- *  separate, drifted copies of this existed, and both collapsed "rented"
- *  and "sold" (and, for the agency copy, "under_contract") onto the same
- *  green as "active", making the statuses hard to tell apart at a glance. */
+/** Partagé par les vues « annonces » de l'agence et de l'admin — il en
+ *  existait auparavant deux copies séparées ayant divergé, et toutes deux
+ *  fusionnaient « loué » et « vendu » (et, pour la copie agence, « sous
+ *  compromis ») sur le même vert que « actif », rendant les statuts
+ *  difficiles à distinguer d'un coup d'œil. */
 function tiListingStatusBadge(status) {
   const map = {
     pending: ["badge-pending", "listing_status_pending"],
@@ -523,10 +531,11 @@ function tiIsPubliclyVisible(p) {
   return (p.listingStatus === "active" || !p.listingStatus) && p.deletionStatus !== "pending";
 }
 
-/** Sidebar notification-count badges, shared across all three dashboards.
- *  Badges are injected as a sibling marker rather than inside the
- *  data-i18n text node, and re-applied on language change, since
- *  tiApplyLang() overwrites textContent on every [data-i18n] element. */
+/** Badges de nombre de notifications dans le menu latéral, partagés par les
+ *  trois tableaux de bord. Les badges sont injectés comme un marqueur
+ *  voisin plutôt qu'à l'intérieur du nœud de texte data-i18n, et
+ *  réappliqués au changement de langue, puisque tiApplyLang() écrase le
+ *  textContent de chaque élément [data-i18n]. */
 let TI_NAV_BADGES = {};
 function tiSetNavBadge(panelKey, count) {
   TI_NAV_BADGES[panelKey] = count;
@@ -562,7 +571,7 @@ function tiAmenityIconChar(icon) {
   return TI_AMENITY_ICONS[icon] || icon || "✨";
 }
 
-/* ---------- Property spec sheet (print / PDF export for agency & admin) ---------- */
+/* ---------- Fiche technique du bien (export impression / PDF pour agence et admin) ---------- */
 async function tiGeneratePropertySheet(propertyId) {
   const property = await TiDB.getProperty(propertyId);
   if (!property) return;
@@ -641,9 +650,9 @@ function tiQrCodeUrl(data, size = 220) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}`;
 }
 
-/** Renders a review's selected tags as small chips, colored by their
- *  pre-classified sentiment. Shared by the public property page, the
- *  agency dashboard, and the admin dashboard. */
+/** Affiche les tags sélectionnés d'un avis sous forme de petites puces,
+ *  colorées selon leur sentiment pré-classifié. Partagé par la page
+ *  publique du bien, le tableau de bord agence, et le tableau de bord admin. */
 function tiReviewTagsHtml(tagIds) {
   if (!tagIds || !tagIds.length) return "";
   const items = tagIds.map(id => TI_REVIEW_TAGS.find(t2 => t2.id === id)).filter(Boolean);
@@ -652,7 +661,7 @@ function tiReviewTagsHtml(tagIds) {
     <span class="ti-review-tag ti-review-tag-${tag.sentiment}">${tiEscapeHtml(tiGetLang() === "en" ? tag.labelEn : tag.label)}</span>`).join("")}</div>`;
 }
 
-/* ---------- Review sentiment insights (aggregate, for agency/admin) ---------- */
+/* ---------- Analyse de sentiment des avis (agrégée, pour agence/admin) ---------- */
 function tiComputeReviewInsights(reviews) {
   const approved = reviews.filter(r => r.approved !== false);
   const totalCount = approved.length;
@@ -733,11 +742,11 @@ function tiToast(msg) {
   window._tiToastTimer = setTimeout(() => el.classList.remove("show"), 3200);
 }
 
-/* ---------- Modal ---------- */
+/* ---------- Fenêtre modale ---------- */
 function tiOpenModal(id) { document.getElementById(id).classList.add("open"); }
 function tiCloseModal(id) { document.getElementById(id).classList.remove("open"); }
 
-/* ---------- Property card ---------- */
+/* ---------- Carte de bien ---------- */
 function tiStarsHtml(rating) {
   const full = Math.round(rating);
   let html = "";
@@ -749,7 +758,7 @@ function tiTypeLabel(type) {
   return { apartment: t("type_apartment"), house: t("type_house"), office: t("type_office"), land: t("type_land") }[type] || type;
 }
 
-/* ---------- Shared favorites panel (client, agency, admin all use this) ---------- */
+/* ---------- Panneau de favoris partagé (utilisé par client, agence et admin) ---------- */
 let TI_FAVORITES_CACHE = [];
 
 function tiSimpleSearchBar(filterMountId, inputId, placeholder, onInput) {
@@ -859,7 +868,7 @@ document.addEventListener("ti:currencychange", () => {
   });
 });
 
-/* ---------- Scroll-reveal ---------- */
+/* ---------- Apparition au défilement ---------- */
 let tiRevealObserver = null;
 function tiObserveReveals(root = document) {
   if (!tiRevealObserver) {
@@ -876,7 +885,7 @@ function tiObserveReveals(root = document) {
 }
 document.addEventListener("DOMContentLoaded", () => tiObserveReveals());
 
-/* ---------- Header scroll shadow + mobile nav ---------- */
+/* ---------- Ombre d'en-tête au défilement + navigation mobile ---------- */
 function tiToggleMobileNav(force) {
   const nav = document.getElementById("ti-nav");
   const burger = document.getElementById("ti-burger");
@@ -922,7 +931,7 @@ function tiSetBtnLoading(btn, loading) {
   else { btn.classList.remove("is-loading"); btn.disabled = false; }
 }
 
-/* ---------- File helpers (document upload/view) ---------- */
+/* ---------- Utilitaires de fichiers (envoi/visualisation de documents) ---------- */
 const TI_MAX_DOC_PREVIEW_SIZE = 3 * 1024 * 1024; // 3MB — keeps localStorage usage safe for a client-side demo
 
 function tiReadFileAsDataUrl(file) {
@@ -934,10 +943,11 @@ function tiReadFileAsDataUrl(file) {
   });
 }
 
-/** Resizes + re-encodes an image file client-side before it's stored as a data
- *  URL — without this, a handful of real camera photos would blow past the
- *  localStorage quota almost immediately. Returns a JPEG data URL capped at
- *  maxDim on its longest side. */
+/** Redimensionne et ré-encode un fichier image côté client avant de le
+ *  stocker en URL de données — sans ça, quelques vraies photos prises avec
+ *  un appareil photo dépasseraient presque immédiatement le quota du
+ *  localStorage. Renvoie une URL de données JPEG plafonnée à maxDim sur son
+ *  plus grand côté. */
 function tiCompressImageFile(file, maxDim = 1280, quality = 0.75) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -962,9 +972,10 @@ function tiCompressImageFile(file, maxDim = 1280, quality = 0.75) {
   });
 }
 
-/** Opens a stored document (data URL) in a new tab via a blob: URL — more reliably
- *  allowed by browsers than navigating directly to a data: URL, and renders PDFs/
- *  images inline when possible instead of forcing a download. */
+/** Ouvre un document stocké (URL de données) dans un nouvel onglet via une
+ *  URL blob: — plus fiablement autorisé par les navigateurs que de naviguer
+ *  directement vers une URL data:, et affiche les PDF/images directement
+ *  quand c'est possible plutôt que de forcer un téléchargement. */
 async function tiOpenDocument(dataUrl, fileName) {
   try {
     const res = await fetch(dataUrl);
@@ -978,8 +989,8 @@ async function tiOpenDocument(dataUrl, fileName) {
   }
 }
 
-/** Reusable empty-state block (icon + message + optional call-to-action). */
-/* ---------- Skeleton loaders ---------- */
+/** Bloc d'état vide réutilisable (icône + message + appel à l'action optionnel). */
+/* ---------- Chargeurs squelettes ---------- */
 function tiSkeletonCardsHtml(count = 6) {
   return Array.from({ length: count }, () => `
     <div class="ti-card ti-skeleton-el">
@@ -1036,7 +1047,7 @@ function tiEmptyStateHtml(message, ctaText, ctaHref, iconKey) {
     </div>`;
 }
 
-/* ---------- Audit log helpers ---------- */
+/* ---------- Utilitaires du journal d'audit ---------- */
 function tiLogAgencyAction(action, targetType, targetId, targetLabel, details) {
   TiDB.logAction({
     actorId: TI_SESSION.id, actorName: TI_SESSION.name, actorRole: "agency",
@@ -1060,11 +1071,12 @@ function tiFormatTimeOnly(iso) {
   return d.toLocaleTimeString(tiGetLang() === "en" ? "en-US" : "fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
-/* ---------- Audit log timeline (shared: period filter, day grouping, pagination) ----------
-   Used by both the agency and admin "Journal d'audit" panels. Each caller
-   keeps its own small { period, page } state object and a rerenderFn name
-   (a global function of theirs that re-applies filtering) — the timeline
-   itself is stateless and just renders whatever page/period it's given. */
+/* ---------- Chronologie du journal d'audit (partagée : filtre de période, regroupement par jour, pagination) ----------
+   Utilisée par les panneaux « Journal d'audit » de l'agence et de l'admin.
+   Chaque appelant garde son propre petit objet d'état { period, page } et un
+   nom de rerenderFn (une de leurs fonctions globales qui réapplique le
+   filtrage) — la chronologie elle-même n'a pas d'état et affiche simplement
+   la page/période qu'on lui donne. */
 const TI_AUDIT_PAGE_SIZE = 15;
 function tiAuditActionIcon(action) {
   const a = (action || "").toLowerCase();
@@ -1173,8 +1185,9 @@ function tiRenderImpersonationBanner() {
       <button class="btn btn-sm" onclick="tiStopImpersonation()">${t('stop_impersonating')}</button>
     </div>`;
 }
-/** Composite state used for filtering: distinguishes "for sale" from "for rent"
- *  instead of lumping both under a generic "active" listingStatus. */
+/** État composite utilisé pour le filtrage : distingue « à vendre » de
+ *  « à louer » plutôt que de les regrouper sous un simple listingStatus
+ *  « actif » générique. */
 function tiPropertyStateValue(p) {
   const status = p.listingStatus || "active";
   if (status === "pending" || status === "rejected") return status;
@@ -1195,9 +1208,11 @@ function tiPropertyStateOptionsHtml() {
     <option value="rejected">${t('listing_status_rejected')}</option>`;
 }
 
-/** Compact ribbon shown on property cards once a favorited listing is no
- *  longer freely available — mirrors "Under Contract"/"Sold" badges used by
- *  major listing platforms so a saved search still tells the full story. */
+/** Bandeau compact affiché sur les cartes de bien une fois qu'une annonce
+ *  mise en favori n'est plus librement disponible — reprend les badges
+ *  « Sous compromis »/« Vendu » utilisés par les grandes plateformes
+ *  d'annonces, pour qu'une recherche sauvegardée raconte toujours
+ *  l'histoire complète. */
 function tiPropertyStatusRibbonHtml(p) {
   const status = p.listingStatus;
   if (!["under_contract", "sold", "rented"].includes(status)) return "";
@@ -1206,10 +1221,11 @@ function tiPropertyStatusRibbonHtml(p) {
   return `<span class="ti-card-ribbon ${cls}">${label}</span>`;
 }
 
-/* ---------- Pie chart (pure CSS conic-gradient, no library, works offline) ---------- */
-/** Lightweight SVG line/area trend chart (no library, consistent with the
- *  pie/bar charts elsewhere) — the standard "metric over time" visual used
- *  by professional SaaS dashboards (Stripe, HubSpot, Mixpanel, etc). */
+/* ---------- Graphique circulaire (dégradé conique CSS pur, sans bibliothèque, fonctionne hors ligne) ---------- */
+/** Graphique de tendance SVG léger en courbe/aire (sans bibliothèque,
+ *  cohérent avec les graphiques circulaires/en barres ailleurs) — la
+ *  visualisation standard « métrique dans le temps » utilisée par les
+ *  tableaux de bord SaaS professionnels (Stripe, HubSpot, Mixpanel, etc.). */
 let TI_CHART_INSTANCE_COUNTER = 0;
 function tiHighlightLinePoint(id, on) {
   const el = document.getElementById(id);
@@ -1240,13 +1256,14 @@ function tiLineChartSvg(labels, values, formatFn, compareValues) {
   const comparePoly = compareValues
     ? `<polyline points="${compareValues.map((v, i) => `${xAt(i)},${yAt(v)}`).join(" ")}" fill="none" stroke="var(--ink-soft)" stroke-width="2" stroke-dasharray="5,4" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/>`
     : "";
-  // Invisible, full-height hover slices — one per data point, covering the
-  // gap between neighboring points rather than just the tiny dot itself.
-  // This is the interaction pattern used by Recharts/Chart.js: hover
-  // anywhere in a point's "column" instead of needing to land a cursor on
-  // a 4px circle, which is what made these charts hard to use on laptop
-  // screens where several charts share a row. A thin guide line and an
-  // enlarged dot confirm which column is active.
+  // Tranches de survol invisibles, en pleine hauteur — une par point de
+  // donnée, couvrant l'espace entre points voisins plutôt que le minuscule
+  // point lui-même. C'est le schéma d'interaction utilisé par
+  // Recharts/Chart.js : survoler n'importe où dans la « colonne » d'un
+  // point plutôt que de devoir placer le curseur précisément sur un cercle
+  // de 4px, ce qui rendait ces graphiques difficiles à utiliser sur des
+  // écrans de laptop où plusieurs graphiques se partagent une ligne. Une
+  // fine ligne repère et un point agrandi confirment quelle colonne est active.
   const hoverSlices = values.map((v, i) => {
     const cx = xAt(i);
     const leftEdge = i === 0 ? padL : (xAt(i - 1) + cx) / 2;
@@ -1285,7 +1302,7 @@ function tiLineChartHtml(title, labels, values, formatFn, compareValues) {
     </div>`;
 }
 
-/** Small "+12% vs last period" style delta badge next to a stat card figure. */
+/** Petit badge d'écart façon « +12% vs période précédente », à côté du chiffre d'une carte statistique. */
 function tiTrendBadgeHtml(deltaPct) {
   if (deltaPct == null) return "";
   const up = deltaPct >= 0;
@@ -1294,9 +1311,10 @@ function tiTrendBadgeHtml(deltaPct) {
   return `<span class="ti-trend-badge ${cls}">${arrow} ${Math.abs(deltaPct)}%</span>`;
 }
 
-/** Deterministic pseudo-trend used only where no real historical series
- *  exists yet — stable across reloads (seeded by key) rather than random
- *  flicker, and clearly bounded to a plausible small percentage range. */
+/** Pseudo-tendance déterministe utilisée seulement là où aucune vraie série
+ *  historique n'existe encore — stable entre rechargements (initialisée par
+ *  clé) plutôt qu'un scintillement aléatoire, et clairement bornée à une
+ *  plage de pourcentage faible et plausible. */
 function tiSeededDeltaPct(key, maxAbs = 18) {
   let hash = 0;
   for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
@@ -1304,36 +1322,40 @@ function tiSeededDeltaPct(key, maxAbs = 18) {
   return Math.round(pct * 10) / 10;
 }
 
-/** Splits a running total into a smooth, deterministic daily series trending
- *  toward "today" — used where we track a lifetime counter but not a full
- *  per-day log, so a trend chart can still be shown without random flicker. */
+/** Décompose un total cumulé en une série quotidienne lissée et déterministe,
+ *  tendant vers « aujourd'hui » — utilisé quand on suit un compteur global
+ *  mais pas un journal complet jour par jour, pour qu'un graphique de
+ *  tendance puisse quand même être affiché sans scintillement aléatoire. */
 /* ============================================================
-   AI-generated text — swappable adapter
+   Texte généré par IA — adaptateur interchangeable
    ------------------------------------------------------------
-   Every AI-assisted text feature (report summaries, listing
-   description generation, ...) goes through tiGetAiText() below
-   instead of being written directly — swapping in a real language
-   model later is a one-line change here, with no changes needed
-   in any feature's own code.
+   Chaque fonctionnalité de texte assistée par IA (résumés de rapports,
+   génération de description d'annonce, ...) passe par tiGetAiText()
+   ci-dessous plutôt que d'être écrite directement — brancher un vrai
+   modèle de langage plus tard ne demandera qu'un changement d'une ligne
+   ici, sans aucune modification nécessaire dans le code propre à chaque
+   fonctionnalité.
 
-   ADAPTER 1 (active by default): local rule-based generator
-     No setup needed. Builds text directly from the structured
-     data each feature passes in — genuinely adapts to the actual
-     values, but has no real language understanding.
+   ADAPTATEUR 1 (actif par défaut) : générateur local à base de règles
+     Aucune configuration nécessaire. Construit le texte directement à
+     partir des données structurées que chaque fonctionnalité transmet —
+     s'adapte réellement aux valeurs réelles, mais n'a aucune
+     compréhension du langage à proprement parler.
 
-   ADAPTER 2 (ready to activate): real language-model API
-     1. Stand up a small backend endpoint (e.g. in the /server
-        scaffold used for TI_BACKEND="api") with one route per
-        endpoint name below (e.g. POST /api/ai/report-insight,
-        POST /api/ai/listing-description), each accepting the JSON
-        payload and returning { result: "..." }. Keep your model
-        API key server-side — never call a language-model API with
-        a key embedded in browser code.
-     2. Set TI_AI_BACKEND = "api" below and TI_AI_API_BASE to that
-        server's base URL.
-   If the API call fails for any reason (offline, timeout, bad
-   response), tiGetAiText() silently falls back to the local
-   generator so the feature is never left without a result.
+   ADAPTATEUR 2 (prêt à activer) : vraie API de modèle de langage
+     1. Mettez en place un petit point d'accès backend (par exemple dans
+        la base /server utilisée pour TI_BACKEND="api") avec une route
+        par nom de point d'accès ci-dessous (ex. POST
+        /api/ai/report-insight, POST /api/ai/listing-description),
+        chacune acceptant la charge utile JSON et renvoyant
+        { result: "..." }. Gardez votre clé d'API de modèle côté
+        serveur — n'appelez jamais une API de modèle de langage avec une
+        clé intégrée dans le code du navigateur.
+     2. Définissez TI_AI_BACKEND = "api" ci-dessous et TI_AI_API_BASE
+        avec l'URL de base de ce serveur.
+   Si l'appel API échoue pour une raison quelconque (hors ligne, délai
+   dépassé, mauvaise réponse), tiGetAiText() revient silencieusement au
+   générateur local pour que la fonctionnalité ne se retrouve jamais sans résultat.
    ============================================================ */
 const TI_AI_BACKEND = "local"; // "local" | "api"
 const TI_AI_API_BASE = "http://localhost:4000/api/ai";
@@ -1351,7 +1373,7 @@ async function tiGetAiText(endpoint, payload, localFallback) {
         if (data && data.result) return data.result;
       }
     } catch (err) {
-      // Network or API failure — fall through to the local generator.
+      // Échec réseau ou API — on retombe sur le générateur local.
     }
   }
   return localFallback();
@@ -1375,7 +1397,7 @@ function tiSyntheticDailySeries(total, days, seedKey) {
   });
 }
 
-/* ---------- Shared chart tooltip (line/bar hover) ---------- */
+/* ---------- Infobulle de graphique partagée (survol courbe/barres) ---------- */
 function tiShowChartTooltip(evt, text) {
   let tip = document.getElementById("ti-chart-tooltip");
   if (!tip) {
@@ -1451,7 +1473,7 @@ function tiPieLegendHover(el, value, pct) {
   }
 }
 
-/* ---------- Horizontal bar chart (pure CSS, no library) — good for ranked/per-item data ---------- */
+/* ---------- Graphique en barres horizontales (CSS pur, sans bibliothèque) — adapté aux données classées/par élément ---------- */
 function tiBarChartHtml(title, items) {
   const max = Math.max(1, ...items.map(i => i.value));
   const rows = items.length ? items.map(i => `

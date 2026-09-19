@@ -1,19 +1,22 @@
 /* ============================================================
-   Timmo — auth (demo session layer, swappable for
-   Firebase Auth by wiring tiAuth from firebase-config.js)
+   Timmo — authentification (couche de session pour démo, peut être
+   remplacée par Firebase Auth en branchant tiAuth depuis firebase-config.js)
    ============================================================ */
 
 const TI_SESSION_KEY = "ti_session";
 
-/* ---------- Password hashing ----------
-   SHA-256 with a per-user random salt, via the browser's native Web Crypto
-   API — no server available in this demo to run a real password hasher.
-   IMPORTANT: this is a real improvement over plain text, but it is NOT a
-   substitute for bcrypt/argon2. Those are deliberately slow, server-side
-   algorithms built to resist large-scale brute-force guessing; a fast
-   general-purpose hash like SHA-256 is not. A real backend must hash with
-   bcrypt/argon2 server-side — this only protects against casual/direct
-   exposure of the demo data, e.g. someone reading localStorage. */
+/* ---------- Hachage des mots de passe ----------
+   SHA-256 avec un sel aléatoire par utilisateur, via l'API Web Crypto
+   native du navigateur — aucun serveur disponible dans cette démo pour
+   exécuter un vrai hachage de mot de passe.
+   IMPORTANT : c'est une vraie amélioration par rapport au texte en clair,
+   mais ce n'est PAS un substitut à bcrypt/argon2. Ces algorithmes sont
+   volontairement lents et côté serveur, conçus pour résister aux attaques
+   par force brute à grande échelle ; un hachage rapide et généraliste
+   comme SHA-256 ne l'est pas. Un vrai backend doit hacher avec
+   bcrypt/argon2 côté serveur — ceci protège seulement contre une
+   exposition directe/occasionnelle des données de démo, par exemple
+   quelqu'un lisant le localStorage. */
 async function tiHashPassword(password, salt) {
   const enc = new TextEncoder();
   const data = enc.encode(salt + ":" + password);
@@ -25,18 +28,19 @@ function tiGenerateSalt() {
   crypto.getRandomValues(arr);
   return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
 }
-/** Mutates the given user object in place: replaces any plaintext password
- *  with a salted hash. Caller is responsible for persisting the user. */
+/** Modifie l'objet utilisateur donné en place : remplace tout mot de passe
+ *  en clair par un hachage salé. L'appelant est responsable de sauvegarder l'utilisateur. */
 async function tiSetUserPassword(user, plainPassword) {
   user.passwordSalt = tiGenerateSalt();
   user.passwordHash = await tiHashPassword(plainPassword, user.passwordSalt);
   delete user.password;
 }
-/** Verifies a login attempt against a user record, transparently upgrading
- *  legacy plaintext accounts (e.g. seed demo data) to a salted hash the
- *  first time they successfully log in — a standard lazy-migration pattern,
- *  so nothing needs a one-off migration script and no account is ever
- *  locked out by the upgrade. */
+/** Vérifie une tentative de connexion par rapport à un enregistrement utilisateur,
+ *  en migrant discrètement les comptes en texte clair hérités (ex. données de
+ *  démo initiales) vers un hachage salé dès leur première connexion réussie —
+ *  un schéma classique de migration paresseuse, pour n'avoir besoin d'aucun
+ *  script de migration ponctuel et ne jamais bloquer un compte à cause de
+ *  cette mise à niveau. */
 async function tiVerifyUserPassword(user, plainPassword) {
   if (user.password !== undefined) {
     const matches = user.password === plainPassword;
@@ -52,15 +56,16 @@ async function tiVerifyUserPassword(user, plainPassword) {
   return (await tiHashPassword(plainPassword, user.passwordSalt)) === user.passwordHash;
 }
 
-/* ---------- Login rate limiting ----------
-   Client-side progressive lockout by email — stops casual/automated
-   guessing through the UI. This is NOT a substitute for server-side rate
-   limiting (a real backend should still throttle at the network/API layer,
-   e.g. via a WAF) since a determined attacker can simply clear local
-   storage; it does raise the bar for the common case and gives honest
-   feedback while doing it. */
+/* ---------- Limitation du taux de connexion ----------
+   Blocage progressif côté client par e-mail — arrête les tentatives
+   occasionnelles/automatisées via l'interface. Ce n'est PAS un substitut
+   à une vraie limitation côté serveur (un vrai backend doit toujours
+   limiter au niveau réseau/API, par exemple via un WAF), puisqu'un
+   attaquant déterminé peut simplement effacer le stockage local ; cela
+   relève néanmoins le niveau pour le cas courant et donne un retour
+   honnête à l'utilisateur en attendant. */
 const TI_LOGIN_ATTEMPTS_KEY = "ti_login_attempts";
-const TI_LOGIN_LOCKOUT_STEPS = [0, 0, 0, 15, 30, 60, 120, 300]; // seconds, by attempt count
+const TI_LOGIN_LOCKOUT_STEPS = [0, 0, 0, 15, 30, 60, 120, 300]; // secondes, selon le nombre de tentatives
 function tiGetLoginAttemptState(email) {
   const all = tiLoad(TI_LOGIN_ATTEMPTS_KEY, {});
   return all[email.toLowerCase()] || { count: 0, lockedUntil: 0 };
@@ -81,8 +86,8 @@ function tiClearLoginAttempts(email) {
   delete all[email.toLowerCase()];
   tiSave(TI_LOGIN_ATTEMPTS_KEY, all);
 }
-/** Seconds remaining before this email may attempt to log in again, or 0
- *  if it isn't currently locked out. */
+/** Secondes restantes avant que cet e-mail puisse retenter une connexion, ou 0
+ *  s'il n'est pas actuellement bloqué. */
 function tiLoginLockoutRemaining(email) {
   const state = tiGetLoginAttemptState(email);
   const remaining = Math.ceil((state.lockedUntil - Date.now()) / 1000);
@@ -169,8 +174,9 @@ async function tiRegisterAgency({ name, agencyName, email, password }) {
   return { ok: true, user };
 }
 
-/** Guard a dashboard page: redirect to login if not authenticated
- *  with the required role. Call at top of each dashboard page. */
+/** Protège une page de tableau de bord : redirige vers la connexion si
+ *  l'utilisateur n'est pas authentifié avec le rôle requis. À appeler en
+ *  haut de chaque page de tableau de bord. */
 function tiRequireRole(role) {
   const s = tiGetSession();
   if (!s || s.role !== role) {

@@ -1,6 +1,6 @@
 /* ============================================================
-   Timmo — i18n engine
-   Default language: French (fr). Secondary: English (en).
+   Timmo — moteur d'internationalisation
+   Langue par défaut : français (fr). Secondaire : anglais (en).
    ============================================================ */
 
 const TI_TRANSLATIONS = {

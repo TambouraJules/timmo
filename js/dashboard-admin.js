@@ -1,5 +1,5 @@
 /* ============================================================
-   Timmo — admin dashboard
+   Timmo — tableau de bord administrateur
    ============================================================ */
 
 const TI_SESSION = tiRequireRole("admin");
@@ -16,9 +16,10 @@ function tiShowPanel(name) {
   history.replaceState(null, "", url);
 }
 
-/** Refreshes just the data/markup a given panel needs, in place — no browser
- *  navigation, no white-flash, no lost scroll position. Replaces the old
- *  tiReloadDashboard() full-page-reload pattern. */
+/** Rafraîchit uniquement les données/le balisage dont un panneau donné a
+ *  besoin, sur place — pas de navigation, pas de flash blanc, pas de perte
+ *  de position de défilement. Remplace l'ancien mécanisme
+ *  tiReloadDashboard() qui rechargeait toute la page. */
 async function tiRefreshPanel(panelName) {
   const tasksByPanel = {
     overview: tiRenderOverview,
@@ -71,7 +72,7 @@ function tiSwitchPlatformTrendPeriod(period) {
   tiRenderPlatformTrendChart();
 }
 
-/* Real cumulative agency signups over time — grounded in actual subscribedSince dates. */
+/* Évolution réelle et cumulée des inscriptions d'agences — basée sur les vraies dates subscribedSince. */
 let TI_AGENCIES_FOR_TREND = [];
 let TI_AGENCIES_TREND_PERIOD = "6m";
 function tiRenderAgenciesTrendChart() {
@@ -97,7 +98,7 @@ function tiSwitchAgenciesTrendPeriod(period) {
   tiRenderAgenciesTrendChart();
 }
 
-/* Properties by locality — grounded in actual neighborhood data. */
+/* Biens par localité — basé sur les vraies données de quartier. */
 function tiRenderLocalitiesChart(props) {
   const counts = {};
   props.forEach(p => { counts[p.neighborhood] = (counts[p.neighborhood] || 0) + 1; });
@@ -242,7 +243,7 @@ async function tiRenderUsers() {
   tiApplyUsersFilter();
 }
 
-/* ---------- Agencies: full admin CRUD ---------- */
+/* ---------- Agences : CRUD complet côté admin ---------- */
 let TI_ADMIN_ALL_AGENCIES = [];
 let TI_ADMIN_ALL_AGENCY_PROPS = [];
 function tiRenderAgenciesFilterBar() {
@@ -290,11 +291,11 @@ function tiApplyAgenciesFilter() {
     </div>`;
   }).join('') : `<p style="color:var(--ink-soft)">${t('filter_no_results')}</p>`;
 }
-/* ---------- Agency detail sub-dashboard ---------- */
+/* ---------- Sous-tableau de bord détail agence ---------- */
 let TI_AGENCY_DETAIL_ID = null;
 let TI_AGENCY_DETAIL_AGENTS = [];
 
-/* ---------- Agency sub-site (white-label) management ---------- */
+/* ---------- Gestion du sous-site agence (marque blanche) ---------- */
 function tiSubsiteDetailsHtml(agency) {
   if (!agency.subsiteEnabled) {
     return `<p style="color:var(--ink-soft);font-size:.85rem;margin-top:14px;">${t('subsite_disabled_note')}</p>`;
@@ -563,8 +564,8 @@ async function tiToggleAgencySuspended(id) {
   await tiRefreshPanel("agencies");
 }
 
-// In-place variants for use from inside the agency detail drill-down: they
-// re-render that same detail view instead of bouncing back to the list.
+// Variantes sur place, utilisées depuis la fiche détail d'une agence : elles
+// réaffichent cette même fiche au lieu de retourner à la liste.
 async function tiAgencyDetailToggleVerified(id) {
   const agency = await TiDB.getAgency(id);
   if (!agency) return;
@@ -806,7 +807,7 @@ async function tiRejectListing(id) {
   await tiRefreshPanel("listings");
 }
 
-/* ---------- Characteristics catalog (platform-wide, admin-managed) ---------- */
+/* ---------- Catalogue de caractéristiques (valable pour toute la plateforme, géré par l'admin) ---------- */
 const TI_ICON_PICKER_OPTIONS = [
   "🛡️", "📹", "🔔", "🚪", "🧑‍✈️", "🛗", "🌇", "🏙️", "🌆", "🌳",
   "🏊", "🍖", "❄️", "🔥", "🛋️", "👔", "🛁", "🍳", "🍽️", "🅿️",
@@ -983,7 +984,7 @@ async function tiRenderAdminPayments() {
     return sum + (inv && inv.status === "paid" ? inv.amount : 0);
   }, 0);
 
-  // Real 6-month MRR trend, aggregated from every agency's actual billed invoices.
+  // Vraie tendance du MRR sur 6 mois, agrégée à partir des factures réellement émises pour chaque agence.
   const byPeriod = {};
   subsData.forEach(s => s.invoices.forEach(inv => { byPeriod[inv.period] = (byPeriod[inv.period] || 0) + inv.amount; }));
   const periods = Object.keys(byPeriod).sort();
@@ -1130,10 +1131,10 @@ async function tiModerate(id, approve) {
 }
 
 let TI_ADMIN_AUDIT_CACHE = [];
-/* ---------- Push notifications (admin broadcast) ---------- */
-/* ---------- Reports (print-ready, exportable via browser Print → PDF) ---------- */
+/* ---------- Notifications push (diffusion admin) ---------- */
+/* ---------- Rapports (prêts à imprimer, exportables via Imprimer → PDF du navigateur) ---------- */
 const TI_REPORT_PERIOD_DAYS = { week: 7, month: 30, quarter: 90, year: 365 };
-/* ---------- Smart report summary (data-driven narrative, not a live LLM call) ---------- */
+/* ---------- Résumé intelligent de rapport (récit basé sur les données, pas un appel LLM en direct) ---------- */
 function tiGenerateAdminReportInsight(d) {
   const lang = tiGetLang();
   const parts = [];

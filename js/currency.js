@@ -1,7 +1,7 @@
 /* ============================================================
-   Timmo — currency engine
-   Default: CFA (XOF). Secondary: EUR.
-   XOF is pegged to EUR at a fixed rate set by the BCEAO treaty.
+   Timmo — moteur de devises
+   Par défaut : CFA (XOF). Secondaire : EUR.
+   Le XOF est arrimé à l'EUR à un taux fixe défini par le traité de la BCEAO.
    ============================================================ */
 
 const TI_CUR_KEY = "ti_currency";
@@ -16,7 +16,7 @@ function tiSetCurrency(cur) {
   tiApplyCurrency();
 }
 
-/** amountXOF: base amount always stored in CFA (XOF) */
+/** amountXOF : montant de base toujours stocké en CFA (XOF) */
 function tiFormatPrice(amountXOF) {
   const cur = tiGetCurrency();
   const lang = tiGetLang ? tiGetLang() : "fr";

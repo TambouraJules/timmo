@@ -1,8 +1,9 @@
 /* ============================================================
-   Timmo — seed data
-   This is the DEFAULT dataset used when no real database is
-   connected. See js/db.js for how to swap this for Firebase
-   or the Node.js API without touching the UI code.
+   Timmo — données de démonstration
+   C'est le jeu de données PAR DÉFAUT utilisé quand aucune vraie base
+   de données n'est connectée. Voir js/db.js pour savoir comment
+   remplacer ceci par Firebase ou l'API Node.js sans toucher au code
+   de l'interface.
    ============================================================ */
 
 const TI_NEIGHBORHOODS = [
@@ -16,12 +17,13 @@ const TI_NEIGHBORHOODS = [
   { id: "ouakam", name: "Ouakam", lat: 14.7233, lng: -17.4919, img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=60" },
 ];
 
-/* ---------- Administrative hierarchy (Région > Département > Commune) ----------
-   Used to guide listing placement in the new-listing wizard. Only the Dakar
-   région/département has communes with a matching quartier in the app today
-   (hoodId) — other régions/départements are included for a realistic picker,
-   but selecting one currently outside Dakar simply leaves the quartier field
-   for manual choice, since there's no seeded neighborhood data there yet. */
+/* ---------- Hiérarchie administrative (Région > Département > Commune) ----------
+   Utilisée pour guider le placement d'une annonce dans l'assistant de
+   publication. Seuls la région/le département de Dakar ont aujourd'hui des
+   communes avec un quartier correspondant dans l'application (hoodId) —
+   les autres régions/départements sont inclus pour un sélecteur réaliste,
+   mais en choisir un actuellement hors de Dakar laisse simplement le champ
+   quartier en saisie manuelle, faute de données de quartier initiales là-bas. */
 const TI_ADMIN_REGIONS = [
   { id: "dakar", name: "Dakar" },
   { id: "thies", name: "Thiès" },
@@ -106,8 +108,8 @@ const TI_PHOTO_SETS = {
   ]
 };
 
-/* Icons for the property characteristics section (emoji-based, works fully
-   offline, no icon font or extra asset needed). */
+/* Icônes pour la section des caractéristiques du bien (basées sur des emojis,
+   fonctionne entièrement hors ligne, sans police d'icônes ni ressource supplémentaire). */
 const TI_AMENITY_ICONS = {
   security: "🛡️", elevator: "🛗", balcony: "🌇", ac: "❄️", kitchen: "🍳",
   wifi: "📶", garden: "🌳", parking: "🅿️", generator: "🔌", meeting: "🗣️",
@@ -115,8 +117,8 @@ const TI_AMENITY_ICONS = {
   fence: "🚧", deed: "📜", road: "🛣️", water: "🚰",
 };
 
-/* Baseline set of characteristics per property type. "Meublé/Furnished" is
-   appended automatically for listings where furnished === true. */
+/* Ensemble de base des caractéristiques par type de bien. « Meublé/Furnished »
+   est ajouté automatiquement pour les annonces où furnished === true. */
 const TI_AMENITIES_BY_TYPE = {
   apartment: [
     { icon: "security", label: "Sécurité 24h/24", labelEn: "24/7 security" },
@@ -157,22 +159,24 @@ function tiBuildAmenities(type, furnished) {
   return list;
 }
 
-/* ---------- Admin-managed characteristics catalog ----------
-   Seed data for the platform-wide list of selectable property
-   characteristics, editable by the administrator (Caractéristiques panel).
-   Each item's `icon` is a raw emoji character (not a lookup key), so an
-   admin edit or deletion never affects wording already published on an
-   existing listing. `types` lists which property type(s) this item is
-   offered for by default in the agency's listing wizard. */
-/* ---------- Review tags ----------
-   A curated, pre-classified vocabulary clients pick from when leaving a
-   review, instead of relying on free text alone. Two real benefits over
-   free text: (1) nothing here can carry an injection payload — it's a
-   closed set of fixed strings — and (2) because each tag is already
-   labeled positive/negative, aggregating them across many reviews gives
-   genuine, structured signal for the sentiment summaries below, without
-   needing real NLP on free-form comments. Free text remains available for
-   anyone who wants to add detail, but the tags carry the real signal. */
+/* ---------- Catalogue de caractéristiques géré par l'admin ----------
+   Données initiales pour la liste, valable pour toute la plateforme, des
+   caractéristiques de bien sélectionnables, modifiable par l'administrateur
+   (panneau Caractéristiques). Le champ `icon` de chaque élément est un
+   caractère emoji brut (pas une clé de correspondance), donc une modification
+   ou suppression par l'admin n'affecte jamais le libellé déjà publié sur une
+   annonce existante. `types` liste le(s) type(s) de bien pour lesquels cet
+   élément est proposé par défaut dans l'assistant de publication de l'agence. */
+/* ---------- Tags d'avis ----------
+   Un vocabulaire sélectionné et pré-classifié que les clients choisissent en
+   laissant un avis, plutôt que de s'appuyer uniquement sur du texte libre.
+   Deux avantages réels par rapport au texte libre : (1) rien ici ne peut
+   porter une charge d'injection — c'est un ensemble fermé de chaînes fixes
+   — et (2) comme chaque tag est déjà classé positif/négatif, les agréger
+   sur de nombreux avis donne un signal structuré et réel pour les résumés
+   de sentiment ci-dessous, sans avoir besoin de vrai NLP sur des commentaires
+   en texte libre. Le texte libre reste disponible pour qui veut ajouter des
+   détails, mais ce sont les tags qui portent le signal réel. */
 const TI_REVIEW_TAGS = [
   { id: "rt_fast_comm", label: "Communication rapide", labelEn: "Fast communication", sentiment: "positive" },
   { id: "rt_as_described", label: "Bien tel que décrit", labelEn: "Property as described", sentiment: "positive" },
@@ -358,11 +362,13 @@ const TI_AGENCIES = [
   { id: "ag003", name: "Teranga Foncier", code: "TF", email: "contact@terangafoncier.sn", phone: "+221 78 345 67 89", address: "Route de Ouakam, Dakar", tier: "standard", maxAgents: 2, maxListings: 10, verified: false, subscriptionStatus: "past_due", subscribedSince: "2026-04-01" },
 ];
 
-/* Attach computed fields (photos, tour panels, coordinates) at load time
-   so the seed stays compact and each type keeps a distinct gallery. */
+/* Ajoute les champs calculés (photos, panoramas de visite, coordonnées) au
+   chargement, pour que les données initiales restent compactes et que chaque
+   type garde une galerie distincte. */
 (function tiEnrichProperties() {
-  // Realistic demo values for the moderation/analytics features — one row per
-  // property in seed order (p001..p012): validation status and view count.
+  // Valeurs de démo réalistes pour les fonctionnalités de modération/analytique —
+  // une ligne par bien dans l'ordre initial (p001..p012) : statut de validation
+  // et nombre de vues.
   const TI_SEED_STATUS = ["active", "active", "active", "rented", "active", "pending", "active", "sold", "active", "pending", "active", "active"];
   const TI_SEED_VIEWS =  [145, 89, 210, 67, 34, 3, 52, 178, 95, 1, 40, 120];
   TI_PROPERTIES.forEach((p, i) => {
@@ -373,7 +379,7 @@ const TI_AGENCIES = [
     p.listingStatus = TI_SEED_STATUS[i] || "active";
     p.views = TI_SEED_VIEWS[i] ?? 0;
     const nb = TI_NEIGHBORHOODS.find(n => n.id === p.neighborhood);
-    // small jitter so pins don't overlap exactly
+    // léger décalage aléatoire pour que les repères ne se superposent pas exactement
     p.lat = nb.lat + (((i * 37) % 10) - 5) * 0.0018;
     p.lng = nb.lng + (((i * 53) % 10) - 5) * 0.0018;
   });

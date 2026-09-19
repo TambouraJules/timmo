@@ -1,5 +1,5 @@
 /* ============================================================
-   Timmo — property detail page logic
+   Timmo — logique de la page de détail d'un bien
    ============================================================ */
 
 let TI_PROPERTY = null;
@@ -140,8 +140,9 @@ async function tiRenderPropertyContent() {
   document.getElementById("ti-prop-desc").textContent = tiPropertyDesc(p);
   tiApplyLang();
   tiApplyCurrency();
-  // Deferred to the next frame so the browser has committed layout first —
-  // Leaflet in particular needs a container with a real, painted size.
+  // Différé à la prochaine frame pour que le navigateur ait déjà validé la mise
+  // en page — Leaflet en particulier a besoin d'un conteneur avec une taille
+  // réelle déjà affichée.
   requestAnimationFrame(() => {
     try { tiInitMap(); } catch (err) { console.error("Erreur carte:", err); }
   });
@@ -168,7 +169,7 @@ async function tiRenderSimilar() {
   `;
 }
 
-/* ---------- Map ---------- */
+/* ---------- Carte ---------- */
 function tiInitMap() {
   const p = TI_PROPERTY;
   const container = document.getElementById("ti-map");
@@ -182,12 +183,12 @@ function tiInitMap() {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(TI_MAP_INSTANCE);
   L.marker([p.lat, p.lng]).addTo(TI_MAP_INSTANCE).bindPopup(tiPropertyTitle(p)).openPopup();
-  // Leaflet can mis-measure a container that was just inserted into the DOM;
-  // force it to re-check its size once the layout has fully settled.
+  // Leaflet peut mal évaluer un conteneur qui vient d'être inséré dans le DOM ;
+  // on force une nouvelle vérification de sa taille une fois la mise en page bien stabilisée.
   setTimeout(() => TI_MAP_INSTANCE && TI_MAP_INSTANCE.invalidateSize(), 200);
 }
 
-/* ---------- Lightbox (gallery-aware) ---------- */
+/* ---------- Visionneuse (galerie) ---------- */
 let TI_LIGHTBOX_INDEX = 0;
 function tiOpenLightbox(index) {
   TI_LIGHTBOX_INDEX = index;
@@ -215,7 +216,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") tiCloseModal("modal-lightbox");
 });
 
-/* ---------- Favorite ---------- */
+/* ---------- Favori ---------- */
 async function tiTogglePropertyFav() {
   const s = tiGetSession();
   if (!s) { window.location.href = "login.html"; return; }
@@ -230,7 +231,7 @@ async function tiTogglePropertyFav() {
   tiToast(nowFav ? t("saved_fav") : t("save_fav"));
 }
 
-/* ---------- Booking date fields: availability calendar (short stay) or simple date input ---------- */
+/* ---------- Champs de dates de réservation : calendrier de disponibilité (séjour court) ou simple champ de date ---------- */
 function tiTodayIso() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -260,8 +261,8 @@ function tiRangeHasUnavailable(startIso, endIso, bookedSet, blockedSet) {
 
 let TI_CAL_STATE = null;
 
-/* Always-visible calendar rendered directly on the property page for
-   short-stay listings (not just tucked away inside the booking modal). */
+/* Calendrier toujours visible, affiché directement sur la page du bien
+   pour les séjours courts (pas seulement caché dans la fenêtre de réservation). */
 async function tiInitPageCalendar() {
   const p = TI_PROPERTY;
   const mount = document.getElementById("ti-page-calendar");
@@ -292,8 +293,8 @@ async function tiRenderBookingDateFields() {
   const p = TI_PROPERTY;
   const container = document.getElementById("bk-date-fields");
   if (p.shortStay) {
-    // Selection already happens in the always-visible page calendar; the
-    // modal just confirms (or prompts for) the chosen dates.
+    // La sélection se fait déjà dans le calendrier toujours visible de la page ;
+    // la fenêtre modale ne fait que confirmer (ou demander) les dates choisies.
     const st = TI_CAL_STATE;
     const hasRange = st && st.checkin && st.checkout;
     container.innerHTML = hasRange
@@ -404,7 +405,7 @@ function tiRenderCalendar() {
   `;
 }
 
-/* ---------- Booking ---------- */
+/* ---------- Réservation ---------- */
 function tiOpenBookingModal() {
   const s = tiGetSession();
   if (s) {
@@ -468,7 +469,7 @@ async function tiSubmitMessage(e) {
   return false;
 }
 
-/* ---------- Payment ---------- */
+/* ---------- Paiement ---------- */
 function tiOpenPaymentModal() {
   const s = tiGetSession();
   if (!s) { window.location.href = "login.html"; return; }
@@ -496,7 +497,7 @@ async function tiSubmitPayment(e) {
   return false;
 }
 
-/* ---------- Reviews ---------- */
+/* ---------- Avis ---------- */
 let TI_SELECTED_RATING = 5;
 function tiOpenReviewModal() {
   const s = tiGetSession();

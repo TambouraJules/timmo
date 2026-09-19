@@ -1,5 +1,5 @@
 /* ============================================================
-   Timmo — agency dashboard
+   Timmo — tableau de bord agence
    ============================================================ */
 
 const TI_SESSION = tiRequireRole("agency");
@@ -17,12 +17,14 @@ function tiShowPanel(name) {
   history.replaceState(null, "", url);
 }
 
-/** Refreshes just the data/markup a given panel needs, in place — no browser
- *  navigation, no white-flash, no lost scroll position. Replaces the old
- *  tiReloadDashboard() full-page-reload pattern.
- *  Note: tiRenderClientsPipeline() reuses the TI_AGENCY_ALL_BOOKINGS cache
- *  populated by tiRenderAgencyBookings(), so whenever both are needed that
- *  fetch must complete first — never run them concurrently via Promise.all. */
+/** Rafraîchit uniquement les données/le balisage dont un panneau donné a
+ *  besoin, sur place — pas de navigation, pas de flash blanc, pas de perte
+ *  de position de défilement. Remplace l'ancien mécanisme
+ *  tiReloadDashboard() qui rechargeait toute la page.
+ *  Remarque : tiRenderClientsPipeline() réutilise le cache
+ *  TI_AGENCY_ALL_BOOKINGS rempli par tiRenderAgencyBookings(), donc chaque
+ *  fois que les deux sont nécessaires, cette récupération doit se terminer
+ *  d'abord — ne jamais les lancer en parallèle via Promise.all. */
 async function tiRefreshPanel(panelName) {
   const isSupervisor = TI_SESSION.agentRole === "supervisor";
   if (panelName === "listings") {
@@ -116,8 +118,8 @@ function tiRenderPropertiesTrendChart() {
     labels.push(d.toLocaleDateString(tiGetLang() === "en" ? "en-US" : "fr-FR", cfg.unit === "day" ? { day: "2-digit", month: "2-digit" } : { month: "short" }));
     buckets.push(d);
   }
-  // Real counts from each property's actual createdAt — not synthetic,
-  // since this is data the platform genuinely has.
+  // Vrais décomptes à partir du createdAt réel de chaque bien — pas synthétiques,
+  // puisque ce sont des données que la plateforme possède réellement.
   const counts = buckets.map(bucketDate => TI_STATS_PROPS_CACHE.filter(p => {
     if (!p.createdAt) return false;
     const created = new Date(p.createdAt);
@@ -332,7 +334,7 @@ async function tiAssignPropertyToAgent(propertyId, agentId) {
   await tiRefreshPanel("listings");
 }
 
-/* ---------- Agents management (supervisor only) ---------- */
+/* ---------- Gestion des agents (superviseur uniquement) ---------- */
 function tiPopulateAssignAgentSelect() {
   const sel = document.getElementById("nl-assign-agent");
   if (!sel) return;
@@ -390,9 +392,9 @@ async function tiRenderAgents() {
 }
 
 let TI_AUDIT_LOG_CACHE = [];
-/* ---------- Reports (print-ready, exportable via browser Print → PDF) ---------- */
+/* ---------- Rapports (prêts à imprimer, exportables via Imprimer → PDF du navigateur) ---------- */
 const TI_REPORT_PERIOD_DAYS = { week: 7, month: 30, quarter: 90, year: 365 };
-/* ---------- Smart report summary (data-driven narrative, not a live LLM call) ---------- */
+/* ---------- Résumé intelligent de rapport (récit basé sur les données, pas un appel LLM en direct) ---------- */
 function tiGenerateAgencyReportInsight(d) {
   const lang = tiGetLang();
   const parts = [];
@@ -732,7 +734,7 @@ async function tiRenderAgencyListings() {
   const bookings = (await TiDB.getBookings({ agencyId: TI_SESSION.agencyId })).filter(b => propIds.has(b.propertyId) && b.rental);
   TI_AGENCY_PAYMENT_STATUS_CACHE = {};
   bookings.forEach(b => {
-    // keep the most recently confirmed rental booking per property
+    // ne garde que la réservation de location confirmée la plus récente par bien
     if (!TI_AGENCY_PAYMENT_STATUS_CACHE[b.propertyId] || new Date(b.createdAt) > new Date(TI_AGENCY_PAYMENT_STATUS_CACHE[b.propertyId].createdAt)) {
       TI_AGENCY_PAYMENT_STATUS_CACHE[b.propertyId] = b;
     }
@@ -807,7 +809,7 @@ function tiPopulateHoodSelectNL() {
   tiPopulateRegionSelect();
 }
 
-/* ---------- Location: Région > Département > Commune > Quartier + map pin ---------- */
+/* ---------- Localisation : Région > Département > Commune > Quartier + repère sur la carte ---------- */
 let TI_LOCATION_MAP = null;
 let TI_LOCATION_MARKER = null;
 let TI_NL_PIN = null; // { lat, lng } once the agent has clicked the map; null = use quartier default
@@ -848,9 +850,10 @@ function tiOnHoodChange() {
   tiUpdateListingPreview();
 }
 function tiSelectHoodInHierarchy(hoodId) {
-  // Reverse-lookup used when opening an existing listing for edit: finds
-  // which région/département/commune the saved quartier belongs to, so the
-  // cascading selects open already showing the right path.
+  // Recherche inverse utilisée à l'ouverture d'une annonce existante en
+  // modification : retrouve à quelle région/département/commune appartient
+  // le quartier enregistré, pour que les listes déroulantes en cascade
+  // s'ouvrent déjà sur le bon chemin.
   for (const [deptId, communes] of Object.entries(TI_ADMIN_COMMUNES)) {
     const commune = communes.find(c => c.hoodId === hoodId);
     if (!commune) continue;
@@ -896,8 +899,8 @@ function tiInitLocationMap() {
   setTimeout(() => TI_LOCATION_MAP.invalidateSize(), 200);
 }
 
-/* ---------- Photo insertion + live preview ---------- */
-/* ---------- Photo upload manager (drag-drop, click-upload, reorder, replace) ---------- */
+/* ---------- Insertion de photos + aperçu en direct ---------- */
+/* ---------- Gestionnaire d'envoi de photos (glisser-déposer, clic, réorganiser, remplacer) ---------- */
 const TI_NL_PHOTO_MAX = 10;
 let TI_NL_PHOTOS = [];
 let TI_PHOTO_REPLACE_INDEX = null;
@@ -978,7 +981,7 @@ function tiRenderPhotoPreview() {
     </div>`).join('') + (TI_NL_PHOTOS.length < TI_NL_PHOTO_MAX ? '' : '');
 }
 
-/* ---------- Characteristics picker ---------- */
+/* ---------- Sélecteur de caractéristiques ---------- */
 async function tiRenderAmenityPicker(checkedIcons) {
   const type = document.getElementById("nl-type").value;
   const catalog = await TiDB.getAmenityCatalog();
@@ -998,7 +1001,7 @@ function tiReadCheckedAmenities() {
   }));
 }
 
-/* ---------- AI-assisted listing description (see tiGetAiText in main.js) ---------- */
+/* ---------- Description d'annonce assistée par IA (voir tiGetAiText dans main.js) ---------- */
 function tiGenerateListingDescriptionLocal(d) {
   const isEn = d.lang === "en";
   const typeLabel = tiTypeLabel(d.type).toLowerCase();
@@ -1064,14 +1067,14 @@ async function tiGenerateListingDescription() {
   document.getElementById("nl-desc").value = text;
 }
 
-/* ---------- Availability management (available-from date / blocked-dates calendar) ---------- */
+/* ---------- Gestion de la disponibilité (date de disponibilité / calendrier de dates bloquées) ---------- */
 function tiTodayIsoA() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 let TI_BLOCKED_CAL_STATE = null;
 
-/* ---------- New-listing wizard (steps + live preview) ---------- */
+/* ---------- Assistant de nouvelle annonce (étapes + aperçu en direct) ---------- */
 let TI_WIZARD_STEP = 1;
 const TI_WIZARD_TOTAL_STEPS = 5;
 
@@ -1222,7 +1225,7 @@ function tiRenderBlockedCalendar() {
     </div>`;
 }
 
-/* ---------- Create / edit listing ---------- */
+/* ---------- Créer / modifier une annonce ---------- */
 function tiEditListing(id) {
   TiDB.getProperty(id).then(async p => {
     if (!p) return;
@@ -1358,7 +1361,7 @@ async function tiRenderAgencyBookings() {
   mount.innerHTML = TI_AGENCY_ALL_BOOKINGS.map(b => tiAgencyBookingCardHtml(b)).join('');
 }
 
-/* ---------- Clients pipeline: active / dossier validation / contract signature ---------- */
+/* ---------- Pipeline clients : actif / validation du dossier / signature du contrat ---------- */
 function tiClientPipelineStage(b) {
   return tiComputeBookingStage(b);
 }
@@ -1749,7 +1752,7 @@ async function tiAgencyReply(e, propertyId, userId) {
   return false;
 }
 
-/* ---------- Announcements (agency broadcasts to tenants) ---------- */
+/* ---------- Annonces (diffusions de l'agence vers les locataires) ---------- */
 function tiSyncAnnouncementPreview() {
   const preview = document.getElementById("an-live-preview");
   if (!preview) return;
@@ -1818,7 +1821,7 @@ async function tiDeleteAnnouncementRow(id) {
   tiRenderAnnouncementsPage();
 }
 
-/* ---------- Welcome kit (auto-attached documents for new tenants) ---------- */
+/* ---------- Kit de bienvenue (documents attachés automatiquement pour les nouveaux locataires) ---------- */
 async function tiRenderWelcomeKit() {
   const kit = await TiDB.getWelcomeKit(TI_SESSION.agencyId);
   const mount = document.getElementById("welcomekit-mount");

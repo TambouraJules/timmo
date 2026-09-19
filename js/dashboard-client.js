@@ -1,5 +1,5 @@
 /* ============================================================
-   Timmo — client dashboard
+   Timmo — tableau de bord client
    ============================================================ */
 
 const TI_SESSION = tiRequireRole("client");
@@ -17,9 +17,10 @@ function tiShowPanel(name) {
   history.replaceState(null, "", url);
 }
 
-/** Refreshes just the data/markup a given panel needs, in place — no browser
- *  navigation, no white-flash, no lost scroll position. Replaces the old
- *  tiReloadDashboard() full-page-reload pattern. */
+/** Rafraîchit uniquement les données/le balisage dont un panneau donné a
+ *  besoin, sur place — pas de navigation, pas de flash blanc, pas de perte
+ *  de position de défilement. Remplace l'ancien mécanisme
+ *  tiReloadDashboard() qui rechargeait toute la page. */
 async function tiRefreshPanel(panelName) {
   const tasksByPanel = {
     overview: tiRenderClientOverview,
