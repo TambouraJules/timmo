@@ -14,7 +14,7 @@ const miscRoutes = require("./routes/misc");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "12mb" }));
 
 app.use("/api/properties", propertiesRoutes);
 app.use("/api/agencies", agenciesRoutes);

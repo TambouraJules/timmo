@@ -622,27 +622,45 @@ const TiDB = {
     return p;
   },
 
-  async getBookings(filter = {}) {
+  /** Point de passage unique pour lire les réservations, utilisé par toutes
+   *  les méthodes ci-dessous plutôt que chacune faisant son propre
+   *  tiLoad("ti_bookings") — un seul endroit à rendre compatible API. */
+  async _bookingsAll(filter = {}) {
+    if (TI_BACKEND === "api") {
+      const params = new URLSearchParams(filter).toString();
+      return (await fetch(`${TI_API_BASE}/bookings${params ? "?" + params : ""}`)).json();
+    }
     let all = tiLoad("ti_bookings", []);
     if (filter.userId) all = all.filter(b => b.userId === filter.userId);
     if (filter.agencyId) all = all.filter(b => b.agencyId === filter.agencyId);
     if (filter.propertyId) all = all.filter(b => b.propertyId === filter.propertyId);
     return all;
   },
-  async createBooking(booking) {
+  /** Point de passage unique pour créer/sauvegarder une réservation —
+   *  upsert par id métier, aussi bien en local qu'à travers l'API. */
+  async _bookingSave(booking) {
+    if (TI_BACKEND === "api") {
+      return (await fetch(`${TI_API_BASE}/bookings`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(booking) })).json();
+    }
     const all = tiLoad("ti_bookings", []);
-    booking.id = "bk_" + Date.now();
-    booking.status = "pending";
-    booking.createdAt = new Date().toISOString();
-    all.unshift(booking);
+    const idx = all.findIndex(b => b.id === booking.id);
+    if (idx >= 0) all[idx] = booking; else all.unshift(booking);
     tiSave("ti_bookings", all);
     return booking;
   },
+  async getBookings(filter = {}) {
+    return this._bookingsAll(filter);
+  },
+  async createBooking(booking) {
+    booking.id = "bk_" + Date.now();
+    booking.status = "pending";
+    booking.createdAt = new Date().toISOString();
+    return this._bookingSave(booking);
+  },
   async updateBookingStatus(id, status) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === id);
-    if (b) b.status = status;
-    tiSave("ti_bookings", all);
+    if (b) { b.status = status; await this._bookingSave(b); }
     if (status === "confirmed") {
       if (b && !b.dossierStatus) await this.requestDocuments(id, TI_DEFAULT_SCREENING_DOCS);
       await this.maybeSendWelcome(id);
@@ -650,10 +668,9 @@ const TiDB = {
     return b;
   },
   async updateBooking(id, patch) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === id);
-    if (b) Object.assign(b, patch);
-    tiSave("ti_bookings", all);
+    if (b) { Object.assign(b, patch); await this._bookingSave(b); }
     return b;
   },
 
@@ -677,33 +694,33 @@ const TiDB = {
     return b;
   },
   async sendContract(bookingId, fileName, fileData) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b) return null;
     b.contracts = b.contracts || [];
     b.contracts.push({ id: "ctr_" + Date.now(), fileName, fileData: fileData || null, sentAt: new Date().toISOString() });
     try {
-      tiSave("ti_bookings", all);
+      await this._bookingSave(b);
     } catch (err) {
-      // Quota de stockage dépassé — on garde les métadonnées (nom de fichier/date), on jette l'aperçu.
+      // Quota de stockage dépassé (local) ou charge utile trop grande (API) — on garde les métadonnées, on jette l'aperçu.
       b.contracts[b.contracts.length - 1].fileData = null;
-      tiSave("ti_bookings", all);
+      await this._bookingSave(b);
       return { ...b, _storageFallback: true };
     }
     return b;
   },
   async signContract(bookingId, contractId) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || !b.contracts) return null;
     const ctr = b.contracts.find(c => c.id === contractId);
     if (ctr) { ctr.signed = true; ctr.signedAt = new Date().toISOString(); }
-    tiSave("ti_bookings", all);
+    await this._bookingSave(b);
     await this.maybeSendWelcome(bookingId);
     return b;
   },
   async submitDocument(bookingId, docKey, fileName, fileData) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || !b.documentRequests) return null;
     const doc = b.documentRequests.find(d => d.key === docKey);
@@ -712,18 +729,18 @@ const TiDB = {
     if (allSubmitted) b.dossierStatus = "under_review";
     b.dossierUpdatedAt = new Date().toISOString();
     try {
-      tiSave("ti_bookings", all);
+      await this._bookingSave(b);
     } catch (err) {
       // Quota de stockage dépassé (fichier volumineux en base64) — on garde les métadonnées, on jette l'aperçu.
       if (doc) doc.fileData = null;
-      tiSave("ti_bookings", all);
+      await this._bookingSave(b);
       return { ...b, _storageFallback: true };
     }
     return b;
   },
   async reviewDocument(bookingId, docKey, status, note) {
     // status : "approved" | "rejected"
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || !b.documentRequests) return null;
     const doc = b.documentRequests.find(d => d.key === docKey);
@@ -734,14 +751,14 @@ const TiDB = {
     b.dossierUpdatedAt = new Date().toISOString();
     if (status === "rejected") {
       b.dossierDueAt = new Date(Date.now() + 3 * 86400000).toISOString(); // 3 days to resubmit
-      tiSave("ti_bookings", all);
+      await this._bookingSave(b);
       await this.sendMessage({
         propertyId: b.propertyId, propertyTitle: b.propertyTitle, agencyId: b.agencyId,
         userId: b.userId, userName: b.name, from: "agency",
         text: `Un document de votre dossier nécessite une correction${note ? ` : ${note}` : ""}. Merci de le renvoyer avant le ${new Date(b.dossierDueAt).toLocaleDateString("fr-FR")} — rendez-vous dans "Mes réservations".`,
       });
     } else {
-      tiSave("ti_bookings", all);
+      await this._bookingSave(b);
     }
     await this.maybeSendWelcome(bookingId);
     return b;
@@ -752,7 +769,7 @@ const TiDB = {
      charges (eau, électricité, internet...) démarrent désactivées — l'agence
      active celles qui s'appliquent à ce bail et fixe leur montant mensuel. */
   async ensureRentalLedger(bookingId) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || b.rental) return b;
     const start = b.checkin ? new Date(b.checkin) : new Date();
@@ -779,11 +796,11 @@ const TiDB = {
       ],
       schedule,
     };
-    tiSave("ti_bookings", all);
+    await this._bookingSave(b);
     return b;
   },
   async setRentalCharges(bookingId, charges) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || !b.rental) return null;
     b.rental.charges = charges;
@@ -791,30 +808,34 @@ const TiDB = {
     b.rental.schedule.forEach(item => {
       if (item.status !== "paid") item.chargesAmount = chargesTotal;
     });
-    tiSave("ti_bookings", all);
+    await this._bookingSave(b);
     return b;
   },
   async payRentalDeposit(bookingId, method) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || !b.rental) return null;
     b.rental.deposit.status = "paid";
     b.rental.deposit.paidAt = new Date().toISOString();
     b.rental.deposit.method = method;
-    tiSave("ti_bookings", all);
+    await this._bookingSave(b);
     return b;
   },
   async payRentalScheduleItem(bookingId, scheduleId, method) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || !b.rental) return null;
     const item = b.rental.schedule.find(s => s.id === scheduleId);
     if (item) { item.status = "paid"; item.paidAt = new Date().toISOString(); item.method = method; }
-    tiSave("ti_bookings", all);
+    await this._bookingSave(b);
     return b;
   },
 
   async getMessages(filter = {}) {
+    if (TI_BACKEND === "api") {
+      const params = new URLSearchParams(filter).toString();
+      return (await fetch(`${TI_API_BASE}/messages${params ? "?" + params : ""}`)).json();
+    }
     let all = tiLoad("ti_messages", []);
     if (filter.propertyId) all = all.filter(m => m.propertyId === filter.propertyId);
     if (filter.userId) all = all.filter(m => m.userId === filter.userId);
@@ -822,15 +843,18 @@ const TiDB = {
     return all;
   },
   async sendMessage(msg) {
-    const all = tiLoad("ti_messages", []);
     msg.id = "msg_" + Date.now();
     msg.createdAt = new Date().toISOString();
+    if (TI_BACKEND === "api") {
+      return (await fetch(`${TI_API_BASE}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(msg) })).json();
+    }
+    const all = tiLoad("ti_messages", []);
     all.push(msg);
     tiSave("ti_messages", all);
     return msg;
   },
   async maybeSendWelcome(bookingId) {
-    const all = tiLoad("ti_bookings", []);
+    const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || b.welcomed) return;
     if (tiComputeBookingStage(b) !== "active") return;
@@ -862,7 +886,7 @@ const TiDB = {
       content: tiSubstituteVars(d.content, mergeVars), contentEn: tiSubstituteVars(d.contentEn, mergeVars),
       createdAt: new Date().toISOString(),
     }));
-    tiSave("ti_bookings", all);
+    await this._bookingSave(b);
     await this.sendMessage({
       propertyId: b.propertyId, propertyTitle: b.propertyTitle, agencyId: b.agencyId,
       userId: b.userId, userName: b.name, from: "agency",
@@ -874,7 +898,7 @@ const TiDB = {
     let list = tiLoad("ti_announcements", []);
     if (agencyId) list = list.filter(a => a.agencyId === agencyId);
     if (userId) {
-      const bookings = tiLoad("ti_bookings", []).filter(b => b.userId === userId && b.status === "confirmed");
+      const bookings = (await this._bookingsAll({ userId })).filter(b => b.status === "confirmed");
       const myAgencyIds = new Set(bookings.map(b => b.agencyId));
       const myPropertyIds = new Set(bookings.map(b => b.propertyId));
       list = list.filter(a => myAgencyIds.has(a.agencyId) && (!a.propertyId || myPropertyIds.has(a.propertyId)));
@@ -894,19 +918,25 @@ const TiDB = {
   },
 
   async getReviews(propertyId) {
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews?propertyId=${encodeURIComponent(propertyId)}`)).json();
     return tiLoad("ti_reviews", []).filter(r => r.propertyId === propertyId);
   },
   async addReview(review) {
-    const all = tiLoad("ti_reviews", []);
     review.id = "rv_" + Date.now();
     review.createdAt = new Date().toISOString();
     review.approved = true;
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })).json();
+    const all = tiLoad("ti_reviews", []);
     all.unshift(review);
     tiSave("ti_reviews", all);
     return review;
   },
-  async getAllReviews() { return tiLoad("ti_reviews", []); },
+  async getAllReviews() {
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews`)).json();
+    return tiLoad("ti_reviews", []);
+  },
   async moderateReview(id, approved) {
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approved }) })).json();
     const all = tiLoad("ti_reviews", []);
     const r = all.find(r => r.id === id);
     if (r) r.approved = approved;
@@ -935,6 +965,10 @@ const TiDB = {
   },
 
   async getPayments(filter = {}) {
+    if (TI_BACKEND === "api") {
+      const params = new URLSearchParams(filter).toString();
+      return (await fetch(`${TI_API_BASE}/payments${params ? "?" + params : ""}`)).json();
+    }
     let all = tiLoad("ti_payments", []);
     if (filter.userId) all = all.filter(p => p.userId === filter.userId);
     return all;
@@ -993,18 +1027,24 @@ const TiDB = {
     return inv;
   },
   async createPayment(payment) {
-    const all = tiLoad("ti_payments", []);
     payment.id = "pay_" + Date.now();
     payment.createdAt = new Date().toISOString();
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/payments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payment) })).json();
+    const all = tiLoad("ti_payments", []);
     all.unshift(payment);
     tiSave("ti_payments", all);
     return payment;
   },
 
   async getFavorites(userId) {
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/favorites?userId=${encodeURIComponent(userId)}`)).json();
     return tiLoad("ti_favorites", []).filter(f => f.userId === userId);
   },
   async toggleFavorite(userId, propertyId) {
+    if (TI_BACKEND === "api") {
+      const data = await (await fetch(`${TI_API_BASE}/favorites/toggle`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, propertyId }) })).json();
+      return data.favorited;
+    }
     let all = tiLoad("ti_favorites", []);
     const exists = all.find(f => f.userId === userId && f.propertyId === propertyId);
     if (exists) {

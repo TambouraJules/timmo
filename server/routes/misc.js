@@ -46,11 +46,17 @@ router.get("/bookings", async (req, res) => {
   const filter = {};
   if (req.query.userId) filter.userId = req.query.userId;
   if (req.query.agencyId) filter.agencyId = req.query.agencyId;
+  if (req.query.propertyId) filter.propertyId = req.query.propertyId;
   res.json(await Booking.find(filter).sort({ createdAt: -1 }));
 });
-router.post("/bookings", async (req, res) => res.json(await Booking.create(req.body)));
+router.post("/bookings", async (req, res) => {
+  const data = req.body;
+  const saved = await Booking.findOneAndUpdate({ id: data.id }, data, { upsert: true, new: true, setDefaultsOnInsert: true });
+  res.json(saved);
+});
 router.patch("/bookings/:id", async (req, res) => {
-  res.json(await Booking.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }));
+  const saved = await Booking.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  res.json(saved);
 });
 
 /* ---------- Messages ---------- */
@@ -71,7 +77,8 @@ router.get("/reviews", async (req, res) => {
 });
 router.post("/reviews", async (req, res) => res.json(await Review.create(req.body)));
 router.patch("/reviews/:id", async (req, res) => {
-  res.json(await Review.findByIdAndUpdate(req.params.id, { approved: req.body.approved }, { new: true }));
+  const saved = await Review.findOneAndUpdate({ id: req.params.id }, { approved: req.body.approved }, { new: true });
+  res.json(saved);
 });
 
 /* ---------- Payments ---------- */

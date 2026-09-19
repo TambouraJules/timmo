@@ -49,6 +49,7 @@ const AgencySchema = new Schema({
 }, { timestamps: true, strict: false });
 
 const BookingSchema = new Schema({
+  id: { type: String, unique: true },
   propertyId: String,
   propertyTitle: String,
   agencyId: String,
@@ -61,9 +62,10 @@ const BookingSchema = new Schema({
   message: String,
   price: Number,
   status: { type: String, default: "pending" },
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const MessageSchema = new Schema({
+  id: { type: String, unique: true },
   propertyId: String,
   propertyTitle: String,
   agencyId: String,
@@ -71,25 +73,27 @@ const MessageSchema = new Schema({
   userName: String,
   from: String, // "client" | "agency"
   text: String,
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const ReviewSchema = new Schema({
+  id: { type: String, unique: true },
   propertyId: String,
   userId: String,
   userName: String,
   rating: Number,
   comment: String,
   approved: { type: Boolean, default: true },
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const PaymentSchema = new Schema({
+  id: { type: String, unique: true },
   propertyId: String,
   propertyTitle: String,
   userId: String,
   amount: Number,
   method: String,
   status: String,
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const FavoriteSchema = new Schema({
   userId: String,
