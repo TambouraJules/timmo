@@ -129,6 +129,29 @@ async function tiLogin(email, password, expectedRole) {
   if (lockedFor > 0) {
     return { ok: false, error: "locked_out", lockedFor };
   }
+  if (TI_BACKEND === "api") {
+    try {
+      const res = await fetch(`${TI_API_BASE}/auth/login`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        if (body.error === "account_frozen" || body.error === "suspended") return { ok: false, error: body.error };
+        tiRegisterFailedLogin(email);
+        return { ok: false, error: "invalid" };
+      }
+      const data = await res.json();
+      const user = data.user;
+      if (expectedRole && user.role !== expectedRole) return { ok: false, error: "wrong_role" };
+      tiClearLoginAttempts(email);
+      localStorage.setItem("ti_api_token", data.token);
+      tiSetSession({ id: user.id, name: user.name, email: user.email, role: user.role, agencyId: user.agencyId || null, agentRole: user.agentRole || null });
+      return { ok: true, user };
+    } catch (err) {
+      return { ok: false, error: "invalid" };
+    }
+  }
   const user = await TiDB.findUserByEmail(email);
   if (!user || !(await tiVerifyUserPassword(user, password))) {
     tiRegisterFailedLogin(email);
@@ -153,6 +176,20 @@ async function tiLogin(email, password, expectedRole) {
 }
 
 async function tiRegisterClient({ name, email, password }) {
+  if (TI_BACKEND === "api") {
+    const res = await fetch(`${TI_API_BASE}/auth/register`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role: "client" }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { ok: false, error: body.error || "exists" };
+    }
+    const data = await res.json();
+    localStorage.setItem("ti_api_token", data.token);
+    tiSetSession({ id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role });
+    return { ok: true, user: data.user };
+  }
   const existing = await TiDB.findUserByEmail(email);
   if (existing) return { ok: false, error: "exists" };
   const user = { id: "u_" + Date.now(), role: "client", name, email };
@@ -163,6 +200,20 @@ async function tiRegisterClient({ name, email, password }) {
 }
 
 async function tiRegisterAgency({ name, agencyName, email, password }) {
+  if (TI_BACKEND === "api") {
+    const res = await fetch(`${TI_API_BASE}/auth/register`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role: "agency", agencyName }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { ok: false, error: body.error || "exists" };
+    }
+    const data = await res.json();
+    localStorage.setItem("ti_api_token", data.token);
+    tiSetSession({ id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role, agencyId: data.user.agencyId, agentRole: data.user.agentRole });
+    return { ok: true, user: data.user };
+  }
   const existing = await TiDB.findUserByEmail(email);
   if (existing) return { ok: false, error: "exists" };
   const agencyId = "ag_" + Date.now();

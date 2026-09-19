@@ -28,11 +28,25 @@ const PropertySchema = new Schema({
 
 const UserSchema = new Schema({
   role: { type: String, enum: ["client", "agency", "admin"] },
+  agentRole: String, // "supervisor" | "agent" — agency accounts only
   name: String,
   email: { type: String, unique: true },
   passwordHash: String,
   agencyId: String,
+  status: { type: String, default: "active" }, // "active" | "suspended"
 }, { timestamps: true });
+
+// strict:false — the agency object carries many evolving fields (welcome
+// kit, sub-site settings, logo, subscription info...); rather than
+// re-declaring each one here and risking silently dropping a field the
+// frontend actually sends, let Mongoose persist whatever it's given.
+const AgencySchema = new Schema({
+  id: { type: String, unique: true },
+  name: String,
+  email: String,
+  phone: String,
+  status: { type: String, default: "active" },
+}, { timestamps: true, strict: false });
 
 const BookingSchema = new Schema({
   propertyId: String,
@@ -85,6 +99,7 @@ const FavoriteSchema = new Schema({
 module.exports = {
   Property: mongoose.model("Property", PropertySchema),
   User: mongoose.model("User", UserSchema),
+  Agency: mongoose.model("Agency", AgencySchema),
   Booking: mongoose.model("Booking", BookingSchema),
   Message: mongoose.model("Message", MessageSchema),
   Review: mongoose.model("Review", ReviewSchema),
