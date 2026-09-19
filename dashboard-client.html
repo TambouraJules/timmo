@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Espace client</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="ti-header"></header>
+
+<div class="ti-dash">
+  <aside class="ti-dash-side">
+    <h3 id="dash-name"></h3>
+    <div class="ti-dash-role" data-i18n="role_client"></div>
+    <nav class="ti-dash-nav">
+      <a data-panel="overview" class="active" onclick="tiShowPanel('overview')" data-i18n="dash_overview"></a>
+      <a data-panel="bookings" onclick="tiShowPanel('bookings')" data-i18n="dash_bookings"></a>
+      <a data-panel="favorites" onclick="tiShowPanel('favorites')" data-i18n="dash_favorites"></a>
+      <a data-panel="messages" onclick="tiShowPanel('messages')" data-i18n="dash_client_announcements"></a>
+      <a data-panel="documents" onclick="tiShowPanel('documents')" data-i18n="dash_documents"></a>
+      <a data-panel="payments" id="nav-client-payments" onclick="tiShowPanel('payments')" data-i18n="dash_payments"></a>
+      <a data-panel="profile" onclick="tiShowPanel('profile')" data-i18n="dash_profile"></a>
+    </nav>
+  </aside>
+
+  <main class="ti-dash-main">
+    <div class="ti-dash-head">
+      <h2 data-i18n="dash_client_title"></h2>
+    </div>
+
+    <section class="ti-dash-panel active" id="panel-overview">
+      <h3 id="overview-greeting" style="margin:0 0 20px;"></h3>
+      <div id="client-overview-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-bookings">
+      <div id="bookings-filters"></div>
+      <div id="bookings-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-favorites">
+      <div id="favorites-filters"></div>
+      <div class="ti-grid" id="favorites-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-messages">
+      <h3 style="margin:0 0 4px;" data-i18n="announcements_section_title"></h3>
+      <p style="color:var(--ink-soft);font-size:.88rem;margin:0 0 16px;" data-i18n="announcements_section_sub"></p>
+      <div id="announcements-mount" style="margin-bottom:32px;"></div>
+      <h3 style="margin:0 0 16px;padding-top:20px;border-top:1px solid var(--line);" data-i18n="messages_section_title"></h3>
+      <div id="messages-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-documents">
+      <div id="documents-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-payments">
+      <div id="payments-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-profile">
+      <div class="ti-sticky-card" style="max-width:420px;">
+        <div class="field"><label data-i18n="full_name"></label><input type="text" id="profile-name" disabled></div>
+        <div class="field"><label data-i18n="email"></label><input type="email" id="profile-email" disabled></div>
+        <p style="font-size:.82rem;color:var(--ink-soft);">Démo — modification de profil désactivée dans cette maquette.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Rent/deposit payment modal -->
+<div class="ti-modal-backdrop" id="modal-pay-schedule">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-pay-schedule')">&times;</button>
+    <h3 data-i18n="pay_title"></h3>
+    <form onsubmit="return tiSubmitSchedulePayment(event)">
+      <div class="field">
+        <label data-i18n="pay_amount"></label>
+        <div style="font-family:var(--font-display);font-size:1.4rem;color:var(--deep);" id="schedule-pay-amount"></div>
+      </div>
+      <label data-i18n="pay_method"></label>
+      <div class="ti-pay-methods">
+        <label><input type="radio" name="spm" value="wave" checked><br><span>Wave</span></label>
+        <label><input type="radio" name="spm" value="om"><br><span>Orange Money</span></label>
+        <label><input type="radio" name="spm" value="card"><br><span>Carte bancaire</span></label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="pay_submit"></button>
+    </form>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-view-text-doc">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-view-text-doc')">&times;</button>
+    <h3 id="view-text-doc-title"></h3>
+    <p id="view-text-doc-body" style="color:var(--ink-soft);line-height:1.6;white-space:pre-line;"></p>
+  </div>
+</div>
+
+<div id="ti-footer"></div>
+
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script src="js/dashboard-client.js"></script>
+</body>
+</html>

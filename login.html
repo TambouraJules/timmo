@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Connexion</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="ti-header"></header>
+
+<div class="ti-auth-wrap">
+  <div class="ti-auth-card">
+    <h2 data-i18n="login_title"></h2>
+    <p style="color:var(--ink-soft);" data-i18n="login_sub"></p>
+
+    <div class="ti-role-tabs" id="role-tabs">
+      <button data-role="client" class="active" data-i18n="role_client"></button>
+      <button data-role="agency" data-i18n="role_agency"></button>
+      <button data-role="admin" data-i18n="role_admin"></button>
+    </div>
+
+    <div id="login-error"></div>
+    <form id="form-login" onsubmit="return tiHandleLogin(event)">
+      <div class="field"><label data-i18n="email"></label><input type="email" id="login-email" required></div>
+      <div class="field"><label data-i18n="password"></label><input type="password" id="login-password" required></div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="login_btn"></button>
+    </form>
+
+    <div class="ti-demo-box" id="demo-box"></div>
+
+    <p style="margin-top:18px;text-align:center;font-size:.9rem;">
+      <span data-i18n="no_account"></span>
+      <a href="register.html" style="color:var(--clay);font-weight:700;" data-i18n="nav_register"></a>
+    </p>
+  </div>
+</div>
+
+<div id="ti-footer"></div>
+
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script>
+  tiRenderHeader();
+  tiRenderFooter();
+
+  let TI_LOGIN_ROLE = new URLSearchParams(window.location.search).get('role') || 'client';
+  const demoCreds = {
+    client: 'client@demo.sn',
+    agency: 'agence@demo.sn',
+    admin: 'admin@demo.sn'
+  };
+
+  function tiSetLoginRoleUI() {
+    document.querySelectorAll('#role-tabs button').forEach(b => b.classList.toggle('active', b.dataset.role === TI_LOGIN_ROLE));
+    document.getElementById('demo-box').innerHTML =
+      `<span data-i18n="login_demo">${t('login_demo')}</span> : <code>${demoCreds[TI_LOGIN_ROLE]}</code> / <code>demo1234</code>`;
+  }
+  document.querySelectorAll('#role-tabs button').forEach(b => {
+    b.addEventListener('click', () => { TI_LOGIN_ROLE = b.dataset.role; tiSetLoginRoleUI(); });
+  });
+  tiSetLoginRoleUI();
+  document.addEventListener('ti:langchange', tiSetLoginRoleUI);
+
+  async function tiHandleLogin(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    tiSetBtnLoading(btn, true);
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    await new Promise(r => setTimeout(r, 350));
+    const res = await tiLogin(email, password, TI_LOGIN_ROLE);
+    const errBox = document.getElementById('login-error');
+    if (!res.ok) {
+      tiSetBtnLoading(btn, false);
+      const errMsg = res.error === 'wrong_role' ? 'Ce compte n\'a pas ce rôle. / This account does not have that role.'
+        : res.error === 'suspended' ? 'Ce compte agence a été suspendu par l\'administrateur. / This agency account has been suspended by the administrator.'
+        : res.error === 'account_frozen' ? 'Ce compte a été gelé. Contactez votre agence ou l\'administrateur. / This account has been frozen. Contact your agency or the administrator.'
+        : res.error === 'locked_out' ? `Trop de tentatives. Réessayez dans ${res.lockedFor}s. / Too many attempts. Try again in ${res.lockedFor}s.`
+        : 'Identifiants invalides. / Invalid credentials.';
+      errBox.innerHTML = `<div class="ti-error">${errMsg}</div>`;
+      return false;
+    }
+    window.location.href = `dashboard-${res.user.role}.html`;
+    return false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
+
+const PropertySchema = new Schema({
+  id: { type: String, unique: true },
+  type: String, // apartment | house | office
+  forSale: Boolean,
+  shortStay: Boolean,
+  title: String,
+  titleEn: String,
+  neighborhood: String,
+  price: Number,
+  bedrooms: Number,
+  bathrooms: Number,
+  area: Number,
+  agencyId: String,
+  furnished: Boolean,
+  rating: { type: Number, default: 0 },
+  reviews: { type: Number, default: 0 },
+  desc: String,
+  descEn: String,
+  photos: [String],
+  cover: String,
+  tourPanels: [String],
+  lat: Number,
+  lng: Number,
+}, { timestamps: true });
+
+const UserSchema = new Schema({
+  role: { type: String, enum: ["client", "agency", "admin"] },
+  name: String,
+  email: { type: String, unique: true },
+  passwordHash: String,
+  agencyId: String,
+}, { timestamps: true });
+
+const BookingSchema = new Schema({
+  propertyId: String,
+  propertyTitle: String,
+  agencyId: String,
+  userId: String,
+  checkin: String,
+  checkout: String,
+  name: String,
+  phone: String,
+  email: String,
+  message: String,
+  price: Number,
+  status: { type: String, default: "pending" },
+}, { timestamps: true });
+
+const MessageSchema = new Schema({
+  propertyId: String,
+  propertyTitle: String,
+  agencyId: String,
+  userId: String,
+  userName: String,
+  from: String, // "client" | "agency"
+  text: String,
+}, { timestamps: true });
+
+const ReviewSchema = new Schema({
+  propertyId: String,
+  userId: String,
+  userName: String,
+  rating: Number,
+  comment: String,
+  approved: { type: Boolean, default: true },
+}, { timestamps: true });
+
+const PaymentSchema = new Schema({
+  propertyId: String,
+  propertyTitle: String,
+  userId: String,
+  amount: Number,
+  method: String,
+  status: String,
+}, { timestamps: true });
+
+const FavoriteSchema = new Schema({
+  userId: String,
+  propertyId: String,
+});
+
+module.exports = {
+  Property: mongoose.model("Property", PropertySchema),
+  User: mongoose.model("User", UserSchema),
+  Booking: mongoose.model("Booking", BookingSchema),
+  Message: mongoose.model("Message", MessageSchema),
+  Review: mongoose.model("Review", ReviewSchema),
+  Payment: mongoose.model("Payment", PaymentSchema),
+  Favorite: mongoose.model("Favorite", FavoriteSchema),
+};

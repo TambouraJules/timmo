@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Détail du bien</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+<header id="ti-header"></header>
+
+<section class="section-tight">
+  <div class="container" id="ti-property-root">
+    <p style="color:var(--ink-soft)">Chargement…</p>
+  </div>
+</section>
+
+<div id="ti-footer"></div>
+
+<!-- Booking modal -->
+<div class="ti-modal-backdrop" id="modal-book">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-book')">&times;</button>
+    <h3 data-i18n="book_title"></h3>
+    <form id="form-book" onsubmit="return tiSubmitBooking(event)">
+      <div id="bk-date-fields"></div>
+      <div class="field"><label data-i18n="book_name"></label><input type="text" id="bk-name" required></div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="book_phone"></label><input type="tel" id="bk-phone" required></div>
+        <div class="field"><label data-i18n="book_email"></label><input type="email" id="bk-email" required></div>
+      </div>
+      <div class="field"><label data-i18n="book_message"></label><textarea id="bk-message"></textarea></div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="book_submit"></button>
+    </form>
+  </div>
+</div>
+
+<!-- Message modal -->
+<div class="ti-modal-backdrop" id="modal-message">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-message')">&times;</button>
+    <h3 data-i18n="agency_contact_title"></h3>
+    <form onsubmit="return tiSubmitMessage(event)">
+      <div class="field"><textarea id="msg-text" data-i18n-placeholder="message_placeholder" required></textarea></div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="send_message"></button>
+    </form>
+  </div>
+</div>
+
+<!-- Payment modal -->
+<div class="ti-modal-backdrop" id="modal-pay">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-pay')">&times;</button>
+    <h3 data-i18n="pay_title"></h3>
+    <form onsubmit="return tiSubmitPayment(event)">
+      <div class="field">
+        <label data-i18n="pay_amount"></label>
+        <div style="font-family:var(--font-display);font-size:1.4rem;color:var(--deep);" id="pay-amount-display"></div>
+      </div>
+      <label data-i18n="pay_method"></label>
+      <div class="ti-pay-methods">
+        <label><input type="radio" name="pm" value="wave" checked><br><span>Wave</span></label>
+        <label><input type="radio" name="pm" value="om"><br><span>Orange Money</span></label>
+        <label><input type="radio" name="pm" value="card"><br><span>Carte bancaire</span></label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="pay_submit"></button>
+    </form>
+  </div>
+</div>
+
+<!-- Review modal -->
+<div class="ti-modal-backdrop" id="modal-review">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-review')">&times;</button>
+    <h3 data-i18n="write_review"></h3>
+    <form onsubmit="return tiSubmitReview(event)">
+      <div class="field">
+        <label data-i18n="your_rating"></label>
+        <div class="ti-star-input" id="review-star-input">
+          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="review_tags_label"></label>
+        <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 10px;" data-i18n="review_tags_hint"></p>
+        <div class="ti-amenity-picker" id="review-tags-picker"></div>
+      </div>
+      <div class="field"><label data-i18n="your_comment_optional"></label><textarea id="review-comment"></textarea></div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="submit_review"></button>
+    </form>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="ti-modal-backdrop" id="modal-lightbox" onclick="if(event.target===this) tiCloseModal('modal-lightbox')">
+  <button class="ti-lightbox-nav ti-lightbox-prev" onclick="event.stopPropagation();tiLightboxStep(-1)" aria-label="Précédent">&#8249;</button>
+  <div class="ti-lightbox-stage">
+    <img id="lightbox-img" src="" alt="">
+    <div class="ti-lightbox-counter" id="lightbox-counter"></div>
+  </div>
+  <button class="ti-lightbox-nav ti-lightbox-next" onclick="event.stopPropagation();tiLightboxStep(1)" aria-label="Suivant">&#8250;</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script src="js/property.js"></script>
+</body>
+</html>

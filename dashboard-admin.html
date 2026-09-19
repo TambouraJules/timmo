@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Administration</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="ti-header"></header>
+<div id="ti-print-root"></div>
+
+<div class="ti-dash">
+  <aside class="ti-dash-side">
+    <h3 id="dash-name"></h3>
+    <div class="ti-dash-role" data-i18n="role_admin"></div>
+    <nav class="ti-dash-nav">
+      <a data-panel="overview" class="active" onclick="tiShowPanel('overview')" data-i18n="dash_admin_overview"></a>
+      <a data-panel="users" onclick="tiShowPanel('users')" data-i18n="dash_admin_users"></a>
+      <a data-panel="agencies" onclick="tiShowPanel('agencies')" data-i18n="dash_admin_agencies"></a>
+      <a data-panel="listings" onclick="tiShowPanel('listings')" data-i18n="dash_admin_listings"></a>
+      <a data-panel="amenities" onclick="tiShowPanel('amenities')" data-i18n="dash_admin_amenities"></a>
+      <a data-panel="payments" onclick="tiShowPanel('payments')" data-i18n="dash_admin_payments"></a>
+      <a data-panel="moderation" onclick="tiShowPanel('moderation')" data-i18n="dash_admin_moderation"></a>
+      <a data-panel="deletions" onclick="tiShowPanel('deletions')" data-i18n="dash_admin_deletions"></a>
+      <a data-panel="audit" onclick="tiShowPanel('audit')" data-i18n="dash_admin_audit"></a>
+      <a data-panel="broadcasts" onclick="tiShowPanel('broadcasts')" data-i18n="dash_admin_broadcasts"></a>
+      <a data-panel="reports" onclick="tiShowPanel('reports')" data-i18n="dash_admin_reports"></a>
+      <a data-panel="favorites" onclick="tiShowPanel('favorites')" data-i18n="dash_favorites"></a>
+    </nav>
+  </aside>
+
+  <main class="ti-dash-main">
+    <div class="ti-dash-head"><h2 data-i18n="dash_admin_title"></h2></div>
+
+    <section class="ti-dash-panel active" id="panel-overview">
+      <div class="ti-stat-grid" id="overview-mount"></div>
+      <div class="ti-charts-row">
+        <div class="ti-chart-card ti-trend-chart-card">
+          <div class="ti-chart-card-head">
+            <h4 id="platform-trend-title"></h4>
+            <div class="ti-period-tabs" id="platform-period-tabs"></div>
+          </div>
+          <div id="platform-trend-chart-mount"></div>
+        </div>
+        <div class="ti-chart-card ti-trend-chart-card">
+          <div class="ti-chart-card-head">
+            <h4 id="agencies-trend-title"></h4>
+            <div class="ti-period-tabs" id="agencies-period-tabs"></div>
+          </div>
+          <div id="agencies-trend-chart-mount"></div>
+        </div>
+        <div id="localities-chart-mount"></div>
+      </div>
+      <div class="ti-charts-grid" id="overview-charts-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-users">
+      <div id="users-filters"></div>
+      <div id="users-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-agencies">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_admin_agencies"></h3>
+        <button class="btn btn-primary btn-sm" onclick="tiOpenAgencyModal()" data-i18n="add_agency"></button>
+      </div>
+      <div id="agencies-filters"></div>
+      <div id="agencies-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-agency-detail">
+      <div id="agency-detail-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-listings">
+      <div id="admin-listings-filters"></div>
+      <div id="admin-listings-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-amenities">
+      <div class="ti-dash-head" style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div>
+          <h3 style="margin:0;" data-i18n="dash_admin_amenities"></h3>
+          <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="amenities_admin_sub"></p>
+        </div>
+        <button class="btn btn-primary" onclick="tiOpenAmenityModal()" data-i18n="amenity_add_action"></button>
+      </div>
+      <div class="ti-admin-filter-bar">
+        <select id="am-type-filter" onchange="tiApplyAmenityFilter()">
+          <option value="" data-i18n="amenity_filter_all_types"></option>
+          <option value="apartment" data-i18n="type_apartment"></option>
+          <option value="house" data-i18n="type_house"></option>
+          <option value="office" data-i18n="type_office"></option>
+          <option value="land" data-i18n="type_land"></option>
+        </select>
+      </div>
+      <div class="ti-amenity-catalog-grid" id="amenity-catalog-mount" style="margin-top:16px;"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-payments">
+      <div id="admin-payments-filters"></div>
+      <div id="admin-payments-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-moderation">
+      <div id="moderation-insight-mount"></div>
+      <div id="moderation-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-deletions">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_admin_deletions"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="deletions_admin_sub"></p>
+      </div>
+      <div id="deletions-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-audit">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_admin_audit"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="audit_admin_sub"></p>
+      </div>
+      <div class="ti-admin-filter-bar">
+        <div class="field" style="margin:0;flex:1 1 180px;">
+          <label data-i18n="filter_by_role"></label>
+          <select id="audit-role-filter" onchange="tiApplyAdminAuditFilter()">
+            <option value="" data-i18n="all_roles"></option>
+            <option value="agency" data-i18n="role_agency"></option>
+            <option value="admin" data-i18n="role_admin_label"></option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;flex:1 1 220px;">
+          <label data-i18n="filter_by_agency"></label>
+          <select id="audit-agency-filter" onchange="tiApplyAdminAuditFilter()">
+            <option value="" data-i18n="all_agencies"></option>
+          </select>
+        </div>
+      </div>
+      <div id="admin-audit-mount" style="margin-top:16px;"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-broadcasts">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_admin_broadcasts"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="broadcasts_sub"></p>
+      </div>
+
+      <form onsubmit="return tiSubmitBroadcast(event)" class="ti-broadcast-form">
+        <input type="hidden" id="bc-edit-id" value="">
+        <div class="field">
+          <label data-i18n="broadcast_template_label"></label>
+          <select id="bc-template" onchange="tiApplyBroadcastTemplate()">
+            <option value="" data-i18n="broadcast_template_blank"></option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="broadcast_title_label"></label>
+          <input type="text" id="bc-title" required maxlength="80">
+        </div>
+        <div class="field">
+          <label data-i18n="broadcast_message_label"></label>
+          <textarea id="bc-message" required rows="3" maxlength="400"></textarea>
+        </div>
+        <div class="field">
+          <label data-i18n="broadcast_audience_label"></label>
+          <select id="bc-audience" onchange="tiToggleBroadcastAgencySelect()">
+            <option value="all" data-i18n="audience_all"></option>
+            <option value="clients" data-i18n="audience_clients"></option>
+            <option value="agencies" data-i18n="audience_agencies"></option>
+            <option value="admins" data-i18n="audience_admins"></option>
+            <option value="agency" data-i18n="audience_one_agency"></option>
+          </select>
+        </div>
+        <div class="field" id="bc-agency-field" style="display:none;">
+          <label data-i18n="broadcast_agency_label"></label>
+          <select id="bc-agency-select"></select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="bc-submit-btn" data-i18n="broadcast_send"></button>
+      </form>
+
+      <h4 class="ti-form-section-title" data-i18n="broadcast_log_title"></h4>
+      <div id="broadcast-log-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-reports">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_admin_reports"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="reports_admin_sub"></p>
+      </div>
+      <div class="ti-report-controls no-print">
+        <div class="field" style="margin:0;">
+          <label data-i18n="report_period_label"></label>
+          <select id="admin-report-period">
+            <option value="week" data-i18n="period_week"></option>
+            <option value="month" selected data-i18n="period_month"></option>
+            <option value="quarter" data-i18n="period_quarter"></option>
+            <option value="year" data-i18n="period_year"></option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="tiGenerateAdminReport()" data-i18n="report_generate"></button>
+        <button class="btn btn-outline" id="admin-report-print-btn" onclick="window.print()" style="display:none;" data-i18n="report_print"></button>
+      </div>
+      <div id="admin-report-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-favorites">
+      <div id="favorites-filters"></div>
+      <div class="ti-grid" id="favorites-mount"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Add / edit agency modal -->
+<div class="ti-modal-backdrop" id="modal-agency">
+  <div class="ti-modal ti-modal-wide">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-agency')">&times;</button>
+    <h3 id="agency-modal-title" data-i18n="add_agency"></h3>
+    <form onsubmit="return tiSubmitAgencyForm(event)">
+      <input type="hidden" id="ag-edit-id" value="">
+
+      <h4 class="ti-form-section-title" data-i18n="agency_info_section"></h4>
+      <div class="field"><label data-i18n="agency_name"></label><input type="text" id="ag-name" required></div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="email"></label><input type="email" id="ag-email" required></div>
+        <div class="field"><label data-i18n="phone_label"></label><input type="tel" id="ag-phone" placeholder="+221 7X XXX XX XX"></div>
+      </div>
+      <div class="field"><label data-i18n="agency_address"></label><input type="text" id="ag-address" placeholder="Rue, quartier, ville"></div>
+      <label class="ti-amenity-option" style="margin-bottom:20px;">
+        <input type="checkbox" id="ag-verified"> <span>✓</span> <span data-i18n="verified_label">Vérifiée</span>
+      </label>
+
+      <h4 class="ti-form-section-title" data-i18n="agency_tier_section"></h4>
+      <p class="ti-form-section-sub" data-i18n="agency_tier_sub"></p>
+      <div class="ti-tier-picker" id="ag-tier-picker"></div>
+
+      <h4 class="ti-form-section-title" data-i18n="agency_limits_section"></h4>
+      <div class="field-row">
+        <div class="field"><label data-i18n="max_agents_label"></label><input type="number" id="ag-max-agents" min="1" required></div>
+        <div class="field"><label data-i18n="max_listings_label"></label><input type="number" id="ag-max-listings" min="1" required></div>
+      </div>
+
+      <div id="ag-supervisor-new-section">
+        <h4 class="ti-form-section-title" data-i18n="agency_responsible_section"></h4>
+        <p class="ti-form-section-sub" data-i18n="agency_responsible_sub"></p>
+        <div class="field"><label data-i18n="responsible_name"></label><input type="text" id="ag-resp-name"></div>
+        <div class="field-row">
+          <div class="field"><label data-i18n="responsible_email"></label><input type="email" id="ag-resp-email"></div>
+          <div class="field"><label data-i18n="responsible_phone"></label><input type="tel" id="ag-resp-phone" placeholder="+221 7X XXX XX XX"></div>
+        </div>
+        <div class="field"><label data-i18n="responsible_password"></label><input type="password" id="ag-resp-password" minlength="4"></div>
+      </div>
+      <div id="ag-supervisor-existing-section" style="display:none;"></div>
+
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="save_changes">Enregistrer</button>
+    </form>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-temp-password">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-temp-password')">&times;</button>
+    <h3 data-i18n="new_temp_password_title"></h3>
+    <p class="ti-form-section-sub" id="temp-password-user-note"></p>
+    <div class="field">
+      <label data-i18n="temp_password_label"></label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="temp-password-value" readonly style="font-family:ui-monospace,monospace;font-weight:700;letter-spacing:.03em;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="tiCopyTempPassword()" data-i18n="copy_label"></button>
+      </div>
+    </div>
+    <p style="color:var(--ink-soft);font-size:.8rem;" data-i18n="temp_password_hint"></p>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-debug-account">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-debug-account')">&times;</button>
+    <h3 data-i18n="debug_account"></h3>
+    <div id="debug-info-mount" class="ti-debug-list"></div>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-invoice-history">
+  <div class="ti-modal ti-modal-wide">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-invoice-history')">&times;</button>
+    <h3 id="invoice-history-title" data-i18n="invoice_history_title"></h3>
+    <div id="invoice-history-mount"></div>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-property-sheet">
+  <div class="ti-modal ti-modal-wide">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-property-sheet')">&times;</button>
+    <div class="ti-property-sheet-actions">
+      <button class="btn btn-primary" onclick="window.print()" data-i18n="report_print"></button>
+    </div>
+    <div id="property-sheet-mount"></div>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-amenity">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-amenity')">&times;</button>
+    <h3 id="amenity-modal-title" data-i18n="amenity_add_action"></h3>
+    <form onsubmit="return tiSubmitAmenity(event)">
+      <input type="hidden" id="am-edit-id" value="">
+      <div class="field">
+        <label data-i18n="amenity_icon_label"></label>
+        <div class="ti-icon-picker" id="am-icon-picker"></div>
+        <input type="hidden" id="am-icon-value" required>
+      </div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="amenity_label_fr"></label><input type="text" id="am-label-fr" required></div>
+        <div class="field"><label data-i18n="amenity_label_en"></label><input type="text" id="am-label-en" required></div>
+      </div>
+      <div class="field">
+        <label data-i18n="amenity_types_label"></label>
+        <div class="ti-amenity-type-checks">
+          <label><input type="checkbox" value="apartment" checked> <span data-i18n="type_apartment"></span></label>
+          <label><input type="checkbox" value="house" checked> <span data-i18n="type_house"></span></label>
+          <label><input type="checkbox" value="office"> <span data-i18n="type_office"></span></label>
+          <label><input type="checkbox" value="land"> <span data-i18n="type_land"></span></label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" data-i18n="save_changes"></button>
+    </form>
+  </div>
+</div>
+
+<div id="ti-footer"></div>
+
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script src="js/dashboard-admin.js"></script>
+</body>
+</html>

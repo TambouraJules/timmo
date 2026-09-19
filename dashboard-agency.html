@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Espace agence</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+<header id="ti-header"></header>
+<div id="ti-impersonation-banner"></div>
+<div id="ti-print-root"></div>
+
+<div class="ti-dash">
+  <aside class="ti-dash-side">
+    <h3 id="dash-name"></h3>
+    <div class="ti-dash-role" data-i18n="role_agency"></div>
+    <nav class="ti-dash-nav">
+      <a data-panel="stats" class="active" onclick="tiShowPanel('stats')" data-i18n="dash_agency_stats"></a>
+      <a data-panel="listings" onclick="tiShowPanel('listings')" data-i18n="dash_agency_listings"></a>
+      <a data-panel="new" onclick="tiShowPanel('new')" data-i18n="dash_agency_new"></a>
+      <a data-panel="bookings" onclick="tiShowPanel('bookings')" data-i18n="dash_agency_bookings"></a>
+      <a data-panel="clients" onclick="tiShowPanel('clients')" data-i18n="dash_agency_clients"></a>
+      <a data-panel="announcements" onclick="tiShowPanel('announcements')" data-i18n="dash_announcements"></a>
+      <a data-panel="welcomekit" onclick="tiShowPanel('welcomekit')" data-i18n="dash_welcomekit"></a>
+      <a data-panel="messages" onclick="tiShowPanel('messages')" data-i18n="dash_messages"></a>
+      <a data-panel="reviews" onclick="tiShowPanel('reviews')" data-i18n="dash_agency_reviews"></a>
+      <a data-panel="agents" id="nav-agents" onclick="tiShowPanel('agents')" data-i18n="dash_agency_agents" style="display:none;"></a>
+      <a data-panel="audit" id="nav-audit" onclick="tiShowPanel('audit')" data-i18n="dash_agency_audit" style="display:none;"></a>
+      <a data-panel="reports" onclick="tiShowPanel('reports')" data-i18n="dash_agency_reports"></a>
+      <a data-panel="favorites" onclick="tiShowPanel('favorites')" data-i18n="dash_favorites"></a>
+    </nav>
+  </aside>
+
+  <main class="ti-dash-main">
+    <div class="ti-dash-head"><h2 data-i18n="dash_agency_title"></h2></div>
+
+    <section class="ti-dash-panel active" id="panel-stats">
+      <div class="ti-stat-grid" id="stats-mount"></div>
+      <div class="ti-charts-row">
+        <div class="ti-chart-card ti-trend-chart-card">
+          <div class="ti-chart-card-head">
+            <h4 id="views-trend-title"></h4>
+            <div class="ti-period-tabs" id="views-period-tabs"></div>
+          </div>
+          <div id="views-trend-chart-mount"></div>
+        </div>
+        <div class="ti-chart-card ti-trend-chart-card">
+          <div class="ti-chart-card-head">
+            <h4 id="properties-trend-title"></h4>
+            <div class="ti-period-tabs" id="properties-period-tabs"></div>
+          </div>
+          <div id="properties-trend-chart-mount"></div>
+        </div>
+        <div id="properties-locality-chart-mount"></div>
+      </div>
+      <div class="ti-charts-grid" id="charts-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-listings">
+      <div id="agency-listings-filters"></div>
+      <div id="listings-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-new">
+      <h3 id="new-listing-form-title" style="margin-bottom:14px;" data-i18n="dash_agency_new"></h3>
+      <div class="ti-wizard-progress" id="nl-wizard-progress"></div>
+
+      <div class="ti-wizard-layout">
+        <form id="form-new-listing" onsubmit="return tiSubmitNewListing(event)" class="ti-wizard-form">
+          <input type="hidden" id="nl-edit-id" value="">
+
+          <div class="ti-wizard-step" data-step="1">
+            <h4 data-i18n="wizard_step1_title"></h4>
+            <div class="field"><label data-i18n="field_title"></label><input type="text" id="nl-title" required oninput="tiUpdateListingPreview()"></div>
+            <div class="field-row">
+              <div class="field"><label data-i18n="field_type"></label>
+                <select id="nl-type" onchange="tiRenderAmenityPicker();tiUpdateListingPreview()">
+                  <option value="apartment" data-i18n="type_apartment"></option>
+                  <option value="house" data-i18n="type_house"></option>
+                  <option value="office" data-i18n="type_office"></option>
+                  <option value="land" data-i18n="type_land"></option>
+                </select>
+              </div>
+              <div class="field"><label>Type</label>
+                <select id="nl-listing-kind" onchange="tiToggleAvailabilityFields();tiUpdateListingPreview()">
+                  <option value="rent" data-i18n="nav_rent"></option>
+                  <option value="sale" data-i18n="nav_buy"></option>
+                  <option value="short" data-i18n="tab_short"></option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label data-i18n="field_price"></label><input type="number" id="nl-price" required oninput="tiUpdateListingPreview()"></div>
+              <div class="field"><label data-i18n="field_area"></label><input type="number" id="nl-area" required oninput="tiUpdateListingPreview()"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label data-i18n="field_bedrooms"></label><input type="number" id="nl-beds" value="1" oninput="tiUpdateListingPreview()"></div>
+              <div class="field"><label data-i18n="field_bathrooms"></label><input type="number" id="nl-baths" value="1" oninput="tiUpdateListingPreview()"></div>
+            </div>
+          </div>
+
+          <div class="ti-wizard-step" data-step="2" style="display:none;">
+            <h4 data-i18n="wizard_step2_title"></h4>
+            <div class="field-row">
+              <div class="field"><label data-i18n="field_region"></label>
+                <select id="nl-region" onchange="tiOnRegionChange()"></select>
+              </div>
+              <div class="field"><label data-i18n="field_department"></label>
+                <select id="nl-department" onchange="tiOnDepartmentChange()"></select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label data-i18n="field_commune"></label>
+                <select id="nl-commune" onchange="tiOnCommuneChange()"></select>
+              </div>
+              <div class="field"><label data-i18n="field_neighborhood"></label>
+                <select id="nl-hood" onchange="tiOnHoodChange()"></select>
+              </div>
+            </div>
+            <div class="field">
+              <label data-i18n="field_map_pin"></label>
+              <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 8px;" data-i18n="map_pin_hint"></p>
+              <div id="nl-location-map" style="height:260px;border-radius:var(--radius-m);overflow:hidden;border:1px solid var(--line);"></div>
+            </div>
+          </div>
+
+          <div class="ti-wizard-step" data-step="3" style="display:none;">
+            <h4 data-i18n="wizard_step3_title"></h4>
+            <div class="field">
+              <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <span data-i18n="field_desc"></span>
+                <button type="button" class="btn btn-outline btn-sm" id="nl-generate-desc-btn" onclick="tiGenerateListingDescription()" data-i18n="generate_desc_action"></button>
+              </label>
+              <textarea id="nl-desc" required oninput="tiUpdateListingPreview()"></textarea>
+            </div>
+            <div class="field">
+              <label data-i18n="field_amenities"></label>
+              <div class="ti-amenity-picker" id="nl-amenity-picker"></div>
+            </div>
+            <div class="field">
+              <label class="ti-furnished-toggle">
+                <input type="checkbox" id="nl-furnished" onchange="tiUpdateListingPreview()">
+                <span data-i18n="field_furnished"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="ti-wizard-step" data-step="4" style="display:none;">
+            <h4 data-i18n="wizard_step4_title"></h4>
+            <div class="field">
+              <label data-i18n="field_photos"></label>
+              <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 10px;" id="nl-photos-count-hint"></p>
+              <div class="ti-photo-dropzone" id="nl-photo-dropzone" onclick="document.getElementById('nl-photo-file-input').click()"
+                   ondragover="event.preventDefault();this.classList.add('dragover');" ondragleave="this.classList.remove('dragover');"
+                   ondrop="event.preventDefault();this.classList.remove('dragover');tiHandlePhotoFiles(event.dataTransfer.files);">
+                <input type="file" id="nl-photo-file-input" accept="image/*" multiple style="display:none;" onchange="tiHandlePhotoFiles(this.files);this.value='';">
+                <span class="ti-photo-dropzone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-1.5h7l1 1.5H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+                <div class="ti-photo-dropzone-text" data-i18n="photo_dropzone_text"></div>
+                <div class="ti-photo-dropzone-sub" data-i18n="photo_dropzone_sub"></div>
+              </div>
+              <div class="ti-photo-grid" id="nl-photo-preview"></div>
+              <input type="file" id="nl-photo-replace-input" accept="image/*" style="display:none;" onchange="tiReplacePhotoFile(this)">
+              <div class="ti-photo-url-add">
+                <input type="text" id="nl-photo-url-input" placeholder="https://...">
+                <button type="button" class="btn btn-outline btn-sm" onclick="tiAddPhotoFromUrl()" data-i18n="photo_add_url_action"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ti-wizard-step" data-step="5" style="display:none;">
+            <h4 data-i18n="wizard_step5_title"></h4>
+            <div class="field" id="nl-available-wrap" style="display:none;">
+              <label data-i18n="availability_from"></label>
+              <input type="date" id="nl-available-from">
+            </div>
+            <div class="field" id="nl-blocked-wrap" style="display:none;">
+              <label data-i18n="manage_availability"></label>
+              <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 8px;" data-i18n="block_dates_hint"></p>
+              <div id="nl-blocked-calendar"></div>
+            </div>
+            <div class="field" id="nl-assign-wrap" style="display:none;">
+              <label data-i18n="assign_to"></label>
+              <select id="nl-assign-agent"><option value="" data-i18n="unassigned"></option></select>
+            </div>
+          </div>
+
+          <div class="ti-wizard-nav">
+            <button type="button" class="btn btn-outline" id="nl-wizard-prev" onclick="tiWizardPrev()" style="display:none;" data-i18n="wizard_previous"></button>
+            <button type="button" class="btn btn-primary" id="nl-wizard-next" onclick="tiWizardNext()" data-i18n="wizard_next"></button>
+            <button type="submit" class="btn btn-primary" id="nl-submit-btn" style="display:none;" data-i18n="publish"></button>
+            <button type="button" class="btn btn-outline" id="nl-cancel-edit" onclick="tiCancelEditListing()" style="display:none;" data-i18n="cancel"></button>
+          </div>
+        </form>
+
+        <div class="ti-wizard-preview">
+          <div class="ti-wizard-preview-label" data-i18n="wizard_preview_label"></div>
+          <div id="nl-preview-mount"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-bookings">
+      <div id="agency-bookings-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-clients">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_agency_clients"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="clients_pipeline_sub"></p>
+      </div>
+      <div class="ti-pipeline-tabs" id="clients-pipeline-tabs"></div>
+      <div id="clients-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-announcements">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_announcements"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="announcements_agency_sub"></p>
+      </div>
+      <form onsubmit="return tiSubmitAnnouncement(event)" class="ti-announcement-form">
+        <div class="field">
+          <label data-i18n="announcement_title_label"></label>
+          <input type="text" id="an-title" required maxlength="80" oninput="tiSyncAnnouncementPreview()">
+        </div>
+        <div class="field">
+          <label data-i18n="announcement_target_label"></label>
+          <select id="an-target" onchange="tiSyncAnnouncementPreview()"></select>
+        </div>
+        <div class="field">
+          <label data-i18n="announcement_text_label"></label>
+          <div id="an-text-editor-mount"></div>
+        </div>
+        <div class="field">
+          <label data-i18n="announcement_preview_label"></label>
+          <div id="an-live-preview"></div>
+        </div>
+        <button type="submit" class="btn btn-primary" data-i18n="announcement_publish"></button>
+      </form>
+      <h4 style="margin:28px 0 12px;" data-i18n="announcement_history_title"></h4>
+      <div id="announcements-agency-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-welcomekit">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_welcomekit"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="welcomekit_sub"></p>
+      </div>
+      <div id="welcomekit-mount"></div>
+      <button type="button" class="btn btn-outline" style="margin-top:16px;" onclick="tiOpenWelcomeKitModal()" data-i18n="welcomekit_add"></button>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-messages">
+      <div id="agency-messages-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-reviews">
+      <div id="agency-reviews-insight-mount"></div>
+      <div id="agency-reviews-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-agents">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_agency_agents"></h3>
+      </div>
+      <form id="form-new-agent" onsubmit="return tiSubmitNewAgent(event)" class="ti-admin-filter-bar" style="align-items:flex-end;">
+        <div class="field" style="margin:0;flex:1 1 160px;"><label data-i18n="full_name"></label><input type="text" id="ag-agent-name" required></div>
+        <div class="field" style="margin:0;flex:1 1 200px;"><label data-i18n="email"></label><input type="email" id="ag-agent-email" required></div>
+        <div class="field" style="margin:0;flex:1 1 160px;"><label data-i18n="password"></label><input type="text" id="ag-agent-password" required minlength="6" placeholder="demo1234"></div>
+        <button type="submit" class="btn btn-primary" data-i18n="add_agent"></button>
+      </form>
+      <div id="agents-mount" style="margin-top:20px;"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-audit">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_agency_audit"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="audit_agency_sub"></p>
+      </div>
+      <div class="ti-admin-filter-bar">
+        <div class="field" style="margin:0;flex:1 1 220px;">
+          <label data-i18n="filter_by_agent"></label>
+          <select id="audit-actor-filter" onchange="tiApplyAuditFilter()">
+            <option value="" data-i18n="all_agents"></option>
+          </select>
+        </div>
+      </div>
+      <div id="audit-mount" style="margin-top:16px;"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-reports">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_agency_reports"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="reports_sub"></p>
+      </div>
+      <div class="ti-report-controls no-print">
+        <div class="field" style="margin:0;">
+          <label data-i18n="report_period_label"></label>
+          <select id="report-period">
+            <option value="week" data-i18n="period_week"></option>
+            <option value="month" selected data-i18n="period_month"></option>
+            <option value="quarter" data-i18n="period_quarter"></option>
+            <option value="year" data-i18n="period_year"></option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="tiGenerateAgencyReport()" data-i18n="report_generate"></button>
+        <button class="btn btn-outline" id="report-print-btn" onclick="window.print()" style="display:none;" data-i18n="report_print"></button>
+      </div>
+      <div id="agency-report-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-favorites">
+      <div id="favorites-filters"></div>
+      <div class="ti-grid" id="favorites-mount"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Request documents modal -->
+<div class="ti-modal-backdrop" id="modal-doc-request">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-doc-request')">&times;</button>
+    <h3 data-i18n="request_documents"></h3>
+    <p style="color:var(--ink-soft);font-size:.88rem;margin-top:-8px;" data-i18n="request_documents_sub"></p>
+    <form onsubmit="return tiSubmitDocRequest(event)">
+      <div class="ti-amenity-picker" id="doc-request-checklist" style="margin-bottom:16px;"></div>
+      <div class="field">
+        <label data-i18n="other_document_label"></label>
+        <input type="text" id="doc-request-custom" placeholder="Ex. Quittance de loyer précédente">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="send_request"></button>
+    </form>
+  </div>
+</div>
+
+<!-- Manage rental charges modal -->
+<div class="ti-modal-backdrop" id="modal-charges">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-charges')">&times;</button>
+    <h3 data-i18n="manage_charges"></h3>
+    <p style="color:var(--ink-soft);font-size:.88rem;margin-top:-8px;" data-i18n="manage_charges_sub"></p>
+    <form onsubmit="return tiSubmitCharges(event)">
+      <div id="charges-checklist" style="margin-bottom:18px;"></div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="save_changes"></button>
+    </form>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-property-sheet">
+  <div class="ti-modal ti-modal-wide">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-property-sheet')">&times;</button>
+    <div class="ti-property-sheet-actions">
+      <button class="btn btn-primary" onclick="window.print()" data-i18n="report_print"></button>
+    </div>
+    <div id="property-sheet-mount"></div>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-welcomekit-item">
+  <div class="ti-modal ti-modal-wide">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-welcomekit-item')">&times;</button>
+    <h3 data-i18n="welcomekit_modal_title"></h3>
+    <form onsubmit="return tiSubmitWelcomeKitItem(event)">
+      <input type="hidden" id="wk-id">
+      <div class="field">
+        <label data-i18n="welcomekit_doc_title"></label>
+        <input type="text" id="wk-title" required maxlength="60">
+      </div>
+      <div class="field">
+        <label data-i18n="welcomekit_doc_content"></label>
+        <div id="wk-content-editor-mount"></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="save_changes"></button>
+    </form>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-agent-detail">
+  <div class="ti-modal ti-modal-wide">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-agent-detail')">&times;</button>
+    <div id="agent-detail-mount"></div>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-deletion-request">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-deletion-request')">&times;</button>
+    <h3 id="deletion-request-title"></h3>
+    <p style="color:var(--ink-soft);font-size:.88rem;margin-top:-8px;" id="deletion-request-sub"></p>
+    <p style="color:var(--ink-soft);font-size:.82rem;background:var(--paper);padding:10px 12px;border-radius:var(--radius-s);" data-i18n="deletion_request_notice"></p>
+    <form onsubmit="return tiSubmitDeletionRequest(event)">
+      <div class="field">
+        <label data-i18n="deletion_reason_label"></label>
+        <textarea id="deletion-reason" required maxlength="300"></textarea>
+      </div>
+      <button type="submit" class="btn btn-danger btn-block" data-i18n="deletion_request_submit"></button>
+    </form>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-temp-password">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-temp-password')">&times;</button>
+    <h3 data-i18n="new_temp_password_title"></h3>
+    <p class="ti-form-section-sub" id="temp-password-user-note"></p>
+    <div class="field">
+      <label data-i18n="temp_password_label"></label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="temp-password-value" readonly style="font-family:ui-monospace,monospace;font-weight:700;letter-spacing:.03em;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="tiCopyTempPassword()" data-i18n="copy_label"></button>
+      </div>
+    </div>
+    <p style="color:var(--ink-soft);font-size:.8rem;" data-i18n="temp_password_hint"></p>
+  </div>
+</div>
+
+<div id="ti-footer"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script src="js/dashboard-agency.js"></script>
+</body>
+</html>

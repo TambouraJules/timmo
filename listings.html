@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Toutes les annonces</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+<header id="ti-header"></header>
+
+<section class="section-tight">
+  <div class="container">
+    <button class="ti-filters-toggle" id="ti-filters-toggle" onclick="tiToggleMobileFilters()">
+      <span id="ti-filters-toggle-icon"></span> <span data-i18n="filter_price">Filtres</span>
+      <span class="ti-filters-toggle-count" id="ti-filters-toggle-count" style="display:none;">0</span>
+    </button>
+
+    <div class="ti-filters-scrim" id="ti-filters-scrim" onclick="tiToggleMobileFilters(false)"></div>
+
+    <div class="ti-listings-layout">
+      <aside class="ti-filters" id="ti-filters-panel">
+        <div class="ti-filters-head">
+          <h3 style="margin:0;font-family:var(--font-body);font-size:1rem;font-weight:800;">Filtres</h3>
+          <button class="ti-filters-reset-link" id="ti-filters-reset-link" onclick="tiResetFilters()" style="display:none;" data-i18n="filter_reset"></button>
+        </div>
+
+        <div class="ti-filter-section">
+          <h4 data-i18n="filter_price"></h4>
+          <div class="field-row">
+            <div class="field" style="margin-bottom:0;"><input type="number" id="f-min-price" placeholder="Min" inputmode="numeric"></div>
+            <div class="field" style="margin-bottom:0;"><input type="number" id="f-max-price" placeholder="Max" inputmode="numeric"></div>
+          </div>
+        </div>
+
+        <div class="ti-filter-section">
+          <h4 data-i18n="field_type"></h4>
+          <div class="ti-chip-group" id="f-type-chips">
+            <span class="ti-chip" data-val="apartment" data-i18n="type_apartment"></span>
+            <span class="ti-chip" data-val="house" data-i18n="type_house"></span>
+            <span class="ti-chip" data-val="office" data-i18n="type_office"></span>
+            <span class="ti-chip" data-val="land" data-i18n="type_land"></span>
+          </div>
+        </div>
+
+        <div class="ti-filter-section">
+          <h4 data-i18n="filter_bedrooms"></h4>
+          <div class="ti-chip-group" id="f-bed-chips">
+            <span class="ti-chip" data-val="1">1+</span>
+            <span class="ti-chip" data-val="2">2+</span>
+            <span class="ti-chip" data-val="3">3+</span>
+            <span class="ti-chip" data-val="4">4+</span>
+          </div>
+        </div>
+
+        <div class="ti-filter-section">
+          <h4 data-i18n="filter_neighborhood"></h4>
+          <select id="f-hood">
+            <option value="">—</option>
+          </select>
+        </div>
+
+        <button class="btn btn-dark btn-block ti-filters-mobile-cta" onclick="tiToggleMobileFilters(false)">
+          <span data-i18n="see_all">Voir les résultats</span> <span id="ti-filters-mobile-count"></span>
+        </button>
+      </aside>
+
+      <div>
+        <div class="ti-results-bar">
+          <div>
+            <h2 style="margin-bottom:4px;" data-i18n="listings_title"></h2>
+            <span id="ti-results-count" style="color:var(--ink-soft);font-size:.9rem;"></span>
+          </div>
+          <select id="f-sort" onchange="tiRenderListings()" style="max-width:220px;">
+            <option value="recent" data-i18n="sort_recent"></option>
+            <option value="price_asc" data-i18n="sort_price_asc"></option>
+            <option value="price_desc" data-i18n="sort_price_desc"></option>
+            <option value="rating" data-i18n="sort_rating"></option>
+          </select>
+          <button class="btn btn-outline btn-sm ti-map-toggle-btn" id="ti-map-toggle" onclick="tiToggleMapView()">
+            <span id="ti-map-toggle-icon"></span> <span id="ti-map-toggle-label" data-i18n="view_map"></span>
+          </button>
+        </div>
+        <div class="ti-active-chips" id="ti-active-chips"></div>
+        <div class="ti-listings-split" id="ti-listings-split">
+          <div class="ti-listings-scroll-wrap">
+            <div class="ti-listings-sticky-count" id="ti-listings-sticky-count"></div>
+            <div class="ti-grid ti-reveal-stagger in-view" id="ti-listings-mount"></div>
+          </div>
+          <div class="ti-listings-map" id="ti-listings-map">
+            <div id="ti-search-map"></div>
+            <div class="ti-map-bounds-note" id="ti-map-bounds-note"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="ti-footer"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script>
+  tiRenderHeader();
+  tiRenderFooter();
+  document.getElementById('ti-filters-toggle-icon').innerHTML = TI_ICONS.home;
+
+  let TI_ALL_PROPS = [];
+  let TI_FAVS = [];
+  let TI_DATA_READY = false;
+  let TI_SUBSITE_AGENCY = null;
+  const TI_FILTER = { type: null, beds: null, hood: '', minPrice: null, maxPrice: null };
+  let tiPriceDebounce = null;
+
+  /* ---------- Interactive map search ---------- */
+  let TI_MAP_VIEW_ACTIVE = false;
+  let TI_SEARCH_MAP = null;
+  let TI_MAP_MARKERS = {};
+  let TI_MAP_LAST_FILTERED_LIST = [];
+  let TI_MAP_SUPPRESS_MOVEEND = false;
+
+  function tiCreateMarkerIcon(highlighted) {
+    return L.divIcon({
+      className: '', html: `<div class="ti-map-pin${highlighted ? ' highlighted' : ''}"></div>`,
+      iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -24],
+    });
+  }
+
+  function tiToggleMapView() {
+    TI_MAP_VIEW_ACTIVE = !TI_MAP_VIEW_ACTIVE;
+    document.getElementById('ti-listings-split').classList.toggle('map-active', TI_MAP_VIEW_ACTIVE);
+    document.getElementById('ti-map-toggle-label').textContent = TI_MAP_VIEW_ACTIVE ? t('view_list') : t('view_map');
+    document.getElementById('ti-map-toggle-icon').innerHTML = TI_MAP_VIEW_ACTIVE ? TI_ICONS.grid : TI_ICONS.pin;
+    if (TI_MAP_VIEW_ACTIVE) {
+      requestAnimationFrame(() => {
+        tiInitSearchMap();
+        if (TI_SEARCH_MAP) tiRenderMapMarkers(TI_MAP_LAST_FILTERED_LIST, true);
+      });
+    }
+  }
+
+  function tiInitSearchMap() {
+    if (TI_SEARCH_MAP) { setTimeout(() => TI_SEARCH_MAP.invalidateSize(), 50); return; }
+    const container = document.getElementById('ti-search-map');
+    if (typeof L === 'undefined') {
+      container.innerHTML = `<div class="ti-map-fallback">Carte indisponible — vérifiez votre connexion internet.<br><small>Map unavailable — check your internet connection.</small></div>`;
+      return;
+    }
+    TI_SEARCH_MAP = L.map(container).setView([14.7167, -17.4677], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(TI_SEARCH_MAP);
+    TI_SEARCH_MAP.on('moveend', () => { if (!TI_MAP_SUPPRESS_MOVEEND) tiUpdateListFromMapBounds(); });
+    setTimeout(() => TI_SEARCH_MAP.invalidateSize(), 100);
+  }
+
+  function tiRenderMapMarkers(list, fitBounds) {
+    if (!TI_SEARCH_MAP) return;
+    TI_MAP_LAST_FILTERED_LIST = list;
+    Object.values(TI_MAP_MARKERS).forEach(m => TI_SEARCH_MAP.removeLayer(m));
+    TI_MAP_MARKERS = {};
+    const withCoords = list.filter(p => p.lat != null && p.lng != null);
+    withCoords.forEach(p => {
+      const marker = L.marker([p.lat, p.lng], { icon: tiCreateMarkerIcon(false) })
+        .addTo(TI_SEARCH_MAP)
+        .bindPopup(`
+          <a class="ti-map-popup" href="property.html?id=${p.id}">
+            <img src="${p.cover}" alt="">
+            <span class="ti-map-popup-body"><strong>${tiPropertyTitle(p)}</strong><span>${tiFormatPrice(p.price)}</span></span>
+          </a>`);
+      marker.on('mouseover', () => tiHighlightCard(p.id, true));
+      marker.on('mouseout', () => tiHighlightCard(p.id, false));
+      TI_MAP_MARKERS[p.id] = marker;
+    });
+    if (fitBounds && withCoords.length) {
+      TI_MAP_SUPPRESS_MOVEEND = true;
+      TI_SEARCH_MAP.fitBounds(L.latLngBounds(withCoords.map(p => [p.lat, p.lng])).pad(0.25));
+      setTimeout(() => { TI_MAP_SUPPRESS_MOVEEND = false; }, 300);
+    }
+    tiUpdateListFromMapBounds();
+  }
+
+  function tiUpdateListFromMapBounds() {
+    if (!TI_SEARCH_MAP) return;
+    const bounds = TI_SEARCH_MAP.getBounds();
+    const visible = TI_MAP_LAST_FILTERED_LIST.filter(p => p.lat != null && p.lng != null && bounds.contains([p.lat, p.lng]));
+    document.getElementById('ti-listings-mount').innerHTML = visible.length
+      ? visible.map(p => tiPropertyCardHtml(p, TI_FAVS)).join('')
+      : `<p style="color:var(--ink-soft)">${t('empty_listings')}</p>`;
+    document.getElementById('ti-map-bounds-note').textContent = `${visible.length} ${t('visible_on_map')}`;
+    document.getElementById('ti-listings-sticky-count').textContent = `${visible.length} ${t('listings_results')}`;
+    tiWireCardMapHover();
+    tiObserveReveals();
+  }
+
+  function tiHighlightCard(propId, on) {
+    const card = document.querySelector(`#ti-listings-mount [data-prop-id="${propId}"]`);
+    if (card) card.classList.toggle('map-highlight', on);
+  }
+  function tiHighlightMarker(propId, on) {
+    const marker = TI_MAP_MARKERS[propId];
+    if (!marker) return;
+    marker.setIcon(tiCreateMarkerIcon(on));
+    marker.setZIndexOffset(on ? 1000 : 0);
+  }
+  function tiWireCardMapHover() {
+    document.querySelectorAll('#ti-listings-mount [data-prop-id]').forEach(card => {
+      const id = card.dataset.propId;
+      card.addEventListener('mouseenter', () => tiHighlightMarker(id, true));
+      card.addEventListener('mouseleave', () => tiHighlightMarker(id, false));
+    });
+  }
+
+  function tiPopulateHoodSelect() {
+    const sel = document.getElementById('f-hood');
+    TI_NEIGHBORHOODS.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n.id; opt.textContent = n.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function tiChipToggle(groupId, key) {
+    document.querySelectorAll(`#${groupId} .ti-chip`).forEach(chip => {
+      chip.addEventListener('click', () => {
+        const alreadyActive = chip.classList.contains('active');
+        document.querySelectorAll(`#${groupId} .ti-chip`).forEach(c => c.classList.remove('active'));
+        if (!alreadyActive) {
+          chip.classList.add('active');
+          TI_FILTER[key] = chip.dataset.val;
+        } else {
+          TI_FILTER[key] = null;
+        }
+        tiRenderListings();
+      });
+    });
+  }
+
+  function tiResetFilters() {
+    TI_FILTER.type = null; TI_FILTER.beds = null; TI_FILTER.hood = ''; TI_FILTER.minPrice = null; TI_FILTER.maxPrice = null;
+    document.querySelectorAll('.ti-chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('f-hood').value = '';
+    document.getElementById('f-min-price').value = '';
+    document.getElementById('f-max-price').value = '';
+    const params = new URLSearchParams(window.location.search);
+    ['tab', 'q', 'type', 'budget', 'hood'].forEach(k => params.delete(k));
+    history.replaceState(null, '', 'listings.html');
+    tiRenderListings();
+  }
+
+  function tiRemoveFilter(key) {
+    if (key === 'type' || key === 'beds') {
+      TI_FILTER[key] = null;
+      document.querySelectorAll(`#f-${key === 'type' ? 'type' : 'bed'}-chips .ti-chip`).forEach(c => c.classList.remove('active'));
+    } else if (key === 'hood') {
+      TI_FILTER.hood = ''; document.getElementById('f-hood').value = '';
+    } else if (key === 'price') {
+      TI_FILTER.minPrice = null; TI_FILTER.maxPrice = null;
+      document.getElementById('f-min-price').value = ''; document.getElementById('f-max-price').value = '';
+    }
+    tiRenderListings();
+  }
+
+  function tiActiveFilterCount() {
+    let n = 0;
+    if (TI_FILTER.type) n++;
+    if (TI_FILTER.beds) n++;
+    if (TI_FILTER.hood) n++;
+    if (TI_FILTER.minPrice != null || TI_FILTER.maxPrice != null) n++;
+    return n;
+  }
+
+  function tiRenderActiveChips(resultCount) {
+    const pills = [];
+    if (TI_FILTER.type) pills.push({ key: 'type', label: tiTypeLabel(TI_FILTER.type) });
+    if (TI_FILTER.beds) pills.push({ key: 'beds', label: `${TI_FILTER.beds}+ ${t('bedrooms')}` });
+    if (TI_FILTER.hood) pills.push({ key: 'hood', label: tiNeighborhoodName(TI_FILTER.hood) });
+    if (TI_FILTER.minPrice != null || TI_FILTER.maxPrice != null) {
+      const min = TI_FILTER.minPrice != null ? tiFormatPrice(TI_FILTER.minPrice) : '';
+      const max = TI_FILTER.maxPrice != null ? tiFormatPrice(TI_FILTER.maxPrice) : '';
+      pills.push({ key: 'price', label: min && max ? `${min} – ${max}` : (min ? `≥ ${min}` : `≤ ${max}`) });
+    }
+    document.getElementById('ti-active-chips').innerHTML = pills.map(p => `
+      <button class="ti-active-chip" onclick="tiRemoveFilter('${p.key}')">${p.label} <span>&times;</span></button>
+    `).join('');
+
+    const count = tiActiveFilterCount();
+    const badge = document.getElementById('ti-filters-toggle-count');
+    badge.textContent = count;
+    badge.style.display = count ? 'inline-flex' : 'none';
+    document.getElementById('ti-filters-reset-link').style.display = count ? 'inline-flex' : 'none';
+    document.getElementById('ti-filters-mobile-count').textContent = `(${resultCount})`;
+  }
+
+  function tiToggleMobileFilters(force) {
+    const panel = document.getElementById('ti-filters-panel');
+    const scrim = document.getElementById('ti-filters-scrim');
+    const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+    panel.classList.toggle('open', open);
+    scrim.classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  function tiRenderListings() {
+    if (!TI_DATA_READY) return;
+    let list = [...TI_ALL_PROPS];
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'buy') list = list.filter(p => p.forSale);
+    if (tab === 'rent') list = list.filter(p => !p.forSale);
+    if (tab === 'short') list = list.filter(p => p.shortStay);
+
+    const qType = params.get('type');
+    if (qType) TI_FILTER.type = qType;
+    TI_FILTER.hood = document.getElementById('f-hood').value;
+    const q = params.get('q');
+    const budget = params.get('budget');
+
+    if (TI_FILTER.type) list = list.filter(p => p.type === TI_FILTER.type);
+    if (TI_FILTER.beds) list = list.filter(p => p.bedrooms >= parseInt(TI_FILTER.beds));
+    if (TI_FILTER.hood) list = list.filter(p => p.neighborhood === TI_FILTER.hood);
+    if (q) list = list.filter(p => tiNeighborhoodName(p.neighborhood).toLowerCase().includes(q.toLowerCase()) || tiPropertyTitle(p).toLowerCase().includes(q.toLowerCase()) || (p.reference || '').toLowerCase().includes(q.toLowerCase()));
+    if (budget) list = list.filter(p => p.price <= parseFloat(budget));
+
+    const minVal = document.getElementById('f-min-price').value;
+    const maxVal = document.getElementById('f-max-price').value;
+    TI_FILTER.minPrice = minVal !== '' ? parseFloat(minVal) : null;
+    TI_FILTER.maxPrice = maxVal !== '' ? parseFloat(maxVal) : null;
+    if (TI_FILTER.minPrice != null) list = list.filter(p => p.price >= TI_FILTER.minPrice);
+    if (TI_FILTER.maxPrice != null) list = list.filter(p => p.price <= TI_FILTER.maxPrice);
+
+    const sort = document.getElementById('f-sort').value;
+    if (sort === 'price_asc') list.sort((a, b) => a.price - b.price);
+    if (sort === 'price_desc') list.sort((a, b) => b.price - a.price);
+    if (sort === 'rating') list.sort((a, b) => b.rating - a.rating);
+
+    document.getElementById('ti-results-count').textContent = `${list.length} ${t('listings_results')}`;
+    document.getElementById('ti-listings-sticky-count').textContent = `${list.length} ${t('listings_results')}`;
+    TI_MAP_LAST_FILTERED_LIST = list;
+    document.getElementById('ti-listings-mount').innerHTML = list.length
+      ? list.map(p => tiPropertyCardHtml(p, TI_FAVS)).join('')
+      : `<p style="color:var(--ink-soft)">${t('empty_listings')}</p>`;
+    if (TI_MAP_VIEW_ACTIVE && TI_SEARCH_MAP) {
+      tiRenderMapMarkers(list, true);
+    }
+    tiRenderActiveChips(list.length);
+    tiObserveReveals();
+  }
+
+  ['f-min-price', 'f-max-price'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      clearTimeout(tiPriceDebounce);
+      tiPriceDebounce = setTimeout(tiRenderListings, 450);
+    });
+  });
+  document.getElementById('f-hood').addEventListener('change', tiRenderListings);
+
+  async function tiListingsInit() {
+    document.getElementById("ti-listings-mount").innerHTML = tiSkeletonCardsHtml(6);
+    tiPopulateHoodSelect();
+    tiChipToggle('f-type-chips', 'type');
+    tiChipToggle('f-bed-chips', 'beds');
+
+    const params = new URLSearchParams(window.location.search);
+    const agencySlug = params.get('agency');
+    if (agencySlug) {
+      TI_SUBSITE_AGENCY = await TiDB.getAgencyBySlug(agencySlug);
+      if (!TI_SUBSITE_AGENCY) {
+        document.getElementById("ti-listings-mount").innerHTML = tiEmptyStateHtml(t('subsite_not_found_text'), t('see_all'), 'index.html', 'home');
+        const filtersEl = document.querySelector('.ti-filters');
+        if (filtersEl) filtersEl.style.display = 'none';
+        return;
+      }
+      tiRenderHeader(null, { name: TI_SUBSITE_AGENCY.name, logoDataUrl: TI_SUBSITE_AGENCY.logoDataUrl, slug: TI_SUBSITE_AGENCY.subsiteSlug });
+      tiRenderFooter(TI_SUBSITE_AGENCY);
+    }
+
+    await new Promise(r => setTimeout(r, 400));
+    TI_ALL_PROPS = (await TiDB.getProperties()).filter(tiIsPubliclyVisible);
+    if (TI_SUBSITE_AGENCY) TI_ALL_PROPS = TI_ALL_PROPS.filter(p => p.agencyId === TI_SUBSITE_AGENCY.id);
+    const s = tiGetSession();
+    TI_FAVS = s ? (await TiDB.getFavorites(s.id)).map(f => f.propertyId) : [];
+
+    if (params.get('type')) {
+      TI_FILTER.type = params.get('type');
+      document.querySelectorAll('#f-type-chips .ti-chip').forEach(c => c.classList.toggle('active', c.dataset.val === TI_FILTER.type));
+    }
+    if (params.get('hood')) document.getElementById('f-hood').value = params.get('hood');
+
+    TI_DATA_READY = true;
+    tiRenderListings();
+  }
+  document.addEventListener('ti:langchange', tiRenderListings);
+  tiListingsInit();
+</script>
+</body>
+</html>

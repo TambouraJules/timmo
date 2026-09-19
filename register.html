@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Inscription</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="ti-header"></header>
+
+<div class="ti-auth-wrap">
+  <div class="ti-auth-card">
+    <h2 data-i18n="register_title"></h2>
+
+    <div class="ti-role-tabs" id="reg-role-tabs">
+      <button data-role="client" class="active" data-i18n="role_client"></button>
+      <button data-role="agency" data-i18n="role_agency"></button>
+    </div>
+
+    <div id="register-error"></div>
+    <form id="form-register" onsubmit="return tiHandleRegister(event)">
+      <div class="field"><label data-i18n="full_name"></label><input type="text" id="reg-name" required></div>
+      <div class="field" id="reg-agency-field" style="display:none;"><label data-i18n="agency_name"></label><input type="text" id="reg-agency-name"></div>
+      <div class="field"><label data-i18n="email"></label><input type="email" id="reg-email" required></div>
+      <div class="field"><label data-i18n="password"></label><input type="password" id="reg-password" required minlength="6"></div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="register_btn"></button>
+    </form>
+
+    <p style="margin-top:18px;text-align:center;font-size:.9rem;">
+      <span data-i18n="have_account"></span>
+      <a href="login.html" style="color:var(--clay);font-weight:700;" data-i18n="nav_login"></a>
+    </p>
+  </div>
+</div>
+
+<div id="ti-footer"></div>
+
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script>
+  tiRenderHeader();
+  tiRenderFooter();
+
+  let TI_REG_ROLE = 'client';
+  document.querySelectorAll('#reg-role-tabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      TI_REG_ROLE = b.dataset.role;
+      document.querySelectorAll('#reg-role-tabs button').forEach(x => x.classList.toggle('active', x === b));
+      document.getElementById('reg-agency-field').style.display = TI_REG_ROLE === 'agency' ? 'block' : 'none';
+      document.getElementById('reg-agency-name').required = TI_REG_ROLE === 'agency';
+    });
+  });
+
+  async function tiHandleRegister(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    tiSetBtnLoading(btn, true);
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    const errBox = document.getElementById('register-error');
+
+    await new Promise(r => setTimeout(r, 350));
+    let res;
+    if (TI_REG_ROLE === 'agency') {
+      res = await tiRegisterAgency({ name, agencyName: document.getElementById('reg-agency-name').value, email, password });
+    } else {
+      res = await tiRegisterClient({ name, email, password });
+    }
+    if (!res.ok) {
+      tiSetBtnLoading(btn, false);
+      errBox.innerHTML = `<div class="ti-error">Un compte existe déjà avec cet email. / An account already exists with this email.</div>`;
+      return false;
+    }
+    window.location.href = `dashboard-${TI_REG_ROLE}.html`;
+    return false;
+  }
+</script>
+</body>
+</html>

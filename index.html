@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Location et vente immobilière au Sénégal</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header id="ti-header"></header>
+
+<section class="ti-hero">
+  <div class="ti-hero-video-wrap">
+    <video class="ti-hero-video" id="ti-hero-video" autoplay muted loop playsinline
+      poster="https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=60">
+      <source src="https://assets.mixkit.co/videos/2091/2091-720.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="ti-hero-glow"></div>
+  <div class="ti-hero-inner">
+    <div class="ti-eyebrow" data-i18n="hero_eyebrow"></div>
+    <h1 data-i18n="hero_title"></h1>
+    <p class="ti-hero-sub" data-i18n="hero_sub"></p>
+
+    <div class="ti-search-card-wrap">
+      <div class="ti-search-card">
+      <div class="ti-search-tabs">
+        <button class="active" data-tab="rent" onclick="tiSwitchTab('rent',this)" data-i18n="tab_rent"></button>
+        <button data-tab="buy" onclick="tiSwitchTab('buy',this)" data-i18n="tab_buy"></button>
+        <button data-tab="short" onclick="tiSwitchTab('short',this)" data-i18n="tab_short"></button>
+      </div>
+      <form class="ti-search-form" id="ti-home-search" onsubmit="return tiSubmitHomeSearch(event)">
+        <input type="text" id="ti-search-where" data-i18n-placeholder="search_where" placeholder="">
+        <select id="ti-search-type">
+          <option value="">— <span data-i18n="search_type"></span> —</option>
+          <option value="apartment" data-i18n="type_apartment"></option>
+          <option value="house" data-i18n="type_house"></option>
+          <option value="office" data-i18n="type_office"></option>
+          <option value="land" data-i18n="type_land"></option>
+        </select>
+        <input type="number" id="ti-search-budget" data-i18n-placeholder="search_budget" placeholder="">
+        <button type="submit" class="btn btn-primary" data-i18n="search_btn"></button>
+      </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="ti-horizon-top"></div>
+
+<section class="section">
+  <div class="container">
+    <div class="ti-section-head">
+      <div>
+        <h2 data-i18n="cat_title"></h2>
+      </div>
+    </div>
+    <div class="ti-cats ti-reveal-stagger">
+      <a href="listings.html?type=apartment" class="ti-cat-card">
+        <div class="ti-cat-icon"></div>
+        <h3 data-i18n="type_apartment"></h3>
+        <p data-i18n="cat_apartment_d" style="color:var(--ink-soft);"></p>
+      </a>
+      <a href="listings.html?type=house" class="ti-cat-card">
+        <div class="ti-cat-icon"></div>
+        <h3 data-i18n="type_house"></h3>
+        <p data-i18n="cat_house_d" style="color:var(--ink-soft);"></p>
+      </a>
+      <a href="listings.html?type=office" class="ti-cat-card">
+        <div class="ti-cat-icon"></div>
+        <h3 data-i18n="type_office"></h3>
+        <p data-i18n="cat_office_d" style="color:var(--ink-soft);"></p>
+      </a>
+      <a href="listings.html?type=land&tab=buy" class="ti-cat-card">
+        <div class="ti-cat-icon"></div>
+        <h3 data-i18n="type_land"></h3>
+        <p data-i18n="cat_land_d" style="color:var(--ink-soft);"></p>
+      </a>
+    </div>
+    <div class="ti-perks ti-reveal">
+      <span class="ti-perk" data-i18n="perk_no_deposit"></span>
+      <span class="ti-perk" data-i18n="perk_furnished"></span>
+      <span class="ti-perk" data-i18n="perk_verified"></span>
+      <span class="ti-perk" data-i18n="perk_3d"></span>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="ti-section-head"><h2 data-i18n="quartiers_title"></h2></div>
+    <div class="ti-hoods ti-reveal-stagger" id="ti-hoods-mount"></div>
+  </div>
+</section>
+
+<section class="section" style="background:var(--paper-raised);border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <div class="container">
+    <div class="ti-section-head">
+      <div><h2 data-i18n="featured_title"></h2><p data-i18n="featured_sub"></p></div>
+      <a href="listings.html" class="btn btn-outline" data-i18n="see_all"></a>
+    </div>
+    <div class="ti-grid ti-reveal-stagger" id="ti-featured-mount"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="ti-section-head"><h2 data-i18n="how_title"></h2></div>
+    <div class="ti-steps ti-reveal-stagger">
+      <div class="ti-step"><div class="ti-step-num">01</div><h3 data-i18n="how_1_t"></h3><p style="color:var(--ink-soft)" data-i18n="how_1_d"></p></div>
+      <div class="ti-step"><div class="ti-step-num">02</div><h3 data-i18n="how_2_t"></h3><p style="color:var(--ink-soft)" data-i18n="how_2_d"></p></div>
+      <div class="ti-step"><div class="ti-step-num">03</div><h3 data-i18n="how_3_t"></h3><p style="color:var(--ink-soft)" data-i18n="how_3_d"></p></div>
+    </div>
+  </div>
+</section>
+
+<div id="ti-footer"></div>
+
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script>
+  tiRenderHeader('home');
+  tiRenderFooter();
+
+  // inject icons into category cards (kept out of template string above for readability)
+  document.querySelectorAll('.ti-cat-icon')[0].innerHTML = TI_ICONS.home;
+  document.querySelectorAll('.ti-cat-icon')[1].innerHTML = TI_ICONS.home;
+  document.querySelectorAll('.ti-cat-icon')[2].innerHTML = TI_ICONS.office;
+  document.querySelectorAll('.ti-cat-icon')[3].innerHTML = TI_ICONS.land;
+  document.getElementById('ti-horizon-top').innerHTML = tiHorizonSvg();
+
+  const heroVideo = document.getElementById('ti-hero-video');
+  if (heroVideo) {
+    heroVideo.addEventListener('canplay', () => heroVideo.classList.add('loaded'));
+    heroVideo.addEventListener('error', () => heroVideo.closest('.ti-hero-video-wrap')?.remove());
+  }
+
+  function tiSwitchTab(tab, btn) {
+    document.querySelectorAll('.ti-search-tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('ti-home-search').dataset.tab = tab;
+  }
+
+  function tiSubmitHomeSearch(e) {
+    e.preventDefault();
+    const tab = document.getElementById('ti-home-search').dataset.tab || 'rent';
+    const where = document.getElementById('ti-search-where').value;
+    const type = document.getElementById('ti-search-type').value;
+    const budget = document.getElementById('ti-search-budget').value;
+    const params = new URLSearchParams();
+    params.set('tab', tab);
+    if (where) params.set('q', where);
+    if (type) params.set('type', type);
+    if (budget) params.set('budget', budget);
+    window.location.href = 'listings.html?' + params.toString();
+    return false;
+  }
+
+  async function tiHomeInit() {
+    document.getElementById("ti-featured-mount").innerHTML = tiSkeletonCardsHtml(6);
+    await new Promise(r => setTimeout(r, 400));
+    const props = (await TiDB.getProperties()).filter(tiIsPubliclyVisible);
+    const s = tiGetSession();
+    const favs = s ? (await TiDB.getFavorites(s.id)).map(f => f.propertyId) : [];
+
+    // neighborhoods
+    const hoodsMount = document.getElementById('ti-hoods-mount');
+    hoodsMount.innerHTML = TI_NEIGHBORHOODS.slice(0, 4).map(n => `
+      <a href="listings.html?hood=${n.id}" class="ti-hood-card">
+        <img src="${n.img}" alt="${n.name}" loading="lazy">
+        <span class="ti-hood-label">${n.name}</span>
+      </a>`).join('');
+
+    // featured (top rated, 6)
+    const featured = [...props].sort((a, b) => b.rating - a.rating).slice(0, 6);
+    document.getElementById('ti-featured-mount').innerHTML = featured.map(p => tiPropertyCardHtml(p, favs)).join('');
+    tiApplyCurrency();
+    tiObserveReveals();
+  }
+  tiHomeInit();
+</script>
+</body>
+</html>
