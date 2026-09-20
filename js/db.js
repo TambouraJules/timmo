@@ -447,7 +447,7 @@ const TiDB = {
     return (await this.getAgencies()).find(a => a.id === id);
   },
   async getAgencyBySlug(slug) {
-    const all = tiLoad("ti_agencies", TI_AGENCIES);
+    const all = await this.getAgencies();
     return all.find(a => a.subsiteSlug === slug && a.subsiteEnabled) || null;
   },
   async toggleAgencySubsite(agencyId) {
