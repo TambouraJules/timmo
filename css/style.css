@@ -69,11 +69,18 @@ p { margin: 0 0 1em; }
   html { scroll-behavior: auto; }
 }
 
-/* ---------- Universal page-enter (applied to main content wrappers) ---------- */
-#ti-property-root, .ti-listings-layout, .ti-auth-card {
+/* ---------- Universal page-enter (applied to main content wrappers) ----------
+   .ti-auth-card a une simple animation d'entrée slide+fade (aucun enfant en
+   position fixe, donc aucun risque). #ti-property-root (galerie plein écran)
+   et .ti-listings-layout (panneau de filtres mobile) utilisent uniquement un
+   fondu sans transform : un transform, même retombé à translateY(0), reste
+   un contexte d'empilement/bloc de référence pour tout descendant en
+   position:fixed — ce qui décalait ces éléments par rapport à cet ancêtre
+   au lieu de la fenêtre réelle. */
+.ti-auth-card {
   animation: ti-page-in .5s var(--ease) both;
 }
-.ti-dash-main, .ti-dash-side {
+#ti-property-root, .ti-listings-layout, .ti-dash-main, .ti-dash-side {
   animation: ti-fade-in .4s var(--ease) both;
 }
 @keyframes ti-page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
