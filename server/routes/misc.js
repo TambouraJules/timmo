@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { Booking, Message, Review, Payment, Favorite, User, Agency } = require("../models/models");
+const { Booking, Message, Review, Payment, Favorite, User, Agency, Announcement } = require("../models/models");
 
 /* ---------- Auth ---------- */
 router.post("/auth/register", async (req, res) => {
@@ -97,6 +97,18 @@ router.post("/favorites/toggle", async (req, res) => {
   if (existing) { await existing.deleteOne(); return res.json({ favorited: false }); }
   await Favorite.create({ userId, propertyId });
   res.json({ favorited: true });
+});
+
+/* ---------- Announcements ---------- */
+router.get("/announcements", async (req, res) => {
+  const filter = {};
+  if (req.query.agencyId) filter.agencyId = req.query.agencyId;
+  res.json(await Announcement.find(filter).sort({ createdAt: -1 }));
+});
+router.post("/announcements", async (req, res) => res.json(await Announcement.create(req.body)));
+router.delete("/announcements/:id", async (req, res) => {
+  await Announcement.deleteOne({ id: req.params.id });
+  res.json({ ok: true });
 });
 
 module.exports = router;

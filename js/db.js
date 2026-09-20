@@ -460,43 +460,42 @@ const TiDB = {
     return agency;
   },
   async getWelcomeKit(agencyId) {
-    const all = tiLoad("ti_agencies", TI_AGENCIES);
-    const agency = all.find(a => a.id === agencyId);
+    const agency = await this.getAgency(agencyId);
     if (!agency) return [];
-    if (!agency.welcomeKit) { agency.welcomeKit = tiDefaultWelcomeKit(); tiSave("ti_agencies", all); }
+    if (!agency.welcomeKit) {
+      agency.welcomeKit = tiDefaultWelcomeKit();
+      await this.saveAgency({ id: agencyId, welcomeKit: agency.welcomeKit });
+    }
     return agency.welcomeKit;
   },
   async saveWelcomeKitItem(agencyId, item) {
-    const all = tiLoad("ti_agencies", TI_AGENCIES);
-    const agency = all.find(a => a.id === agencyId);
+    const agency = await this.getAgency(agencyId);
     if (!agency) return null;
-    if (!agency.welcomeKit) agency.welcomeKit = tiDefaultWelcomeKit();
+    const welcomeKit = agency.welcomeKit || tiDefaultWelcomeKit();
     if (item.id) {
-      const idx = agency.welcomeKit.findIndex(d => d.id === item.id);
-      if (idx !== -1) agency.welcomeKit[idx] = item;
+      const idx = welcomeKit.findIndex(d => d.id === item.id);
+      if (idx !== -1) welcomeKit[idx] = item;
     } else {
       item.id = "wk_" + Date.now();
       item.enabled = true;
-      agency.welcomeKit.push(item);
+      welcomeKit.push(item);
     }
-    tiSave("ti_agencies", all);
-    return agency.welcomeKit;
+    await this.saveAgency({ id: agencyId, welcomeKit });
+    return welcomeKit;
   },
   async deleteWelcomeKitItem(agencyId, itemId) {
-    const all = tiLoad("ti_agencies", TI_AGENCIES);
-    const agency = all.find(a => a.id === agencyId);
+    const agency = await this.getAgency(agencyId);
     if (!agency || !agency.welcomeKit) return null;
-    agency.welcomeKit = agency.welcomeKit.filter(d => d.id !== itemId);
-    tiSave("ti_agencies", all);
-    return agency.welcomeKit;
+    const welcomeKit = agency.welcomeKit.filter(d => d.id !== itemId);
+    await this.saveAgency({ id: agencyId, welcomeKit });
+    return welcomeKit;
   },
   async toggleWelcomeKitItem(agencyId, itemId) {
-    const all = tiLoad("ti_agencies", TI_AGENCIES);
-    const agency = all.find(a => a.id === agencyId);
+    const agency = await this.getAgency(agencyId);
     if (!agency || !agency.welcomeKit) return null;
     const item = agency.welcomeKit.find(d => d.id === itemId);
     if (item) item.enabled = !item.enabled;
-    tiSave("ti_agencies", all);
+    await this.saveAgency({ id: agencyId, welcomeKit: agency.welcomeKit });
     return agency.welcomeKit;
   },
   async saveAgency(agency) {
@@ -895,8 +894,14 @@ const TiDB = {
   },
 
   async getAnnouncements({ agencyId, userId } = {}) {
-    let list = tiLoad("ti_announcements", []);
-    if (agencyId) list = list.filter(a => a.agencyId === agencyId);
+    let list;
+    if (TI_BACKEND === "api") {
+      const params = agencyId ? `?agencyId=${encodeURIComponent(agencyId)}` : "";
+      list = await (await fetch(`${TI_API_BASE}/announcements${params}`)).json();
+    } else {
+      list = tiLoad("ti_announcements", []);
+      if (agencyId) list = list.filter(a => a.agencyId === agencyId);
+    }
     if (userId) {
       const bookings = (await this._bookingsAll({ userId })).filter(b => b.status === "confirmed");
       const myAgencyIds = new Set(bookings.map(b => b.agencyId));
@@ -906,13 +911,15 @@ const TiDB = {
     return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
   async createAnnouncement({ agencyId, propertyId, title, text }) {
-    const all = tiLoad("ti_announcements", []);
     const announcement = { id: "an_" + Date.now(), agencyId, propertyId: propertyId || null, title, text, createdAt: new Date().toISOString() };
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/announcements`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(announcement) })).json();
+    const all = tiLoad("ti_announcements", []);
     all.push(announcement);
     tiSave("ti_announcements", all);
     return announcement;
   },
   async deleteAnnouncement(id) {
+    if (TI_BACKEND === "api") { await fetch(`${TI_API_BASE}/announcements/${id}`, { method: "DELETE" }); return; }
     const all = tiLoad("ti_announcements", []);
     tiSave("ti_announcements", all.filter(a => a.id !== id));
   },

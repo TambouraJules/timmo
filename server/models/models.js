@@ -95,6 +95,14 @@ const PaymentSchema = new Schema({
   status: String,
 }, { timestamps: true, strict: false });
 
+const AnnouncementSchema = new Schema({
+  id: { type: String, unique: true },
+  agencyId: String,
+  propertyId: String,
+  title: String,
+  text: String,
+}, { timestamps: true, strict: false });
+
 const FavoriteSchema = new Schema({
   userId: String,
   propertyId: String,
@@ -109,4 +117,5 @@ module.exports = {
   Review: mongoose.model("Review", ReviewSchema),
   Payment: mongoose.model("Payment", PaymentSchema),
   Favorite: mongoose.model("Favorite", FavoriteSchema),
+  Announcement: mongoose.model("Announcement", AnnouncementSchema),
 };
