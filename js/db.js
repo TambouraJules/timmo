@@ -30,8 +30,8 @@
      http://localhost:4000/api).
    ============================================================ */
 
-const TI_BACKEND = "local"; // "local" | "firebase" | "api"
-const TI_API_BASE = "http://localhost:4000/api";
+const TI_BACKEND = "api"; // "local" | "firebase" | "api"
+const TI_API_BASE = "https://timmo-api.onrender.com/api";
 
 function tiLoad(key, fallback) {
   try {
