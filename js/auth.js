@@ -6,38 +6,21 @@
 const TI_SESSION_KEY = "ti_session";
 
 /* ---------- Hachage des mots de passe ----------
-   SHA-256 avec un sel aléatoire par utilisateur, via l'API Web Crypto
-   native du navigateur — aucun serveur disponible dans cette démo pour
-   exécuter un vrai hachage de mot de passe.
-   IMPORTANT : c'est une vraie amélioration par rapport au texte en clair,
-   mais ce n'est PAS un substitut à bcrypt/argon2. Ces algorithmes sont
-   volontairement lents et côté serveur, conçus pour résister aux attaques
-   par force brute à grande échelle ; un hachage rapide et généraliste
-   comme SHA-256 ne l'est pas. Un vrai backend doit hacher avec
-   bcrypt/argon2 côté serveur — ceci protège seulement contre une
-   exposition directe/occasionnelle des données de démo, par exemple
-   quelqu'un lisant le localStorage. */
-async function tiHashPassword(password, salt) {
-  const enc = new TextEncoder();
-  const data = enc.encode(salt + ":" + password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-function tiGenerateSalt() {
-  const arr = new Uint8Array(16);
-  crypto.getRandomValues(arr);
-  return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
-}
+   bcrypt (via la bibliothèque bcryptjs, chargée depuis un CDN, la même que
+   celle utilisée côté serveur) — un seul schéma de hachage pour toute
+   l'application, que le compte vive en local (démo) ou dans la vraie base
+   via l'API. bcrypt gère son propre sel en interne (intégré au hash),
+   donc aucun champ passwordSalt séparé n'est nécessaire. */
 /** Modifie l'objet utilisateur donné en place : remplace tout mot de passe
- *  en clair par un hachage salé. L'appelant est responsable de sauvegarder l'utilisateur. */
+ *  en clair par un hachage bcrypt. L'appelant est responsable de sauvegarder l'utilisateur. */
 async function tiSetUserPassword(user, plainPassword) {
-  user.passwordSalt = tiGenerateSalt();
-  user.passwordHash = await tiHashPassword(plainPassword, user.passwordSalt);
+  user.passwordHash = await dcodeIO.bcrypt.hash(plainPassword, 10);
+  delete user.passwordSalt;
   delete user.password;
 }
 /** Vérifie une tentative de connexion par rapport à un enregistrement utilisateur,
  *  en migrant discrètement les comptes en texte clair hérités (ex. données de
- *  démo initiales) vers un hachage salé dès leur première connexion réussie —
+ *  démo initiales) vers un hachage bcrypt dès leur première connexion réussie —
  *  un schéma classique de migration paresseuse, pour n'avoir besoin d'aucun
  *  script de migration ponctuel et ne jamais bloquer un compte à cause de
  *  cette mise à niveau. */
@@ -52,8 +35,8 @@ async function tiVerifyUserPassword(user, plainPassword) {
     }
     return matches;
   }
-  if (!user.passwordHash || !user.passwordSalt) return false;
-  return (await tiHashPassword(plainPassword, user.passwordSalt)) === user.passwordHash;
+  if (!user.passwordHash) return false;
+  return dcodeIO.bcrypt.compare(plainPassword, user.passwordHash);
 }
 
 /* ---------- Limitation du taux de connexion ----------

@@ -52,7 +52,7 @@ function tiSave(key, value) {
    auxquels il manque un champ désormais attendu par l'interface — tout en
    laissant intacts les réservations, messages, avis, paiements et favoris
    propres à l'utilisateur. */
-const TI_SCHEMA_VERSION = "7";
+const TI_SCHEMA_VERSION = "8";
 
 (function tiSeedLocalDb() {
   const seededVersion = localStorage.getItem("ti_seeded");
@@ -99,21 +99,17 @@ const TI_SCHEMA_VERSION = "7";
     });
     tiSave("ti_agencies", [...mergedSeedAgencies, ...adminAddedAgencies]);
 
-    // Rétablit la hiérarchie superviseur/agent sur les installations
-    // existantes : donne le rang « superviseur » à chaque compte agence
-    // préexistant (ils étaient propriétaires d'agence à accès complet
-    // avant l'existence des agents) et ajoute le compte agent de démo pour
-    // que la fonctionnalité soit visible immédiatement.
-    const existingUsers = tiLoad("ti_users", []);
-    let usersChanged = false;
-    existingUsers.forEach(u => {
-      if (u.role === "agency" && !u.agentRole) { u.agentRole = "supervisor"; usersChanged = true; }
-    });
-    if (!existingUsers.some(u => u.email === "agent@demo.sn")) {
-      existingUsers.push({ id: "u_agent1", role: "agency", agentRole: "agent", name: "Moussa Fall", agencyId: "ag001", email: "agent@demo.sn", password: "demo1234" });
-      usersChanged = true;
-    }
-    if (usersChanged) tiSave("ti_users", existingUsers);
+    // Comptes de démo toujours réinitialisés sur les données initiales
+    // actuelles lors d'un changement de version — plus simple et plus sûr
+    // qu'une retouche en place (garantit qu'aucun format de hachage de mot
+    // de passe obsolète ne survit à un changement de schéma comme celui-ci),
+    // et les comptes de démo ne contiennent aucune donnée réelle à préserver.
+    tiSave("ti_users", [
+      { id: "u_client", role: "client", name: "Awa Diop", email: "client@demo.sn", password: "demo1234" },
+      { id: "u_agency", role: "agency", agentRole: "supervisor", name: "Sahel Habitat", agencyId: "ag001", email: "agence@demo.sn", password: "demo1234" },
+      { id: "u_agent1", role: "agency", agentRole: "agent", name: "Moussa Fall", agencyId: "ag001", email: "agent@demo.sn", password: "demo1234" },
+      { id: "u_admin", role: "admin", name: "Admin Timmo", email: "admin@demo.sn", password: "demo1234" },
+    ]);
   }
 
   localStorage.setItem("ti_seeded", TI_SCHEMA_VERSION);
