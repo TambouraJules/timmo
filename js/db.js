@@ -292,27 +292,30 @@ const TiDB = {
     return true;
   },
   async requestAgentDeletion(id, reason, requestedByName) {
-    const users = tiLoad("ti_users", []);
+    const users = await this._usersAll();
     const u = users.find(u => u.id === id);
     if (!u) return null;
     u.deletionStatus = "pending";
     u.deletionReason = reason;
     u.deletionRequestedAt = new Date().toISOString();
     u.deletionRequestedBy = requestedByName;
-    tiSave("ti_users", users);
+    await this._userSave(u);
     return u;
   },
   async cancelAgentDeletion(id) {
-    const users = tiLoad("ti_users", []);
+    const users = await this._usersAll();
     const u = users.find(u => u.id === id);
-    if (u) { delete u.deletionStatus; delete u.deletionReason; delete u.deletionRequestedAt; delete u.deletionRequestedBy; tiSave("ti_users", users); }
+    if (u) {
+      u.deletionStatus = null; u.deletionReason = null; u.deletionRequestedAt = null; u.deletionRequestedBy = null;
+      await this._userSave(u);
+    }
     return u;
   },
   async getPendingAgentDeletions() {
-    return tiLoad("ti_users", []).filter(u => u.deletionStatus === "pending");
+    return (await this._usersAll()).filter(u => u.deletionStatus === "pending");
   },
   async approveAgentDeletion(id, adminName) {
-    const users = tiLoad("ti_users", []);
+    const users = await this._usersAll();
     const u = users.find(u => u.id === id);
     if (!u) return null;
     await this.deleteAgent(id);
@@ -324,11 +327,11 @@ const TiDB = {
     return true;
   },
   async rejectAgentDeletion(id, adminName) {
-    const users = tiLoad("ti_users", []);
+    const users = await this._usersAll();
     const u = users.find(u => u.id === id);
     if (!u) return null;
-    delete u.deletionStatus; delete u.deletionReason; delete u.deletionRequestedAt; delete u.deletionRequestedBy;
-    tiSave("ti_users", users);
+    u.deletionStatus = null; u.deletionReason = null; u.deletionRequestedAt = null; u.deletionRequestedBy = null;
+    await this._userSave(u);
     await this.broadcastNotification({
       title: "Demande de suppression de compte refusée",
       message: `La suppression du compte de ${u.name} a été refusée par l'administration ; le compte reste actif.`,
@@ -525,7 +528,25 @@ const TiDB = {
     }
   },
 
-  async getUsers() { return tiLoad("ti_users", []); },
+  /** Point de passage unique pour lire/sauvegarder les utilisateurs — même
+   *  logique que _bookingsAll/_bookingSave, pour que toutes les méthodes de
+   *  gestion des utilisateurs (panneau admin, agents d'agence, etc.)
+   *  fonctionnent avec l'API sans dupliquer la logique partout. */
+  async _usersAll() {
+    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/users`)).json();
+    return tiLoad("ti_users", []);
+  },
+  async _userSave(user) {
+    if (TI_BACKEND === "api") {
+      return (await fetch(`${TI_API_BASE}/users/${user.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(user) })).json();
+    }
+    const users = tiLoad("ti_users", []);
+    const idx = users.findIndex(u => u.id === user.id);
+    if (idx >= 0) users[idx] = user;
+    tiSave("ti_users", users);
+    return user;
+  },
+  async getUsers() { return this._usersAll(); },
   async findUserByEmail(email) {
     return (await this.getUsers()).find(u => u.email.toLowerCase() === email.toLowerCase());
   },
@@ -536,11 +557,11 @@ const TiDB = {
     return user;
   },
   async updateUser(id, patch) {
-    const users = tiLoad("ti_users", []);
+    const users = await this._usersAll();
     const u = users.find(u => u.id === id);
     if (!u) return null;
     Object.assign(u, patch);
-    tiSave("ti_users", users);
+    await this._userSave(u);
     return u;
   },
 
@@ -549,19 +570,21 @@ const TiDB = {
     return users.filter(u => u.role === "agency" && u.agencyId === agencyId && u.agentRole === "agent");
   },
   async setUserStatus(id, status) {
-    const users = tiLoad("ti_users", []);
+    const users = await this._usersAll();
     const u = users.find(u => u.id === id);
-    if (u) u.status = status;
-    tiSave("ti_users", users);
+    if (u) { u.status = status; await this._userSave(u); }
     return u;
   },
   async recordLogin(id) {
-    const users = tiLoad("ti_users", []);
+    const users = await this._usersAll();
     const u = users.find(u => u.id === id);
-    if (u) u.lastLoginAt = new Date().toISOString();
-    tiSave("ti_users", users);
+    if (u) { u.lastLoginAt = new Date().toISOString(); await this._userSave(u); }
   },
   async regenerateTempPassword(id) {
+    if (TI_BACKEND === "api") {
+      const res = await fetch(`${TI_API_BASE}/users/${id}/reset-password`, { method: "POST" });
+      return res.json();
+    }
     const users = tiLoad("ti_users", []);
     const u = users.find(u => u.id === id);
     if (!u) return { ok: false };
@@ -574,6 +597,12 @@ const TiDB = {
     return { ok: true, password: pwd };
   },
   async createAgent({ name, email, password, agencyId }) {
+    if (TI_BACKEND === "api") {
+      const res = await fetch(`${TI_API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role: "agency", agentRole: "agent", agencyId }) });
+      if (!res.ok) { const body = await res.json().catch(() => ({})); return { ok: false, error: body.error || "exists" }; }
+      const data = await res.json();
+      return { ok: true, agent: data.user };
+    }
     const existing = await this.findUserByEmail(email);
     if (existing) return { ok: false, error: "exists" };
     const agent = { id: "u_" + Date.now(), role: "agency", agentRole: "agent", name, email, agencyId, createdAt: new Date().toISOString() };
@@ -582,6 +611,12 @@ const TiDB = {
     return { ok: true, agent };
   },
   async createAgencySupervisor({ name, email, phone, password, agencyId }) {
+    if (TI_BACKEND === "api") {
+      const res = await fetch(`${TI_API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role: "agency", agentRole: "supervisor", agencyId, phone }) });
+      if (!res.ok) { const body = await res.json().catch(() => ({})); return { ok: false, error: body.error || "exists" }; }
+      const data = await res.json();
+      return { ok: true, supervisor: data.user };
+    }
     const existing = await this.findUserByEmail(email);
     if (existing) return { ok: false, error: "exists" };
     const supervisor = { id: "u_" + Date.now(), role: "agency", agentRole: "supervisor", name, email, phone, agencyId, createdAt: new Date().toISOString() };
@@ -606,13 +641,14 @@ const TiDB = {
     return props.filter(p => p.agencyId === agencyId).length < agency.maxListings;
   },
   async deleteAgent(id) {
-    const users = tiLoad("ti_users", []);
-    tiSave("ti_users", users.filter(u => u.id !== id));
+    if (TI_BACKEND === "api") { await fetch(`${TI_API_BASE}/users/${id}`, { method: "DELETE" }); }
+    else { tiSave("ti_users", tiLoad("ti_users", []).filter(u => u.id !== id)); }
     // désassocie tous les biens qui relevaient de cet agent
-    const props = tiLoad("ti_properties", TI_PROPERTIES);
-    let changed = false;
-    props.forEach(p => { if (p.assignedAgentId === id) { p.assignedAgentId = null; changed = true; } });
-    if (changed) tiSave("ti_properties", props);
+    const props = await this.getProperties();
+    for (const p of props.filter(p => p.assignedAgentId === id)) {
+      p.assignedAgentId = null;
+      await this.saveProperty(p);
+    }
   },
   async assignProperty(propertyId, agentId) {
     const all = tiLoad("ti_properties", TI_PROPERTIES);

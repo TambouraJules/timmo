@@ -34,7 +34,7 @@ const UserSchema = new Schema({
   passwordHash: String,
   agencyId: String,
   status: { type: String, default: "active" }, // "active" | "suspended"
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 // strict:false — the agency object carries many evolving fields (welcome
 // kit, sub-site settings, logo, subscription info...); rather than

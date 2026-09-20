@@ -10,6 +10,7 @@ const mongoose = require("mongoose");
 
 const propertiesRoutes = require("./routes/properties");
 const agenciesRoutes = require("./routes/agencies");
+const usersRoutes = require("./routes/users");
 const miscRoutes = require("./routes/misc");
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(express.json({ limit: "12mb" }));
 
 app.use("/api/properties", propertiesRoutes);
 app.use("/api/agencies", agenciesRoutes);
+app.use("/api/users", usersRoutes);
 app.use("/api", miscRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true, service: "timmo-api" }));
