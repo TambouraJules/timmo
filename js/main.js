@@ -64,6 +64,10 @@ const TI_ICONS = {
   buildingCheck: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 9h5a1 1 0 0 1 1 1v11M8 8h1M8 12h1M8 16h1" stroke-linecap="round"/><path d="m16 15 1.5 1.5L21 13" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   headset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13v-1a8 8 0 0 1 16 0v1" stroke-linecap="round"/><rect x="2" y="13" width="5" height="7" rx="1.5"/><rect x="17" y="13" width="5" height="7" rx="1.5"/><path d="M20 20v1a2 2 0 0 1-2 2h-4" stroke-linecap="round"/></svg>`,
   grid: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18" stroke-linecap="round"/></svg>`,
+  wallet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20M16 14h2" stroke-linecap="round"/></svg>`,
+  users: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20c0-3.3-2.7-6-6-6s-6 2.7-6 6" stroke-linecap="round"/><circle cx="11" cy="8" r="3"/><path d="M20 20c0-2.6-1.7-4.8-4-5.6" stroke-linecap="round"/><path d="M15.5 3.5a3 3 0 0 1 0 5.8" stroke-linecap="round"/></svg>`,
+  barChart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7" stroke-linecap="round"/><path d="M2 20h20" stroke-linecap="round"/></svg>`,
 };
 
 /* ---------- En-tête / Pied de page ---------- */
@@ -553,6 +557,59 @@ function tiApplyNavBadges() {
   });
 }
 document.addEventListener("ti:langchange", tiApplyNavBadges);
+
+/* ---------- Icônes et repli/dépli du menu latéral des tableaux de bord ----------
+   Les icônes sont injectées par JS plutôt qu'écrites dans le HTML, pour
+   n'avoir qu'une seule table de correspondance à tenir à jour au lieu de
+   modifier chacun des ~32 liens à travers les 3 tableaux de bord. Réappliqué
+   à chaque changement de langue (comme pour les badges, puisque
+   tiApplyLang() écrase le textContent), et rappelle tiApplyNavBadges() à la
+   fin puisque reconstruire le innerHTML du lien effacerait sinon un badge
+   déjà affiché. */
+const TI_PANEL_ICONS = {
+  overview: "grid", stats: "barChart",
+  bookings: "calendar", listings: "home", new: "plus",
+  clients: "users", agents: "users", users: "users", agencies: "buildingCheck",
+  announcements: "bell", broadcasts: "bell",
+  welcomekit: "sparkle",
+  messages: "mail",
+  reviews: "star", moderation: "shield",
+  audit: "clock",
+  reports: "barChart",
+  favorites: "heart",
+  documents: "document",
+  payments: "wallet",
+  profile: "user",
+  amenities: "grid",
+  deletions: "trash",
+};
+function tiApplySidebarIcons() {
+  document.querySelectorAll(".ti-dash-nav a[data-panel]").forEach(a => {
+    const panel = a.getAttribute("data-panel");
+    const label = a.textContent.trim();
+    a.setAttribute("data-label", label);
+    a.setAttribute("title", label);
+    const iconKey = TI_PANEL_ICONS[panel];
+    const iconHtml = iconKey && TI_ICONS[iconKey] ? `<span class="ti-dash-nav-icon">${TI_ICONS[iconKey]}</span>` : "";
+    a.innerHTML = `${iconHtml}<span class="ti-dash-nav-label">${tiEscapeHtml(label)}</span>`;
+  });
+  tiApplyNavBadges();
+}
+document.addEventListener("ti:langchange", tiApplySidebarIcons);
+
+/** Restaure l'état replié/déplié mémorisé au chargement de la page. */
+function tiInitSidebarCollapse() {
+  const dash = document.querySelector(".ti-dash");
+  if (!dash) return;
+  dash.classList.toggle("collapsed", localStorage.getItem("ti_sidebar_collapsed") === "1");
+}
+function tiToggleSidebar() {
+  const dash = document.querySelector(".ti-dash");
+  if (!dash) return;
+  const collapsed = dash.classList.toggle("collapsed");
+  localStorage.setItem("ti_sidebar_collapsed", collapsed ? "1" : "0");
+}
+document.addEventListener("DOMContentLoaded", tiInitSidebarCollapse);
 
 function tiToggleRowMenu(btn) {
   const wrap = btn.closest(".ti-row-menu-wrap");

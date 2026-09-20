@@ -70,10 +70,14 @@ p { margin: 0 0 1em; }
 }
 
 /* ---------- Universal page-enter (applied to main content wrappers) ---------- */
-#ti-property-root, .ti-listings-layout, .ti-auth-card, .ti-dash-main, .ti-dash-side {
+#ti-property-root, .ti-listings-layout, .ti-auth-card {
   animation: ti-page-in .5s var(--ease) both;
 }
+.ti-dash-main, .ti-dash-side {
+  animation: ti-fade-in .4s var(--ease) both;
+}
 @keyframes ti-page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ti-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   #ti-property-root, .ti-listings-layout, .ti-auth-card, .ti-dash-main, .ti-dash-side { animation: none; }
 }
@@ -129,22 +133,21 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--c
 textarea { resize: vertical; min-height: 90px; }
 
 /* ---------- Header ---------- */
-.ti-header {
+#ti-header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   background: rgba(247,242,231,.62); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   border-bottom: 1px solid rgba(228,218,196,0);
   box-shadow: none;
   transition: background .45s var(--ease), backdrop-filter .45s var(--ease), border-color .45s var(--ease), box-shadow .45s var(--ease);
 }
-.ti-header.scrolled {
+#ti-header.scrolled {
   background: rgba(247,242,231,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-bottom-color: var(--line);
   box-shadow: 0 8px 24px rgba(23,38,43,.09);
 }
-.ti-demo-banner + .ti-header-inner { }
 body { padding-top: var(--header-h, 68px); }
 .ti-header-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; max-width: 1180px; margin: 0 auto; gap: 20px; transition: padding .3s var(--ease); }
-.ti-header.scrolled .ti-header-inner { padding-top: 11px; padding-bottom: 11px; }
+#ti-header.scrolled .ti-header-inner { padding-top: 11px; padding-bottom: 11px; }
 .ti-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.22rem; color: var(--deep); letter-spacing: -.01em; transition: opacity .2s var(--ease); }
 .ti-brand:hover { opacity: .82; }
 .ti-brand-mark { width: 32px; height: 32px; flex-shrink: 0; color: var(--clay); background: var(--gold-soft); border-radius: 50%; padding: 6px; box-sizing: border-box; transition: transform .3s var(--ease); }
@@ -770,18 +773,38 @@ body { padding-top: var(--header-h, 68px); }
 .ti-success { background: #E3F1E8; color: var(--ok); padding: 10px 14px; border-radius: var(--radius-s); font-size: .85rem; margin-bottom: 14px; }
 
 /* ---------- Dashboard layout ---------- */
-.ti-dash { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - var(--header-h, 68px)); }
-.ti-dash-side { background: var(--deep-2); color: rgba(255,255,255,.85); padding: 26px 16px; }
-.ti-dash-side h3 { color: #fff; font-size: 1rem; margin-bottom: 4px; }
-.ti-dash-side .ti-dash-role { font-size: .76rem; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 22px; }
+.ti-dash { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - var(--header-h, 68px)); transition: grid-template-columns .25s var(--ease); }
+.ti-dash.collapsed { grid-template-columns: 76px 1fr; }
+.ti-dash-side { background: var(--deep-2); color: rgba(255,255,255,.85); padding: 26px 16px; position: relative; transition: padding .25s var(--ease); }
+.ti-dash.collapsed .ti-dash-side { padding-left: 12px; padding-right: 12px; }
+.ti-dash-side h3 { color: #fff; font-size: 1rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; }
+.ti-dash-side .ti-dash-role { font-size: .76rem; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 22px; white-space: nowrap; overflow: hidden; }
+.ti-dash.collapsed .ti-dash-side h3, .ti-dash.collapsed .ti-dash-side .ti-dash-role { opacity: 0; height: 0; margin: 0; overflow: hidden; }
 .ti-dash-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-s); font-weight: 600; font-size: .88rem; color: rgba(255,255,255,.75); cursor: pointer; transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease); }
 .ti-dash-nav a:hover { background: rgba(255,255,255,.08); transform: translateX(2px); }
 .ti-dash-nav a.active { background: var(--clay); color: #fff; }
+.ti-dash-nav-icon { flex-shrink: 0; width: 19px; height: 19px; display: flex; align-items: center; justify-content: center; }
+.ti-dash-nav-icon svg { width: 100%; height: 100%; }
+.ti-dash-nav-label { white-space: nowrap; overflow: hidden; transition: opacity .15s var(--ease); }
 .ti-nav-badge {
   margin-left: auto; background: var(--clay); color: #fff; font-size: .7rem; font-weight: 800;
   padding: 1px 7px; border-radius: 999px; line-height: 1.5; flex-shrink: 0;
 }
 .ti-dash-nav a.active .ti-nav-badge { background: rgba(255,255,255,.28); }
+/* État replié : icônes seules, centrées, étiquette masquée, info-bulle au survol */
+.ti-dash.collapsed .ti-dash-nav a { justify-content: center; padding: 12px 8px; transform: none !important; }
+.ti-dash.collapsed .ti-dash-nav-label { display: none; }
+.ti-dash.collapsed .ti-dash-nav a .ti-nav-badge { position: absolute; top: 2px; right: 2px; margin-left: 0; }
+/* Bouton de repli/dépli — dans le coin supérieur droit de la barre latérale */
+.ti-sidebar-toggle {
+  position: absolute; top: 24px; right: 14px; width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255,255,255,.1); color: #fff; border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .2s var(--ease), transform .2s var(--ease); z-index: 6; padding: 0;
+}
+.ti-sidebar-toggle:hover { background: var(--clay); transform: scale(1.08); }
+.ti-sidebar-toggle svg { width: 13px; height: 13px; transition: transform .3s var(--ease); }
+.ti-dash.collapsed .ti-sidebar-toggle { position: static; margin: 0 auto 14px; display: flex; }
+.ti-dash.collapsed .ti-sidebar-toggle svg { transform: rotate(180deg); }
 .ti-dash-main { padding: 34px 40px; background: var(--paper); }
 .ti-dash-panel { display: none; }
 .ti-dash-panel.active { display: block; }
@@ -1285,6 +1308,7 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
   .ti-detail-grid, .ti-listings-layout { grid-template-columns: 1fr; }
   .ti-dash { grid-template-columns: 1fr; }
   .ti-dash-side { display: flex; overflow-x: auto; gap: 6px; }
+  .ti-sidebar-toggle { display: none; }
   .ti-footer-grid { grid-template-columns: 1fr 1fr; }
   .ti-newsletter-form { width: 100%; }
   .ti-newsletter-form input { flex: 1; min-width: 0; }
