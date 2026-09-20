@@ -33,6 +33,17 @@
 const TI_BACKEND = "api"; // "local" | "firebase" | "api"
 const TI_API_BASE = "https://timmo-api.onrender.com/api";
 
+/** Un seul point de passage pour tout appel à l'API : ajoute automatiquement
+ *  le jeton d'authentification stocké (s'il existe) à l'en-tête
+ *  Authorization — pour que chacun des appels fetch() ci-dessous n'ait pas
+ *  à le répéter individuellement. */
+function tiApiFetch(url, options = {}) {
+  const token = localStorage.getItem("ti_api_token");
+  const headers = { ...(options.headers || {}) };
+  if (token) headers["Authorization"] = "Bearer " + token;
+  return fetch(url, { ...options, headers });
+}
+
 function tiLoad(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -198,7 +209,7 @@ const TiDB = {
   },
 
   async getProperties() {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/properties`)).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/properties`)).json();
     if (TI_BACKEND === "firebase") return tiFirestoreGetAll("properties");
     return tiLoad("ti_properties", TI_PROPERTIES);
   },
@@ -207,7 +218,7 @@ const TiDB = {
     return all.find(p => p.id === id);
   },
   async saveProperty(prop) {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/properties`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(prop) })).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/properties`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(prop) })).json();
     if (TI_BACKEND === "firebase") return tiFirestoreAdd("properties", prop);
     const all = tiLoad("ti_properties", TI_PROPERTIES);
     const idx = all.findIndex(p => p.id === prop.id);
@@ -337,12 +348,12 @@ const TiDB = {
   },
 
   async deleteProperty(id) {
-    if (TI_BACKEND === "api") return fetch(`${TI_API_BASE}/properties/${id}`, { method: "DELETE" });
+    if (TI_BACKEND === "api") return tiApiFetch(`${TI_API_BASE}/properties/${id}`, { method: "DELETE" });
     if (TI_BACKEND === "firebase") return tiFirestoreDelete("properties", id);
     tiSave("ti_properties", tiLoad("ti_properties", TI_PROPERTIES).filter(p => p.id !== id));
   },
   async recordView(id) {
-    if (TI_BACKEND === "api") return fetch(`${TI_API_BASE}/properties/${id}/view`, { method: "POST" });
+    if (TI_BACKEND === "api") return tiApiFetch(`${TI_API_BASE}/properties/${id}/view`, { method: "POST" });
     if (TI_BACKEND === "firebase") return; // best-effort only in the local demo backend
     const all = tiLoad("ti_properties", TI_PROPERTIES);
     const p = all.find(p => p.id === id);
@@ -350,7 +361,7 @@ const TiDB = {
     return p;
   },
   async setListingStatus(id, status) {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/properties/${id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/properties/${id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })).json();
     if (TI_BACKEND === "firebase") return tiFirestoreAdd("properties", { id, listingStatus: status });
     const all = tiLoad("ti_properties", TI_PROPERTIES);
     const p = all.find(p => p.id === id);
@@ -428,7 +439,7 @@ const TiDB = {
   },
 
   async getAgencies() {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/agencies`)).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/agencies`)).json();
     if (TI_BACKEND === "firebase") return tiFirestoreGetAll("agencies");
     return tiLoad("ti_agencies", TI_AGENCIES);
   },
@@ -440,23 +451,18 @@ const TiDB = {
     return all.find(a => a.subsiteSlug === slug && a.subsiteEnabled) || null;
   },
   async toggleAgencySubsite(agencyId) {
-    const all = tiLoad("ti_agencies", TI_AGENCIES);
-    const agency = all.find(a => a.id === agencyId);
+    const agency = await this.getAgency(agencyId);
     if (!agency) return null;
-    agency.subsiteEnabled = !agency.subsiteEnabled;
-    if (agency.subsiteEnabled && !agency.subsiteSlug) {
-      agency.subsiteSlug = tiSlugify(agency.name) + "-" + agencyId.slice(-4);
-    }
-    tiSave("ti_agencies", all);
-    return agency;
+    const subsiteEnabled = !agency.subsiteEnabled;
+    const subsiteSlug = subsiteEnabled && !agency.subsiteSlug ? tiSlugify(agency.name) + "-" + agencyId.slice(-4) : agency.subsiteSlug;
+    await this.saveAgency({ id: agencyId, subsiteEnabled, subsiteSlug });
+    return { ...agency, subsiteEnabled, subsiteSlug };
   },
   async updateAgencyLogo(agencyId, dataUrl) {
-    const all = tiLoad("ti_agencies", TI_AGENCIES);
-    const agency = all.find(a => a.id === agencyId);
+    const agency = await this.getAgency(agencyId);
     if (!agency) return null;
-    agency.logoDataUrl = dataUrl;
-    tiSave("ti_agencies", all);
-    return agency;
+    await this.saveAgency({ id: agencyId, logoDataUrl: dataUrl });
+    return { ...agency, logoDataUrl: dataUrl };
   },
   async getWelcomeKit(agencyId) {
     const agency = await this.getAgency(agencyId);
@@ -500,7 +506,7 @@ const TiDB = {
   async saveAgency(agency) {
     let saved;
     if (TI_BACKEND === "api") {
-      saved = await (await fetch(`${TI_API_BASE}/agencies`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(agency) })).json();
+      saved = await (await tiApiFetch(`${TI_API_BASE}/agencies`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(agency) })).json();
     } else if (TI_BACKEND === "firebase") {
       saved = await tiFirestoreAdd("agencies", agency);
     } else {
@@ -514,7 +520,7 @@ const TiDB = {
     return saved;
   },
   async deleteAgency(id, cascade = true) {
-    if (TI_BACKEND === "api") { await fetch(`${TI_API_BASE}/agencies/${id}`, { method: "DELETE" }); }
+    if (TI_BACKEND === "api") { await tiApiFetch(`${TI_API_BASE}/agencies/${id}`, { method: "DELETE" }); }
     else if (TI_BACKEND === "firebase") { await tiFirestoreDelete("agencies", id); }
     else { tiSave("ti_agencies", tiLoad("ti_agencies", TI_AGENCIES).filter(a => a.id !== id)); }
     tiSyncAgenciesFromStorage();
@@ -529,12 +535,12 @@ const TiDB = {
    *  gestion des utilisateurs (panneau admin, agents d'agence, etc.)
    *  fonctionnent avec l'API sans dupliquer la logique partout. */
   async _usersAll() {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/users`)).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/users`)).json();
     return tiLoad("ti_users", []);
   },
   async _userSave(user) {
     if (TI_BACKEND === "api") {
-      return (await fetch(`${TI_API_BASE}/users/${user.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(user) })).json();
+      return (await tiApiFetch(`${TI_API_BASE}/users/${user.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(user) })).json();
     }
     const users = tiLoad("ti_users", []);
     const idx = users.findIndex(u => u.id === user.id);
@@ -578,7 +584,7 @@ const TiDB = {
   },
   async regenerateTempPassword(id) {
     if (TI_BACKEND === "api") {
-      const res = await fetch(`${TI_API_BASE}/users/${id}/reset-password`, { method: "POST" });
+      const res = await tiApiFetch(`${TI_API_BASE}/users/${id}/reset-password`, { method: "POST" });
       return res.json();
     }
     const users = tiLoad("ti_users", []);
@@ -594,7 +600,7 @@ const TiDB = {
   },
   async createAgent({ name, email, password, agencyId }) {
     if (TI_BACKEND === "api") {
-      const res = await fetch(`${TI_API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role: "agency", agentRole: "agent", agencyId }) });
+      const res = await tiApiFetch(`${TI_API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role: "agency", agentRole: "agent", agencyId }) });
       if (!res.ok) { const body = await res.json().catch(() => ({})); return { ok: false, error: body.error || "exists" }; }
       const data = await res.json();
       return { ok: true, agent: data.user };
@@ -608,7 +614,7 @@ const TiDB = {
   },
   async createAgencySupervisor({ name, email, phone, password, agencyId }) {
     if (TI_BACKEND === "api") {
-      const res = await fetch(`${TI_API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role: "agency", agentRole: "supervisor", agencyId, phone }) });
+      const res = await tiApiFetch(`${TI_API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role: "agency", agentRole: "supervisor", agencyId, phone }) });
       if (!res.ok) { const body = await res.json().catch(() => ({})); return { ok: false, error: body.error || "exists" }; }
       const data = await res.json();
       return { ok: true, supervisor: data.user };
@@ -637,7 +643,7 @@ const TiDB = {
     return props.filter(p => p.agencyId === agencyId).length < agency.maxListings;
   },
   async deleteAgent(id) {
-    if (TI_BACKEND === "api") { await fetch(`${TI_API_BASE}/users/${id}`, { method: "DELETE" }); }
+    if (TI_BACKEND === "api") { await tiApiFetch(`${TI_API_BASE}/users/${id}`, { method: "DELETE" }); }
     else { tiSave("ti_users", tiLoad("ti_users", []).filter(u => u.id !== id)); }
     // désassocie tous les biens qui relevaient de cet agent
     const props = await this.getProperties();
@@ -659,7 +665,7 @@ const TiDB = {
   async _bookingsAll(filter = {}) {
     if (TI_BACKEND === "api") {
       const params = new URLSearchParams(filter).toString();
-      return (await fetch(`${TI_API_BASE}/bookings${params ? "?" + params : ""}`)).json();
+      return (await tiApiFetch(`${TI_API_BASE}/bookings${params ? "?" + params : ""}`)).json();
     }
     let all = tiLoad("ti_bookings", []);
     if (filter.userId) all = all.filter(b => b.userId === filter.userId);
@@ -671,7 +677,7 @@ const TiDB = {
    *  upsert par id métier, aussi bien en local qu'à travers l'API. */
   async _bookingSave(booking) {
     if (TI_BACKEND === "api") {
-      return (await fetch(`${TI_API_BASE}/bookings`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(booking) })).json();
+      return (await tiApiFetch(`${TI_API_BASE}/bookings`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(booking) })).json();
     }
     const all = tiLoad("ti_bookings", []);
     const idx = all.findIndex(b => b.id === booking.id);
@@ -865,7 +871,7 @@ const TiDB = {
   async getMessages(filter = {}) {
     if (TI_BACKEND === "api") {
       const params = new URLSearchParams(filter).toString();
-      return (await fetch(`${TI_API_BASE}/messages${params ? "?" + params : ""}`)).json();
+      return (await tiApiFetch(`${TI_API_BASE}/messages${params ? "?" + params : ""}`)).json();
     }
     let all = tiLoad("ti_messages", []);
     if (filter.propertyId) all = all.filter(m => m.propertyId === filter.propertyId);
@@ -877,7 +883,7 @@ const TiDB = {
     msg.id = "msg_" + Date.now();
     msg.createdAt = new Date().toISOString();
     if (TI_BACKEND === "api") {
-      return (await fetch(`${TI_API_BASE}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(msg) })).json();
+      return (await tiApiFetch(`${TI_API_BASE}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(msg) })).json();
     }
     const all = tiLoad("ti_messages", []);
     all.push(msg);
@@ -929,7 +935,7 @@ const TiDB = {
     let list;
     if (TI_BACKEND === "api") {
       const params = agencyId ? `?agencyId=${encodeURIComponent(agencyId)}` : "";
-      list = await (await fetch(`${TI_API_BASE}/announcements${params}`)).json();
+      list = await (await tiApiFetch(`${TI_API_BASE}/announcements${params}`)).json();
     } else {
       list = tiLoad("ti_announcements", []);
       if (agencyId) list = list.filter(a => a.agencyId === agencyId);
@@ -944,38 +950,38 @@ const TiDB = {
   },
   async createAnnouncement({ agencyId, propertyId, title, text }) {
     const announcement = { id: "an_" + Date.now(), agencyId, propertyId: propertyId || null, title, text, createdAt: new Date().toISOString() };
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/announcements`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(announcement) })).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/announcements`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(announcement) })).json();
     const all = tiLoad("ti_announcements", []);
     all.push(announcement);
     tiSave("ti_announcements", all);
     return announcement;
   },
   async deleteAnnouncement(id) {
-    if (TI_BACKEND === "api") { await fetch(`${TI_API_BASE}/announcements/${id}`, { method: "DELETE" }); return; }
+    if (TI_BACKEND === "api") { await tiApiFetch(`${TI_API_BASE}/announcements/${id}`, { method: "DELETE" }); return; }
     const all = tiLoad("ti_announcements", []);
     tiSave("ti_announcements", all.filter(a => a.id !== id));
   },
 
   async getReviews(propertyId) {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews?propertyId=${encodeURIComponent(propertyId)}`)).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/reviews?propertyId=${encodeURIComponent(propertyId)}`)).json();
     return tiLoad("ti_reviews", []).filter(r => r.propertyId === propertyId);
   },
   async addReview(review) {
     review.id = "rv_" + Date.now();
     review.createdAt = new Date().toISOString();
     review.approved = true;
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/reviews`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })).json();
     const all = tiLoad("ti_reviews", []);
     all.unshift(review);
     tiSave("ti_reviews", all);
     return review;
   },
   async getAllReviews() {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews`)).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/reviews`)).json();
     return tiLoad("ti_reviews", []);
   },
   async moderateReview(id, approved) {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/reviews/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approved }) })).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/reviews/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approved }) })).json();
     const all = tiLoad("ti_reviews", []);
     const r = all.find(r => r.id === id);
     if (r) r.approved = approved;
@@ -1006,7 +1012,7 @@ const TiDB = {
   async getPayments(filter = {}) {
     if (TI_BACKEND === "api") {
       const params = new URLSearchParams(filter).toString();
-      return (await fetch(`${TI_API_BASE}/payments${params ? "?" + params : ""}`)).json();
+      return (await tiApiFetch(`${TI_API_BASE}/payments${params ? "?" + params : ""}`)).json();
     }
     let all = tiLoad("ti_payments", []);
     if (filter.userId) all = all.filter(p => p.userId === filter.userId);
@@ -1068,7 +1074,7 @@ const TiDB = {
   async createPayment(payment) {
     payment.id = "pay_" + Date.now();
     payment.createdAt = new Date().toISOString();
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/payments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payment) })).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/payments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payment) })).json();
     const all = tiLoad("ti_payments", []);
     all.unshift(payment);
     tiSave("ti_payments", all);
@@ -1076,12 +1082,12 @@ const TiDB = {
   },
 
   async getFavorites(userId) {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/favorites?userId=${encodeURIComponent(userId)}`)).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/favorites?userId=${encodeURIComponent(userId)}`)).json();
     return tiLoad("ti_favorites", []).filter(f => f.userId === userId);
   },
   async toggleFavorite(userId, propertyId) {
     if (TI_BACKEND === "api") {
-      const data = await (await fetch(`${TI_API_BASE}/favorites/toggle`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, propertyId }) })).json();
+      const data = await (await tiApiFetch(`${TI_API_BASE}/favorites/toggle`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, propertyId }) })).json();
       return data.favorited;
     }
     let all = tiLoad("ti_favorites", []);
@@ -1096,7 +1102,7 @@ const TiDB = {
   },
 
   async subscribeNewsletter(email) {
-    if (TI_BACKEND === "api") return (await fetch(`${TI_API_BASE}/newsletter`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) })).json();
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/newsletter`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) })).json();
     if (TI_BACKEND === "firebase") return tiFirestoreAdd("newsletter", { email, createdAt: new Date().toISOString() });
     const all = tiLoad("ti_newsletter", []);
     if (!all.includes(email)) all.push(email);
