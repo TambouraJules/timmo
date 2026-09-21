@@ -803,13 +803,8 @@ function tiConfirmSetListingStatus(id, status) {
   if (!confirm(t('confirm_set_listing_status').replace('{action}', label))) return;
   tiSetListingStatus(id, status);
 }
-function tiPopulateHoodSelectNL() {
-  const sel = document.getElementById("nl-hood");
-  sel.innerHTML = TI_NEIGHBORHOODS.map(n => `<option value="${n.id}">${n.name}</option>`).join('');
-  tiPopulateRegionSelect();
-}
 
-/* ---------- Localisation : Région > Département > Commune > Quartier + repère sur la carte ---------- */
+/* ---------- Localisation : Région > Département > Arrondissement > Commune + adresse libre + repère sur la carte ---------- */
 let TI_LOCATION_MAP = null;
 let TI_LOCATION_MARKER = null;
 let TI_NL_PIN = null; // { lat, lng } once the agent has clicked the map; null = use quartier default
@@ -848,68 +843,72 @@ function tiRenderTitleDocCurrent() {
 }
 
 function tiPopulateRegionSelect() {
-  const sel = document.getElementById("nl-region");
-  if (!sel) return;
-  sel.innerHTML = TI_ADMIN_REGIONS.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-  tiOnRegionChange();
+  const mount = document.getElementById("nl-region-chips");
+  if (!mount) return;
+  mount.innerHTML = TI_ADMIN_REGIONS.map(r => `<div class="ti-region-chip" data-region="${r.id}" onclick="tiSelectRegion('${r.id}')">${tiEscapeHtml(r.name)}</div>`).join('');
+  tiSelectRegion(TI_ADMIN_REGIONS[0].id);
 }
-function tiOnRegionChange() {
-  const regionId = document.getElementById("nl-region").value;
+function tiSelectRegion(regionId) {
+  document.getElementById("nl-region").value = regionId;
+  document.querySelectorAll("#nl-region-chips .ti-region-chip").forEach(el => el.classList.toggle("active", el.dataset.region === regionId));
   const depts = TI_ADMIN_DEPARTMENTS[regionId] || [];
-  document.getElementById("nl-department").innerHTML = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById("nl-department").innerHTML = depts.map(d => `<option value="${d.id}">${tiEscapeHtml(d.name)}</option>`).join('');
   tiOnDepartmentChange();
 }
 function tiOnDepartmentChange() {
   const deptId = document.getElementById("nl-department").value;
-  const communes = TI_ADMIN_COMMUNES[deptId] || [];
+  const arrs = tiGetArrondissements(deptId);
+  document.getElementById("nl-arrondissement").innerHTML = arrs.map(a => `<option value="${a.id}">${tiEscapeHtml(a.name)}</option>`).join('');
+  tiOnArrondissementChange();
+}
+function tiOnArrondissementChange() {
+  const arrId = document.getElementById("nl-arrondissement").value;
+  const communes = TI_ADMIN_COMMUNES[arrId] || [];
   const communeSel = document.getElementById("nl-commune");
   communeSel.innerHTML = communes.length
-    ? communes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+    ? communes.map(c => `<option value="${c.id}">${tiEscapeHtml(c.name)}</option>`).join('')
     : `<option value="">${t('no_communes_yet')}</option>`;
   tiOnCommuneChange();
 }
 function tiOnCommuneChange() {
-  const deptId = document.getElementById("nl-department").value;
-  const communeId = document.getElementById("nl-commune").value;
-  const commune = (TI_ADMIN_COMMUNES[deptId] || []).find(c => c.id === communeId);
-  if (commune && commune.hoodId) {
-    document.getElementById("nl-hood").value = commune.hoodId;
-  }
-  tiOnHoodChange();
-}
-function tiOnHoodChange() {
-  TI_NL_PIN = null; // switching quartier resets to that quartier's default map center
+  TI_NL_PIN = null; // changer de commune réinitialise le centrage par défaut de la carte
   tiRecenterLocationMap();
   tiUpdateListingPreview();
 }
+/** Positionne directement la cascade sur un chemin connu (région,
+ *  département, arrondissement, commune) — utilisé à l'ouverture d'une
+ *  annonce ou d'une agence existante en modification. */
+function tiSetLocationHierarchy(region, department, arrondissement, commune) {
+  tiSelectRegion(region && TI_ADMIN_DEPARTMENTS[region] ? region : TI_ADMIN_REGIONS[0].id);
+  if (department) { document.getElementById("nl-department").value = department; tiOnDepartmentChange(); }
+  if (arrondissement) { document.getElementById("nl-arrondissement").value = arrondissement; tiOnArrondissementChange(); }
+  if (commune) document.getElementById("nl-commune").value = commune;
+}
+/** Repli pour les annonces créées avant l'ajout de la hiérarchie complète,
+ *  qui ne connaissaient que le quartier (hoodId) — retrouve la commune
+ *  correspondante par recherche inverse. */
 function tiSelectHoodInHierarchy(hoodId) {
-  // Recherche inverse utilisée à l'ouverture d'une annonce existante en
-  // modification : retrouve à quelle région/département/commune appartient
-  // le quartier enregistré, pour que les listes déroulantes en cascade
-  // s'ouvrent déjà sur le bon chemin.
-  for (const [deptId, communes] of Object.entries(TI_ADMIN_COMMUNES)) {
+  for (const [arrId, communes] of Object.entries(TI_ADMIN_COMMUNES)) {
     const commune = communes.find(c => c.hoodId === hoodId);
     if (!commune) continue;
-    for (const [regionId, depts] of Object.entries(TI_ADMIN_DEPARTMENTS)) {
-      if (depts.some(d => d.id === deptId)) {
-        document.getElementById("nl-region").value = regionId;
-        tiOnRegionChange();
-        document.getElementById("nl-department").value = deptId;
-        tiOnDepartmentChange();
-        document.getElementById("nl-commune").value = commune.id;
-        break;
+    for (const [deptId, arrs] of Object.entries(TI_ADMIN_ARRONDISSEMENTS)) {
+      if (!arrs.some(a => a.id === arrId)) continue;
+      for (const [regionId, depts] of Object.entries(TI_ADMIN_DEPARTMENTS)) {
+        if (depts.some(d => d.id === deptId)) { tiSetLocationHierarchy(regionId, deptId, arrId, commune.id); return; }
       }
     }
-    break;
   }
-  document.getElementById("nl-hood").value = hoodId;
 }
 function tiRecenterLocationMap() {
   if (!TI_LOCATION_MAP) return;
-  const hoodId = document.getElementById("nl-hood").value;
-  const hood = TI_NEIGHBORHOODS.find(n => n.id === hoodId);
-  const target = TI_NL_PIN || (hood ? { lat: hood.lat, lng: hood.lng } : { lat: 14.7167, lng: -17.4677 });
-  TI_LOCATION_MAP.setView([target.lat, target.lng], TI_NL_PIN ? 16 : 14);
+  const arrId = document.getElementById("nl-arrondissement").value;
+  const communeId = document.getElementById("nl-commune").value;
+  const commune = (TI_ADMIN_COMMUNES[arrId] || []).find(c => c.id === communeId);
+  const hood = commune && commune.hoodId ? TI_NEIGHBORHOODS.find(n => n.id === commune.hoodId) : null;
+  const region = TI_ADMIN_REGIONS.find(r => r.id === document.getElementById("nl-region").value);
+  const fallback = hood || region || { lat: 14.7167, lng: -17.4677 };
+  const target = TI_NL_PIN || fallback;
+  TI_LOCATION_MAP.setView([target.lat, target.lng], TI_NL_PIN ? 16 : (hood ? 14 : 11));
   if (TI_LOCATION_MARKER) TI_LOCATION_MARKER.setLatLng([target.lat, target.lng]);
 }
 function tiInitLocationMap() {
@@ -920,8 +919,12 @@ function tiInitLocationMap() {
     return;
   }
   if (TI_LOCATION_MAP) { setTimeout(() => TI_LOCATION_MAP.invalidateSize(), 150); tiRecenterLocationMap(); return; }
-  const hoodId = document.getElementById("nl-hood").value;
-  const hood = TI_NEIGHBORHOODS.find(n => n.id === hoodId) || { lat: 14.7167, lng: -17.4677 };
+  const arrId0 = document.getElementById("nl-arrondissement")?.value;
+  const communeId0 = document.getElementById("nl-commune")?.value;
+  const commune0 = (TI_ADMIN_COMMUNES[arrId0] || []).find(c => c.id === communeId0);
+  const hood0 = commune0 && commune0.hoodId ? TI_NEIGHBORHOODS.find(n => n.id === commune0.hoodId) : null;
+  const region0 = TI_ADMIN_REGIONS.find(r => r.id === document.getElementById("nl-region")?.value);
+  const hood = hood0 || region0 || { lat: 14.7167, lng: -17.4677 };
   const start = TI_NL_PIN || { lat: hood.lat, lng: hood.lng };
   TI_LOCATION_MAP = L.map(container, { scrollWheelZoom: false }).setView([start.lat, start.lng], TI_NL_PIN ? 16 : 14);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '&copy; OpenStreetMap contributors' }).addTo(TI_LOCATION_MAP);
@@ -1080,10 +1083,10 @@ function tiGenerateListingDescriptionLocal(d) {
 }
 async function tiGenerateListingDescription() {
   const btn = document.getElementById("nl-generate-desc-btn");
-  const hoodSelect = document.getElementById("nl-hood");
+  const communeSelect = document.getElementById("nl-commune");
   const payload = {
     type: document.getElementById("nl-type").value,
-    hoodName: hoodSelect.options[hoodSelect.selectedIndex]?.text || "",
+    hoodName: communeSelect.options[communeSelect.selectedIndex]?.text || "",
     listingKind: document.getElementById("nl-listing-kind").value,
     price: Number(document.getElementById("nl-price").value) || 0,
     beds: Number(document.getElementById("nl-beds").value) || 0,
@@ -1158,7 +1161,7 @@ function tiUpdateListingPreview() {
   if (!mount) return;
   const title = document.getElementById("nl-title").value || t("wizard_preview_placeholder_title");
   const type = document.getElementById("nl-type").value;
-  const hoodSel = document.getElementById("nl-hood");
+  const hoodSel = document.getElementById("nl-commune");
   const hoodName = hoodSel && hoodSel.selectedIndex >= 0 ? hoodSel.options[hoodSel.selectedIndex].text : "";
   const kind = document.getElementById("nl-listing-kind").value;
   const price = Number(document.getElementById("nl-price").value) || 0;
@@ -1266,7 +1269,9 @@ function tiEditListing(id) {
     document.getElementById("nl-edit-id").value = p.id;
     document.getElementById("nl-title").value = p.title;
     document.getElementById("nl-type").value = p.type;
-    tiSelectHoodInHierarchy(p.neighborhood);
+    if (p.region && p.commune) tiSetLocationHierarchy(p.region, p.department, p.arrondissement, p.commune);
+    else tiSelectHoodInHierarchy(p.neighborhood);
+    document.getElementById("nl-street-address").value = p.streetAddress || "";
     TI_NL_PIN = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
     document.getElementById("nl-price").value = p.price;
     document.getElementById("nl-listing-kind").value = p.forSale ? "sale" : (p.shortStay ? "short" : "rent");
@@ -1340,12 +1345,19 @@ async function tiSubmitNewListing(e) {
     id: "p_" + Date.now(), agencyId: TI_SESSION.agencyId, rating: 0, reviews: 0, listingStatus: "pending", views: 0, createdAt: new Date().toISOString(),
   };
   if (!editId) prop.reference = await TiDB.nextPropertyReference(TI_SESSION.agencyId);
+  const regionId = document.getElementById("nl-region").value;
+  const deptId = document.getElementById("nl-department").value;
+  const arrId = document.getElementById("nl-arrondissement").value;
+  const communeId = document.getElementById("nl-commune").value;
+  const commune = (TI_ADMIN_COMMUNES[arrId] || []).find(c => c.id === communeId);
   Object.assign(prop, {
     type,
     forSale: kind === "sale",
     shortStay: kind === "short",
     title, titleEn: title,
-    neighborhood: document.getElementById("nl-hood").value,
+    neighborhood: (commune && commune.hoodId) || (commune ? commune.name : ""),
+    region: regionId, department: deptId, arrondissement: arrId, commune: communeId,
+    streetAddress: document.getElementById("nl-street-address").value.trim(),
     price: parseFloat(document.getElementById("nl-price").value),
     bedrooms: parseInt(document.getElementById("nl-beds").value) || 0,
     bathrooms: parseInt(document.getElementById("nl-baths").value) || 1,
@@ -1364,7 +1376,7 @@ async function tiSubmitNewListing(e) {
     prop.lat = TI_NL_PIN.lat;
     prop.lng = TI_NL_PIN.lng;
   } else if (!editId || !prop.lat) {
-    const nb = TI_NEIGHBORHOODS.find(n => n.id === prop.neighborhood);
+    const nb = TI_NEIGHBORHOODS.find(n => n.id === prop.neighborhood) || TI_ADMIN_REGIONS.find(r => r.id === regionId) || { lat: 14.7167, lng: -17.4677 };
     prop.lat = nb.lat + (Math.random() - 0.5) * 0.01;
     prop.lng = nb.lng + (Math.random() - 0.5) * 0.01;
   }
@@ -1978,7 +1990,7 @@ async function tiInitAgencyDashboard() {
   document.getElementById("charts-mount").innerHTML = tiSkeletonChartCardHtml() + tiSkeletonChartCardHtml() + tiSkeletonChartCardHtml();
   document.getElementById("dash-name").textContent = TI_SESSION.name;
   tiUpdateRoleLabel();
-  tiPopulateHoodSelectNL();
+  tiPopulateRegionSelect();
   tiRenderAmenityPicker();
   tiToggleAvailabilityFields();
   tiWizardGoToStep(1);

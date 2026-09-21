@@ -623,7 +623,9 @@ function tiOpenAgencyModal(id) {
       document.getElementById("ag-name").value = a.name;
       document.getElementById("ag-email").value = a.email;
       document.getElementById("ag-phone").value = a.phone || "";
-      document.getElementById("ag-address").value = a.address || "";
+      document.getElementById("ag-address").value = a.streetAddress || "";
+      if (a.region && a.commune) tiSetLocationHierarchyGeneric("ag", a.region, a.department, a.arrondissement, a.commune);
+      else tiPopulateRegionChipsGeneric("ag");
       document.getElementById("ag-verified").checked = !!a.verified;
       tiRenderTierPicker(a.tier || "standard");
       document.getElementById("ag-max-agents").value = a.maxAgents ?? 2;
@@ -642,6 +644,7 @@ function tiOpenAgencyModal(id) {
   } else {
     document.getElementById("ag-supervisor-new-section").style.display = "";
     document.getElementById("ag-supervisor-existing-section").style.display = "none";
+    tiPopulateRegionChipsGeneric("ag");
     tiRenderTierPicker("standard");
     tiSelectTier("standard");
     tiOpenModal("modal-agency");
@@ -653,12 +656,20 @@ async function tiSubmitAgencyForm(e) {
   const editId = document.getElementById("ag-edit-id").value;
   const name = document.getElementById("ag-name").value;
   const tier = document.querySelector('input[name="ag-tier"]:checked')?.value || "standard";
+  const regionId = document.getElementById("ag-region").value;
+  const deptId = document.getElementById("ag-department").value;
+  const arrId = document.getElementById("ag-arrondissement").value;
+  const communeId = document.getElementById("ag-commune").value;
+  const commune = (TI_ADMIN_COMMUNES[arrId] || []).find(c => c.id === communeId);
+  const streetAddress = document.getElementById("ag-address").value.trim();
+  const displayAddress = [streetAddress, commune ? commune.name : null].filter(Boolean).join(", ");
   const agency = {
     id: editId || "ag_" + Date.now(),
     name,
     email: document.getElementById("ag-email").value,
     phone: document.getElementById("ag-phone").value,
-    address: document.getElementById("ag-address").value,
+    region: regionId, department: deptId, arrondissement: arrId, commune: communeId,
+    streetAddress, address: displayAddress,
     tier,
     maxAgents: parseInt(document.getElementById("ag-max-agents").value, 10) || 1,
     maxListings: parseInt(document.getElementById("ag-max-listings").value, 10) || 1,

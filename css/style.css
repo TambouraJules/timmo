@@ -368,6 +368,14 @@ body { padding-top: var(--header-h, 68px); }
 .ti-verified-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
 .ti-verified-badge-lg { font-size: .82rem; padding: 6px 14px 6px 10px; gap: 6px; }
 .ti-verified-badge-lg svg { width: 15px; height: 15px; }
+.ti-region-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.ti-region-chip {
+  padding: 10px 14px; border-radius: var(--radius-s); border: 1.5px solid var(--line); background: var(--paper-raised);
+  font-size: .85rem; font-weight: 700; color: var(--ink); text-align: center; cursor: pointer;
+  transition: border-color .18s var(--ease), background .18s var(--ease), color .18s var(--ease), transform .12s var(--ease);
+}
+.ti-region-chip:hover { border-color: var(--clay); transform: translateY(-1px); }
+.ti-region-chip.active { background: var(--deep); border-color: var(--deep); color: #fff; }
 .ti-title-doc-upload { border: 2px dashed var(--line); border-radius: var(--radius-m); padding: 18px; text-align: center; cursor: pointer; transition: border-color .2s var(--ease), background .2s var(--ease); }
 .ti-title-doc-upload:hover { border-color: var(--clay); background: rgba(196,122,74,.04); }
 .ti-title-doc-current { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--paper-raised); border-radius: var(--radius-s); border: 1px solid var(--line); margin-top: 10px; }

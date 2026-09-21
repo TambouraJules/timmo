@@ -109,21 +109,27 @@
 
           <div class="ti-wizard-step" data-step="2" style="display:none;">
             <h4 data-i18n="wizard_step2_title"></h4>
+            <div class="field">
+              <label data-i18n="field_region"></label>
+              <div class="ti-region-chips" id="nl-region-chips"></div>
+              <input type="hidden" id="nl-region" required>
+            </div>
             <div class="field-row">
-              <div class="field"><label data-i18n="field_region"></label>
-                <select id="nl-region" onchange="tiOnRegionChange()"></select>
-              </div>
               <div class="field"><label data-i18n="field_department"></label>
                 <select id="nl-department" onchange="tiOnDepartmentChange()"></select>
               </div>
+              <div class="field"><label data-i18n="field_arrondissement"></label>
+                <select id="nl-arrondissement" onchange="tiOnArrondissementChange()"></select>
+              </div>
             </div>
-            <div class="field-row">
-              <div class="field"><label data-i18n="field_commune"></label>
-                <select id="nl-commune" onchange="tiOnCommuneChange()"></select>
-              </div>
-              <div class="field"><label data-i18n="field_neighborhood"></label>
-                <select id="nl-hood" onchange="tiOnHoodChange()"></select>
-              </div>
+            <div class="field">
+              <label data-i18n="field_commune"></label>
+              <select id="nl-commune" onchange="tiOnCommuneChange()"></select>
+            </div>
+            <div class="field">
+              <label data-i18n="field_street_address"></label>
+              <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 8px;" data-i18n="field_street_address_hint"></p>
+              <input type="text" id="nl-street-address" placeholder="Rue 12, Cité Keur Gorgui...">
             </div>
             <div class="field">
               <label data-i18n="field_map_pin"></label>

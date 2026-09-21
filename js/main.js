@@ -338,6 +338,48 @@ function tiEscapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/* ---------- Sélecteur générique de localisation (Région > Département >
+   Arrondissement > Commune) ----------
+   Paramétré par un préfixe d'identifiants DOM (ex. "ag" pour le formulaire
+   d'agence), pour être réutilisable sans dupliquer la logique de cascade.
+   Le formulaire de nouvelle annonce garde sa propre version dédiée
+   (tiPopulateRegionSelect, etc.) qui gère en plus la carte et l'aperçu en
+   direct ; celle-ci sert les cas plus simples. */
+function tiPopulateRegionChipsGeneric(prefix, initialRegion) {
+  const mount = document.getElementById(prefix + "-region-chips");
+  if (!mount) return;
+  mount.innerHTML = TI_ADMIN_REGIONS.map(r => `<div class="ti-region-chip" data-region="${r.id}" onclick="tiSelectRegionGeneric('${prefix}','${r.id}')">${tiEscapeHtml(r.name)}</div>`).join('');
+  tiSelectRegionGeneric(prefix, initialRegion && TI_ADMIN_DEPARTMENTS[initialRegion] ? initialRegion : TI_ADMIN_REGIONS[0].id);
+}
+function tiSelectRegionGeneric(prefix, regionId) {
+  document.getElementById(prefix + "-region").value = regionId;
+  document.querySelectorAll("#" + prefix + "-region-chips .ti-region-chip").forEach(el => el.classList.toggle("active", el.dataset.region === regionId));
+  const depts = TI_ADMIN_DEPARTMENTS[regionId] || [];
+  document.getElementById(prefix + "-department").innerHTML = depts.map(d => `<option value="${d.id}">${tiEscapeHtml(d.name)}</option>`).join('');
+  tiOnDepartmentChangeGeneric(prefix);
+}
+function tiOnDepartmentChangeGeneric(prefix) {
+  const deptId = document.getElementById(prefix + "-department").value;
+  const arrs = tiGetArrondissements(deptId);
+  document.getElementById(prefix + "-arrondissement").innerHTML = arrs.map(a => `<option value="${a.id}">${tiEscapeHtml(a.name)}</option>`).join('');
+  tiOnArrondissementChangeGeneric(prefix);
+}
+function tiOnArrondissementChangeGeneric(prefix) {
+  const arrId = document.getElementById(prefix + "-arrondissement").value;
+  const communes = TI_ADMIN_COMMUNES[arrId] || [];
+  const communeSel = document.getElementById(prefix + "-commune");
+  communeSel.innerHTML = communes.length
+    ? communes.map(c => `<option value="${c.id}">${tiEscapeHtml(c.name)}</option>`).join('')
+    : `<option value="">${t('no_communes_yet')}</option>`;
+}
+/** Positionne directement la cascade générique sur un chemin connu. */
+function tiSetLocationHierarchyGeneric(prefix, region, department, arrondissement, commune) {
+  tiPopulateRegionChipsGeneric(prefix, region);
+  if (department) { document.getElementById(prefix + "-department").value = department; tiOnDepartmentChangeGeneric(prefix); }
+  if (arrondissement) { document.getElementById(prefix + "-arrondissement").value = arrondissement; tiOnArrondissementChangeGeneric(prefix); }
+  if (commune) document.getElementById(prefix + "-commune").value = commune;
+}
+
 /* ---------- Éditeur de message enrichi réutilisable ----------
    Un compositeur de message léger et sûr, conçu pour être réutilisé
    partout où une agence rédige un modèle de message qu'un client verra

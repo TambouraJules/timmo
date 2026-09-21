@@ -231,7 +231,26 @@
         <div class="field"><label data-i18n="email"></label><input type="email" id="ag-email" required></div>
         <div class="field"><label data-i18n="phone_label"></label><input type="tel" id="ag-phone" placeholder="+221 7X XXX XX XX"></div>
       </div>
-      <div class="field"><label data-i18n="agency_address"></label><input type="text" id="ag-address" placeholder="Rue, quartier, ville"></div>
+      <div class="field">
+        <label data-i18n="agency_address"></label>
+        <div class="ti-region-chips" id="ag-region-chips"></div>
+        <input type="hidden" id="ag-region" required>
+      </div>
+      <div class="field-row">
+        <div class="field"><label data-i18n="field_department"></label>
+          <select id="ag-department" onchange="tiOnDepartmentChangeGeneric('ag')"></select>
+        </div>
+        <div class="field"><label data-i18n="field_arrondissement"></label>
+          <select id="ag-arrondissement" onchange="tiOnArrondissementChangeGeneric('ag')"></select>
+        </div>
+      </div>
+      <div class="field"><label data-i18n="field_commune"></label>
+        <select id="ag-commune"></select>
+      </div>
+      <div class="field"><label data-i18n="field_street_address"></label>
+        <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 8px;" data-i18n="field_street_address_hint"></p>
+        <input type="text" id="ag-address" placeholder="Rue 12, Cité Keur Gorgui...">
+      </div>
       <label class="ti-amenity-option" style="margin-bottom:20px;">
         <input type="checkbox" id="ag-verified"> <span>✓</span> <span data-i18n="verified_label">Vérifiée</span>
       </label>
