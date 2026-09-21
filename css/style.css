@@ -775,6 +775,7 @@ body { padding-top: var(--header-h, 68px); }
   margin-top: 8px; font-size: .8rem; color: var(--ink-soft); text-align: center;
 }
 .ti-map-price-pin {
+  display: inline-block; width: max-content;
   position: relative; transform: translate(-50%, -100%);
   background: var(--deep); color: #fff; font-weight: 800; font-size: .76rem; font-family: var(--font-body);
   padding: 7px 13px; border-radius: 999px; white-space: nowrap; box-shadow: 0 4px 12px rgba(23,38,43,.3);
