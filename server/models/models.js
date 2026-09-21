@@ -24,7 +24,7 @@ const PropertySchema = new Schema({
   tourPanels: [String],
   lat: Number,
   lng: Number,
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const UserSchema = new Schema({
   role: { type: String, enum: ["client", "agency", "admin"] },
