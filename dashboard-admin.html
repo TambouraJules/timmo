@@ -105,6 +105,7 @@
     </section>
 
     <section class="ti-dash-panel" id="panel-payments">
+      <div id="admin-deposit-disputes-mount"></div>
       <div id="admin-payments-filters"></div>
       <div id="admin-payments-mount"></div>
     </section>
@@ -278,6 +279,26 @@
       <div id="ag-supervisor-existing-section" style="display:none;"></div>
 
       <button type="submit" class="btn btn-primary btn-block" data-i18n="save_changes">Enregistrer</button>
+    </form>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-deposit-resolve">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-deposit-resolve')">&times;</button>
+    <h3 data-i18n="escrow_resolve_title"></h3>
+    <p style="color:var(--ink-soft);font-size:.88rem;margin-top:-8px;" data-i18n="escrow_resolve_sub"></p>
+    <p style="font-size:.85rem;margin-bottom:14px;"><span data-i18n="escrow_deposit_total_label"></span> <strong id="deposit-resolve-total"></strong></p>
+    <form onsubmit="return tiSubmitDepositResolve(event)">
+      <div class="field-row">
+        <div class="field"><label data-i18n="escrow_release_label"></label><input type="number" id="deposit-resolve-release" required></div>
+        <div class="field"><label data-i18n="escrow_claim_label"></label><input type="number" id="deposit-resolve-claim" required></div>
+      </div>
+      <div class="field">
+        <label data-i18n="escrow_resolution_note_label"></label>
+        <textarea id="deposit-resolve-note" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="escrow_resolve_submit"></button>
     </form>
   </div>
 </div>

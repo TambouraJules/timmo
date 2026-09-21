@@ -1282,6 +1282,7 @@ function tiEditListing(id) {
     document.getElementById("nl-street-address").value = p.streetAddress || "";
     TI_NL_PIN = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
     document.getElementById("nl-price").value = p.price;
+    document.getElementById("nl-deposit").value = p.depositAmount || "";
     document.getElementById("nl-listing-kind").value = p.forSale ? "sale" : (p.shortStay ? "short" : "rent");
     document.getElementById("nl-beds").value = p.bedrooms;
     document.getElementById("nl-baths").value = p.bathrooms;
@@ -1371,6 +1372,7 @@ async function tiSubmitNewListing(e) {
     region: regionId, department: deptId, arrondissement: arrId, commune: communeId,
     streetAddress: document.getElementById("nl-street-address").value.trim(),
     price: parseFloat(document.getElementById("nl-price").value),
+    depositAmount: parseFloat(document.getElementById("nl-deposit").value) || 0,
     bedrooms: parseInt(document.getElementById("nl-beds").value) || 0,
     bathrooms: parseInt(document.getElementById("nl-baths").value) || 1,
     area: parseFloat(document.getElementById("nl-area").value),
@@ -1605,6 +1607,7 @@ function tiAgencyBookingCardHtml(b) {
             <span class="ti-rental-deposit-amount" data-price-xof="${b.rental.deposit.amount}">${tiFormatPrice(b.rental.deposit.amount)}</span>
             ${tiRentalStatusBadge(b.rental.deposit.status)}
           </div>
+          ${b.rental.deposit.status === 'paid' ? tiAgencyDepositEscrowHtml(b) : ''}
           ${b.rental.charges.some(c => c.enabled) ? `
             <div class="ti-charges-chips">
               ${b.rental.charges.filter(c => c.enabled).map(c => `<span class="ti-charge-chip">${tiChargeLabel(c)} · <span data-price-xof="${c.amount}">${tiFormatPrice(c.amount)}</span></span>`).join('')}
@@ -1682,6 +1685,67 @@ function tiRentalStatusBadge(status, overdue) {
 function tiChargeLabel(c) { return tiGetLang() === "en" ? c.labelEn : c.label; }
 
 let TI_CHARGES_BOOKING_ID = null;
+/** Affiche, côté agence, l'état du séquestre et les actions possibles une
+ *  fois le dépôt payé : libération immédiate et intégrale, ou ouverture
+ *  du formulaire de répartition partielle avec motif. */
+function tiAgencyDepositEscrowHtml(b) {
+  const d = b.rental.deposit;
+  const status = d.escrowStatus || "held";
+  if (status === "held") {
+    return `<div class="ti-escrow-box">
+      <span class="badge badge-pending">${t('escrow_held_badge')}</span>
+      <div class="ti-escrow-actions">
+        <button class="btn btn-sm btn-primary" onclick="tiReleaseDepositFully('${b.id}', ${d.amount})">${t('escrow_release_full_action')}</button>
+        <button class="btn btn-sm btn-outline" onclick="tiOpenDepositSettlementModal('${b.id}', ${d.amount})">${t('escrow_propose_split_action')}</button>
+      </div>
+    </div>`;
+  }
+  if (status === "proposed") {
+    return `<div class="ti-escrow-box"><span class="badge badge-pending">${t('escrow_awaiting_tenant_badge')}</span><p>${t('escrow_release_label')} <strong data-price-xof="${d.releaseAmount}">${tiFormatPrice(d.releaseAmount)}</strong> · ${t('escrow_claim_label')} <strong data-price-xof="${d.claimAmount}">${tiFormatPrice(d.claimAmount)}</strong></p></div>`;
+  }
+  if (status === "disputed") {
+    return `<div class="ti-escrow-box"><span class="badge badge-cancelled">${t('escrow_disputed_badge')}</span><p>${t('escrow_disputed_agency_note')}</p></div>`;
+  }
+  return `<div class="ti-escrow-box"><span class="badge badge-paid">${t('escrow_settled_badge')}</span><p>${t('escrow_release_label')} <strong data-price-xof="${d.releaseAmount}">${tiFormatPrice(d.releaseAmount)}</strong> · ${t('escrow_claim_label')} <strong data-price-xof="${d.claimAmount}">${tiFormatPrice(d.claimAmount)}</strong></p></div>`;
+}
+async function tiReleaseDepositFully(bookingId, amount) {
+  if (!confirm(t('escrow_release_full_confirm'))) return;
+  await TiDB.proposeDepositSettlement(bookingId, amount, 0, "");
+  tiToast(t('escrow_proposed_toast'));
+  await tiRefreshPanel("bookings");
+}
+let TI_DEPOSIT_SETTLEMENT_CTX = null;
+function tiOpenDepositSettlementModal(bookingId, depositAmount) {
+  TI_DEPOSIT_SETTLEMENT_CTX = { bookingId, depositAmount };
+  document.getElementById("deposit-settlement-total").textContent = tiFormatPrice(depositAmount);
+  document.getElementById("deposit-settlement-release").value = "";
+  document.getElementById("deposit-settlement-claim").value = "";
+  document.getElementById("deposit-settlement-reason").value = "";
+  tiOpenModal("modal-deposit-settlement");
+}
+async function tiSubmitDepositSettlement(e) {
+  e.preventDefault();
+  const { bookingId, depositAmount } = TI_DEPOSIT_SETTLEMENT_CTX;
+  const release = parseFloat(document.getElementById("deposit-settlement-release").value) || 0;
+  const claim = parseFloat(document.getElementById("deposit-settlement-claim").value) || 0;
+  if (release + claim !== depositAmount) {
+    tiToast(t('escrow_amounts_must_sum_error'));
+    return false;
+  }
+  const reason = document.getElementById("deposit-settlement-reason").value.trim();
+  if (claim > 0 && !reason) {
+    tiToast(t('escrow_claim_reason_required'));
+    return false;
+  }
+  const btn = e.target.querySelector("button[type=submit]");
+  tiSetBtnLoading(btn, true);
+  await TiDB.proposeDepositSettlement(bookingId, release, claim, reason);
+  tiSetBtnLoading(btn, false);
+  tiCloseModal("modal-deposit-settlement");
+  tiToast(t('escrow_proposed_toast'));
+  await tiRefreshPanel("bookings");
+  return false;
+}
 function tiOpenChargesModal(bookingId) {
   TI_CHARGES_BOOKING_ID = bookingId;
   const booking = TI_AGENCY_ALL_BOOKINGS.find(b => b.id === bookingId);

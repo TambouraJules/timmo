@@ -355,6 +355,7 @@ async function tiRenderPayments() {
             ? `<span class="badge badge-paid">${t('status_paid')}</span>`
             : `<button class="btn btn-sm btn-primary" onclick="tiOpenSchedulePayModal('${b.id}','deposit',${b.rental.deposit.amount})">${t('pay_now')}</button>`}
         </div>
+        ${b.rental.deposit.status === 'paid' ? tiDepositEscrowStatusHtml(b) : ''}
         <div class="ti-month-list">
           ${b.rental.schedule.map((item, idx) => {
             const total = item.rent + item.chargesAmount;
@@ -422,6 +423,41 @@ function tiToggleMonthBreakdown(rowId) {
 function tiChargeLabel(c) { return tiGetLang() === "en" ? c.labelEn : c.label; }
 
 let TI_SCHEDULE_PAY_CTX = null;
+/** Affiche l'état du séquestre du dépôt une fois celui-ci payé : en attente
+ *  de restitution, répartition proposée par l'agence (avec actions
+ *  accepter/contester), litige en cours d'arbitrage, ou solde final réglé. */
+function tiDepositEscrowStatusHtml(b) {
+  const d = b.rental.deposit;
+  const status = d.escrowStatus || "held";
+  if (status === "held") {
+    return `<div class="ti-escrow-box"><span class="badge badge-pending">${t('escrow_held_badge')}</span><p>${t('escrow_held_note')}</p></div>`;
+  }
+  if (status === "proposed") {
+    return `<div class="ti-escrow-box ti-escrow-proposed">
+      <span class="badge badge-pending">${t('escrow_proposed_badge')}</span>
+      <p>${t('escrow_release_label')} <strong data-price-xof="${d.releaseAmount}">${tiFormatPrice(d.releaseAmount)}</strong> · ${t('escrow_claim_label')} <strong data-price-xof="${d.claimAmount}">${tiFormatPrice(d.claimAmount)}</strong></p>
+      ${d.claimReason ? `<p class="ti-escrow-reason">${t('escrow_claim_reason_label')} ${tiEscapeHtml(d.claimReason)}</p>` : ''}
+      <div class="ti-escrow-actions">
+        <button class="btn btn-sm btn-primary" onclick="tiRespondDepositProposal('${b.id}', true)">${t('escrow_accept_action')}</button>
+        <button class="btn btn-sm btn-outline" onclick="tiRespondDepositProposal('${b.id}', false)">${t('escrow_dispute_action')}</button>
+      </div>
+    </div>`;
+  }
+  if (status === "disputed") {
+    return `<div class="ti-escrow-box"><span class="badge badge-cancelled">${t('escrow_disputed_badge')}</span><p>${t('escrow_disputed_note')}</p></div>`;
+  }
+  return `<div class="ti-escrow-box">
+    <span class="badge badge-paid">${t('escrow_settled_badge')}</span>
+    <p>${t('escrow_release_label')} <strong data-price-xof="${d.releaseAmount}">${tiFormatPrice(d.releaseAmount)}</strong> · ${t('escrow_claim_label')} <strong data-price-xof="${d.claimAmount}">${tiFormatPrice(d.claimAmount)}</strong></p>
+    ${d.decidedBy === 'admin' ? `<p class="ti-escrow-reason">${t('escrow_admin_decided_note')}</p>` : ''}
+  </div>`;
+}
+async function tiRespondDepositProposal(bookingId, accept) {
+  if (!accept && !confirm(t('escrow_dispute_confirm'))) return;
+  await TiDB.respondToDepositProposal(bookingId, accept);
+  tiToast(accept ? t('escrow_accepted_toast') : t('escrow_disputed_toast'));
+  await tiRefreshPanel("payments");
+}
 function tiOpenSchedulePayModal(bookingId, scheduleId, amount) {
   TI_SCHEDULE_PAY_CTX = { bookingId, scheduleId };
   document.getElementById("schedule-pay-amount").textContent = tiFormatPrice(amount);

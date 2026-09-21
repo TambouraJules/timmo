@@ -105,6 +105,11 @@
               <div class="field"><label data-i18n="field_bedrooms"></label><input type="number" id="nl-beds" value="1" oninput="tiUpdateListingPreview()"></div>
               <div class="field"><label data-i18n="field_bathrooms"></label><input type="number" id="nl-baths" value="1" oninput="tiUpdateListingPreview()"></div>
             </div>
+            <div class="field">
+              <label data-i18n="field_deposit_amount"></label>
+              <input type="number" id="nl-deposit" placeholder="0">
+              <p style="font-size:.8rem;color:var(--ink-soft);margin:6px 0 0;" data-i18n="field_deposit_amount_hint"></p>
+            </div>
           </div>
 
           <div class="ti-wizard-step" data-step="2" style="display:none;">
@@ -377,6 +382,26 @@
     <form onsubmit="return tiSubmitCharges(event)">
       <div id="charges-checklist" style="margin-bottom:18px;"></div>
       <button type="submit" class="btn btn-primary btn-block" data-i18n="save_changes"></button>
+    </form>
+  </div>
+</div>
+
+<div class="ti-modal-backdrop" id="modal-deposit-settlement">
+  <div class="ti-modal">
+    <button class="ti-modal-close" onclick="tiCloseModal('modal-deposit-settlement')">&times;</button>
+    <h3 data-i18n="escrow_propose_split_title"></h3>
+    <p style="color:var(--ink-soft);font-size:.88rem;margin-top:-8px;" data-i18n="escrow_propose_split_sub"></p>
+    <p style="font-size:.85rem;margin-bottom:14px;"><span data-i18n="escrow_deposit_total_label"></span> <strong id="deposit-settlement-total"></strong></p>
+    <form onsubmit="return tiSubmitDepositSettlement(event)">
+      <div class="field-row">
+        <div class="field"><label data-i18n="escrow_release_label"></label><input type="number" id="deposit-settlement-release" required></div>
+        <div class="field"><label data-i18n="escrow_claim_label"></label><input type="number" id="deposit-settlement-claim" required></div>
+      </div>
+      <div class="field">
+        <label data-i18n="escrow_claim_reason_label"></label>
+        <textarea id="deposit-settlement-reason" rows="3" placeholder="Ex. réparation d'un carreau cassé, nettoyage en profondeur..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="escrow_propose_split_submit"></button>
     </form>
   </div>
 </div>

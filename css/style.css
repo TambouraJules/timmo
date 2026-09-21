@@ -1164,6 +1164,15 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
 }
 .ti-rental-deposit-row span:first-child { color: var(--ink-soft); font-weight: 600; }
 .ti-rental-deposit-amount { font-family: var(--font-display); font-weight: 700; color: var(--deep); margin-right: auto; }
+.ti-escrow-box {
+  background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-s);
+  padding: 12px 14px; margin: 10px 0; font-size: .85rem;
+}
+.ti-escrow-box p { margin: 8px 0 0; color: var(--ink); }
+.ti-escrow-box p strong { color: var(--deep); }
+.ti-escrow-reason { color: var(--ink-soft) !important; font-size: .82rem; }
+.ti-escrow-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ti-escrow-proposed { border-color: var(--gold); background: var(--gold-soft); }
 .ti-charges-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0; }
 .ti-charge-chip {
   background: var(--gold-soft); color: var(--clay-dark); font-size: .78rem; font-weight: 700;

@@ -27,7 +27,7 @@ async function tiRefreshPanel(panelName) {
     agencies: tiRenderAgencies,
     listings: tiRenderAdminListings,
     amenities: tiRenderAmenityCatalog,
-    payments: tiRenderAdminPayments,
+    payments: async () => { await Promise.all([tiRenderAdminPayments(), tiRenderDepositDisputes()]); },
     moderation: tiRenderModeration,
     deletions: tiRenderDeletionRequests,
     audit: tiRenderAdminAudit,
@@ -1154,6 +1154,69 @@ async function tiRenderDeletionRequests() {
       </div>
     </div>`).join('');
 }
+/** Litiges de dépôt de garantie en attente d'arbitrage — le locataire a
+ *  contesté la répartition proposée par l'agence ; l'administration
+ *  tranche avec une décision finale et contraignante. */
+async function tiRenderDepositDisputes() {
+  const mount = document.getElementById("admin-deposit-disputes-mount");
+  if (!mount) return;
+  const bookings = await TiDB.getBookings({});
+  const disputed = bookings.filter(b => b.rental && b.rental.deposit && b.rental.deposit.escrowStatus === "disputed");
+  if (!disputed.length) { mount.innerHTML = ""; return; }
+  mount.innerHTML = `
+    <h3 style="margin:0 0 4px;">${t('escrow_disputes_title')}</h3>
+    <p style="color:var(--ink-soft);font-size:.88rem;margin:0 0 16px;">${t('escrow_disputes_sub')}</p>
+    ${disputed.map(b => `
+    <div class="ti-list-row" style="align-items:flex-start;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:10px;width:100%;">
+        <span class="ti-agency-avatar">${TI_ICONS.wallet || TI_ICONS.home}</span>
+        <div class="ti-list-row-body">
+          <strong>${tiEscapeHtml(b.propertyTitle)}</strong>
+          <span class="badge badge-cancelled">${t('escrow_disputed_badge')}</span>
+          <br>
+          <span style="color:var(--ink-soft);font-size:.85rem;">${tiEscapeHtml(tiAgencyName(b.agencyId))} · ${tiEscapeHtml(b.name)} · ${t('escrow_deposit_total_label')} <span data-price-xof="${b.rental.deposit.amount}">${tiFormatPrice(b.rental.deposit.amount)}</span></span>
+        </div>
+      </div>
+      <div class="ti-doc-note" style="margin-top:10px;width:100%;">
+        <strong>${t('escrow_proposed_split_label')}</strong>
+        ${t('escrow_release_label')} <span data-price-xof="${b.rental.deposit.releaseAmount}">${tiFormatPrice(b.rental.deposit.releaseAmount)}</span> ·
+        ${t('escrow_claim_label')} <span data-price-xof="${b.rental.deposit.claimAmount}">${tiFormatPrice(b.rental.deposit.claimAmount)}</span>
+        ${b.rental.deposit.claimReason ? `<br>${t('escrow_claim_reason_label')} ${tiEscapeHtml(b.rental.deposit.claimReason)}` : ''}
+      </div>
+      <div class="ti-list-row-actions" style="margin-top:10px;">
+        <button class="btn btn-primary btn-sm" onclick="tiOpenDepositResolveModal('${b.id}', ${b.rental.deposit.amount})">${t('escrow_resolve_action')}</button>
+      </div>
+    </div>`).join('')}
+  `;
+}
+let TI_DEPOSIT_RESOLVE_CTX = null;
+function tiOpenDepositResolveModal(bookingId, depositAmount) {
+  TI_DEPOSIT_RESOLVE_CTX = { bookingId, depositAmount };
+  document.getElementById("deposit-resolve-total").textContent = tiFormatPrice(depositAmount);
+  document.getElementById("deposit-resolve-release").value = "";
+  document.getElementById("deposit-resolve-claim").value = "";
+  document.getElementById("deposit-resolve-note").value = "";
+  tiOpenModal("modal-deposit-resolve");
+}
+async function tiSubmitDepositResolve(e) {
+  e.preventDefault();
+  const { bookingId, depositAmount } = TI_DEPOSIT_RESOLVE_CTX;
+  const release = parseFloat(document.getElementById("deposit-resolve-release").value) || 0;
+  const claim = parseFloat(document.getElementById("deposit-resolve-claim").value) || 0;
+  if (release + claim !== depositAmount) {
+    tiToast(t('escrow_amounts_must_sum_error'));
+    return false;
+  }
+  const note = document.getElementById("deposit-resolve-note").value.trim();
+  const btn = e.target.querySelector("button[type=submit]");
+  tiSetBtnLoading(btn, true);
+  await TiDB.resolveDepositDispute(bookingId, release, claim, note);
+  tiSetBtnLoading(btn, false);
+  tiCloseModal("modal-deposit-resolve");
+  tiToast(t('escrow_resolved_toast'));
+  await tiRenderDepositDisputes();
+  return false;
+}
 async function tiApproveDeletionRequest(type, id) {
   if (!confirm(t('confirm_approve_deletion'))) return;
   if (type === "property") await TiDB.approvePropertyDeletion(id, TI_SESSION.name);
@@ -1501,7 +1564,7 @@ async function tiInitAdminDashboard() {
   document.getElementById("overview-charts-mount").innerHTML = tiSkeletonChartCardHtml() + tiSkeletonChartCardHtml();
   document.getElementById("dash-name").textContent = TI_SESSION.name;
   await new Promise(r => setTimeout(r, 350));
-  await Promise.all([tiRenderOverview(), tiRenderUsers(), tiRenderAgencies(), tiRenderAdminListings(), tiRenderAmenityCatalog(), tiRenderAdminPayments(), tiRenderModeration(), tiRenderDeletionRequests(), tiRenderAdminAudit(), tiRenderBroadcastLog(), tiRenderFavorites()]);
+  await Promise.all([tiRenderOverview(), tiRenderUsers(), tiRenderAgencies(), tiRenderAdminListings(), tiRenderAmenityCatalog(), tiRenderAdminPayments(), tiRenderDepositDisputes(), tiRenderModeration(), tiRenderDeletionRequests(), tiRenderAdminAudit(), tiRenderBroadcastLog(), tiRenderFavorites()]);
   tiApplyPanelFromUrl(["overview", "users", "agencies", "listings", "amenities", "payments", "moderation", "deletions", "audit", "broadcasts", "reports", "favorites"]);
 }
 if (TI_SESSION) tiInitAdminDashboard();

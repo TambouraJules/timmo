@@ -825,6 +825,8 @@ const TiDB = {
     const all = await this._bookingsAll();
     const b = all.find(b => b.id === bookingId);
     if (!b || b.rental) return b;
+    const prop = await this.getProperty(b.propertyId);
+    const depositAmount = (prop && prop.depositAmount) || b.price;
     const start = b.checkin ? new Date(b.checkin) : new Date();
     const schedule = [];
     for (let i = 0; i < 6; i++) {
@@ -840,7 +842,7 @@ const TiDB = {
       });
     }
     b.rental = {
-      deposit: { amount: b.price, status: "pending", paidAt: null, method: null },
+      deposit: { amount: depositAmount, status: "pending", paidAt: null, method: null },
       charges: [
         { key: "water", label: "Eau", labelEn: "Water", amount: 5000, enabled: false },
         { key: "electricity", label: "Électricité", labelEn: "Electricity", amount: 15000, enabled: false },
@@ -1095,6 +1097,45 @@ const TiDB = {
     all.unshift(payment);
     tiSave("ti_payments", all);
     return payment;
+  },
+  /** L'agence propose une répartition du dépôt de garantie séquestré à la
+   *  fin du bail : releaseAmount revient au locataire, claimAmount est
+   *  retenu par l'agence (avec un motif) — les deux doivent totaliser
+   *  le dépôt payé. */
+  async proposeDepositSettlement(bookingId, releaseAmount, claimAmount, claimReason) {
+    const all = await this._bookingsAll();
+    const b = all.find(b => b.id === bookingId);
+    if (!b || !b.rental) return false;
+    Object.assign(b.rental.deposit, {
+      escrowStatus: "proposed", releaseAmount, claimAmount,
+      claimReason: claimReason || "", proposedAt: new Date().toISOString(),
+    });
+    await this._bookingSave(b);
+    return true;
+  },
+  /** Le locataire accepte la répartition proposée (réglé) ou la conteste
+   *  (litige transmis à l'administration pour arbitrage). */
+  async respondToDepositProposal(bookingId, accept) {
+    const all = await this._bookingsAll();
+    const b = all.find(b => b.id === bookingId);
+    if (!b || !b.rental) return false;
+    b.rental.deposit.escrowStatus = accept ? "settled" : "disputed";
+    b.rental.deposit.settledAt = accept ? new Date().toISOString() : null;
+    await this._bookingSave(b);
+    return true;
+  },
+  /** L'administration tranche un litige avec une répartition finale et
+   *  contraignante. */
+  async resolveDepositDispute(bookingId, releaseAmount, claimAmount, note) {
+    const all = await this._bookingsAll();
+    const b = all.find(b => b.id === bookingId);
+    if (!b || !b.rental) return false;
+    Object.assign(b.rental.deposit, {
+      escrowStatus: "settled", releaseAmount, claimAmount,
+      resolutionNote: note || "", settledAt: new Date().toISOString(), decidedBy: "admin",
+    });
+    await this._bookingSave(b);
+    return true;
   },
 
   async getFavorites(userId) {
