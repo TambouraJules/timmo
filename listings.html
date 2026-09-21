@@ -169,9 +169,10 @@
     }
     TI_SEARCH_MAP = L.map(container).setView([14.7167, -17.4677], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(TI_SEARCH_MAP);
+    if (typeof L.markerClusterGroup !== 'function') console.warn('Timmo: plugin Leaflet.markercluster non chargé — repli sans regroupement des marqueurs.');
     TI_MAP_CLUSTER = typeof L.markerClusterGroup === 'function'
       ? L.markerClusterGroup({
-          maxClusterRadius: 60,
+          maxClusterRadius: 100,
           iconCreateFunction: (cluster) => L.divIcon({
             className: '', html: `<div class="ti-map-cluster">${cluster.getChildCount()}</div>`,
             iconSize: [0, 0], iconAnchor: [0, 0],
