@@ -9,6 +9,8 @@
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 </head>
 <body>
 <header id="ti-header"></header>
@@ -110,6 +112,7 @@
 <div id="ti-footer"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/currency.js"></script>
 <script src="js/data.js"></script>
@@ -133,6 +136,7 @@
   /* ---------- Interactive map search ---------- */
   let TI_MAP_VIEW_ACTIVE = false;
   let TI_SEARCH_MAP = null;
+  let TI_MAP_CLUSTER = null;
   let TI_MAP_MARKERS = {};
   let TI_MAP_LAST_FILTERED_LIST = [];
 
@@ -165,19 +169,28 @@
     }
     TI_SEARCH_MAP = L.map(container).setView([14.7167, -17.4677], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(TI_SEARCH_MAP);
+    TI_MAP_CLUSTER = typeof L.markerClusterGroup === 'function'
+      ? L.markerClusterGroup({
+          maxClusterRadius: 60,
+          iconCreateFunction: (cluster) => L.divIcon({
+            className: '', html: `<div class="ti-map-cluster">${cluster.getChildCount()}</div>`,
+            iconSize: [0, 0], iconAnchor: [0, 0],
+          }),
+        })
+      : L.layerGroup(); // repli sans regroupement si le plugin n'a pas pu se charger
+    TI_SEARCH_MAP.addLayer(TI_MAP_CLUSTER);
     setTimeout(() => TI_SEARCH_MAP.invalidateSize(), 100);
   }
 
   function tiRenderMapMarkers(list, fitBounds) {
-    if (!TI_SEARCH_MAP) return;
+    if (!TI_SEARCH_MAP || !TI_MAP_CLUSTER) return;
     TI_MAP_LAST_FILTERED_LIST = list;
-    Object.values(TI_MAP_MARKERS).forEach(m => TI_SEARCH_MAP.removeLayer(m));
+    TI_MAP_CLUSTER.clearLayers();
     TI_MAP_MARKERS = {};
     const withCoords = list.filter(p => p.lat != null && p.lng != null);
     withCoords.forEach(p => {
       const priceLabel = tiFormatPrice(p.price);
       const marker = L.marker([p.lat, p.lng], { icon: tiCreateMarkerIcon(priceLabel, false) })
-        .addTo(TI_SEARCH_MAP)
         .bindPopup(`
           <a class="ti-map-popup" href="property.html?id=${p.id}">
             <img src="${p.cover}" alt="">
@@ -187,6 +200,7 @@
       marker.on('mouseover', () => tiHighlightCard(p.id, true));
       marker.on('mouseout', () => tiHighlightCard(p.id, false));
       TI_MAP_MARKERS[p.id] = marker;
+      TI_MAP_CLUSTER.addLayer(marker);
     });
     if (fitBounds && withCoords.length) {
       TI_SEARCH_MAP.fitBounds(L.latLngBounds(withCoords.map(p => [p.lat, p.lng])).pad(0.25));
