@@ -92,17 +92,25 @@ async function tiRenderPropertyContent() {
         </div>
         <p id="ti-prop-desc" style="font-size:1rem;color:var(--ink-soft);"></p>
 
-        <div class="ti-features-wrap">
+        ${(() => {
+          // p.amenities === undefined : annonce ancienne, jamais dotée de ce
+          // champ — un jeu de caractéristiques type reste un repli honnête.
+          // p.amenities === [] : l'agence a délibérément choisi de n'en
+          // cocher aucune — on respecte ce choix plutôt que d'en inventer.
+          const amenities = p.amenities !== undefined ? p.amenities : tiBuildAmenities(p.type, p.furnished);
+          if (!amenities.length) return '';
+          return `<div class="ti-features-wrap">
           <h4 style="margin:0 0 4px;" data-i18n="features_title"></h4>
           <p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:4px;" data-i18n="features_sub"></p>
           <div class="ti-features-grid">
-            ${(p.amenities || tiBuildAmenities(p.type, p.furnished)).map(a => `
+            ${amenities.map(a => `
               <div class="ti-feature-item">
                 <span class="ti-feature-icon">${tiAmenityIconChar(a.icon)}</span>
                 <span>${tiGetLang() === "en" ? a.labelEn : a.label}</span>
               </div>`).join('')}
           </div>
-        </div>
+        </div>`;
+        })()}
 
         <h4 style="margin-top:30px;" data-i18n="map_title"></h4>
         <div id="ti-map"></div>
