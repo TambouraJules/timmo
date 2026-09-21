@@ -61,12 +61,8 @@
         <label data-i18n="pay_amount"></label>
         <div style="font-family:var(--font-display);font-size:1.4rem;color:var(--deep);" id="pay-amount-display"></div>
       </div>
-      <label data-i18n="pay_method"></label>
-      <div class="ti-pay-methods">
-        <label><input type="radio" name="pm" value="wave" checked><br><span>Wave</span></label>
-        <label><input type="radio" name="pm" value="om"><br><span>Orange Money</span></label>
-        <label><input type="radio" name="pm" value="card"><br><span>Carte bancaire</span></label>
-      </div>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin:-4px 0 16px;" data-i18n="pay_redirect_note"></p>
+      <div id="pay-gateway-error" style="display:none;"></div>
       <button type="submit" class="btn btn-primary btn-block" data-i18n="pay_submit"></button>
     </form>
   </div>

@@ -22,6 +22,7 @@ async function tiRenderPropertyPage() {
   }
   try {
     await tiRenderPropertyContent();
+    await tiHandlePaymentReturn();
   } catch (err) {
     console.error("Erreur d'affichage de la fiche bien:", err);
     root.innerHTML = `<p style="color:var(--ink-soft)">Une erreur est survenue lors du chargement de cette fiche. Essayez de vider le cache local (localStorage) du navigateur et de recharger la page.<br><small>${err.message || err}</small></p>`;
@@ -483,27 +484,49 @@ function tiOpenPaymentModal() {
   const s = tiGetSession();
   if (!s) { window.location.href = "login.html"; return; }
   document.getElementById("pay-amount-display").textContent = tiFormatPrice(TI_PROPERTY.price);
+  document.getElementById("pay-gateway-error").style.display = "none";
   tiOpenModal("modal-pay");
 }
 async function tiSubmitPayment(e) {
   e.preventDefault();
   const btn = e.target.querySelector("button[type=submit]");
+  const errBox = document.getElementById("pay-gateway-error");
+  errBox.style.display = "none";
   tiSetBtnLoading(btn, true);
   const s = tiGetSession();
-  const method = document.querySelector('input[name="pm"]:checked').value;
-  await new Promise(r => setTimeout(r, 900));
-  await TiDB.createPayment({
-    propertyId: TI_PROPERTY.id,
-    propertyTitle: tiPropertyTitle(TI_PROPERTY),
-    userId: s.id,
-    amount: TI_PROPERTY.price,
-    method,
-    status: "paid",
-  });
-  tiSetBtnLoading(btn, false);
-  tiCloseModal("modal-pay");
-  tiToast(t("pay_success"));
+  const returnUrl = `${window.location.origin}/property.html?id=${TI_PROPERTY.id}&pd_return=1`;
+  try {
+    const result = await TiDB.createPaymentCheckout({
+      amount: TI_PROPERTY.price, description: tiPropertyTitle(TI_PROPERTY),
+      purpose: "rent", propertyId: TI_PROPERTY.id, agencyId: TI_PROPERTY.agencyId,
+      returnUrl, cancelUrl: returnUrl,
+    });
+    if (result.simulated) {
+      tiSetBtnLoading(btn, false);
+      tiCloseModal("modal-pay");
+      tiToast(t("pay_success"));
+      return false;
+    }
+    if (!result.checkoutUrl) throw new Error(result.error || "gateway_error");
+    window.location.href = result.checkoutUrl;
+  } catch (err) {
+    tiSetBtnLoading(btn, false);
+    errBox.style.display = "";
+    errBox.innerHTML = `<div class="ti-error">${err.message === "gateway_not_configured" ? t("pay_gateway_not_configured") : t("pay_gateway_error")}</div>`;
+  }
   return false;
+}
+/** Au retour de la passerelle de paiement (PayDunya ajoute ?token=... à
+ *  notre return_url), vérifie le statut réel du paiement — ne fait jamais
+ *  confiance au simple fait d'être revenu sur cette page. */
+async function tiHandlePaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("pd_return") !== "1") return;
+  const token = params.get("token");
+  window.history.replaceState({}, "", window.location.pathname + "?id=" + TI_PROPERTY.id);
+  if (!token) return;
+  const result = await TiDB.confirmPaymentCheckout(token);
+  tiToast(result.status === "completed" ? t("pay_success") : t("pay_pending_or_failed"));
 }
 
 /* ---------- Avis ---------- */

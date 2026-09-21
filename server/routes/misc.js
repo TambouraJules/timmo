@@ -256,4 +256,112 @@ router.delete("/announcements/:id", authenticate, async (req, res) => {
   res.json({ ok: true });
 });
 
+/* ---------- Passerelle de paiement (PayDunya) ----------
+   Couvre Wave, Orange Money et carte bancaire via une seule intégration
+   en libre-service — contrairement à l'API directe d'Orange Money qui
+   exige un agrément marchand long (KYA) via l'opérateur local, PayDunya
+   permet une inscription immédiate. Le client est redirigé vers une
+   page de paiement hébergée où il choisit son moyen de paiement.
+   Nécessite PAYDUNYA_MASTER_KEY, PAYDUNYA_PRIVATE_KEY, PAYDUNYA_TOKEN
+   (voir .env.example) — sans ces variables, la création de session
+   échoue proprement avec un message clair plutôt que de simuler un
+   faux paiement. */
+function tiPaydunyaConfigured() {
+  return !!(process.env.PAYDUNYA_MASTER_KEY && process.env.PAYDUNYA_PRIVATE_KEY && process.env.PAYDUNYA_TOKEN);
+}
+function tiPaydunyaBaseUrl() {
+  return process.env.PAYDUNYA_MODE === "live"
+    ? "https://app.paydunya.com/api/v1"
+    : "https://app.paydunya.com/sandbox-api/v1";
+}
+function tiPaydunyaHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "PAYDUNYA-MASTER-KEY": process.env.PAYDUNYA_MASTER_KEY,
+    "PAYDUNYA-PRIVATE-KEY": process.env.PAYDUNYA_PRIVATE_KEY,
+    "PAYDUNYA-TOKEN": process.env.PAYDUNYA_TOKEN,
+  };
+}
+
+// POST /payment-gateway/checkout — crée une session de paiement PayDunya
+// (Wave, Orange Money, carte...) et renvoie l'URL hébergée vers laquelle
+// rediriger le client pour compléter le règlement.
+router.post("/payment-gateway/checkout", authenticate, async (req, res) => {
+  if (!tiPaydunyaConfigured()) return res.status(503).json({ error: "gateway_not_configured" });
+  const { amount, description, purpose, bookingId, scheduleId, propertyId, agencyId, returnUrl, cancelUrl } = req.body;
+  if (!amount || amount <= 0) return res.status(400).json({ error: "invalid_amount" });
+
+  let store = { name: "Timmo", website_url: "https://timmo-six.vercel.app" };
+  if (agencyId) {
+    const agency = await Agency.findOne({ id: agencyId });
+    if (agency) store = { name: agency.name, phone: agency.phone || "", website_url: "https://timmo-six.vercel.app" };
+  }
+
+  const payload = {
+    invoice: { total_amount: Math.round(amount), description: description || "Paiement Timmo" },
+    store,
+    custom_data: {
+      purpose: purpose || "rent", bookingId: bookingId || "", scheduleId: scheduleId || "",
+      propertyId: propertyId || "", userId: req.user.id, agencyId: agencyId || "",
+    },
+    actions: { cancel_url: cancelUrl || "", return_url: returnUrl || "" },
+  };
+
+  try {
+    const pdRes = await fetch(`${tiPaydunyaBaseUrl()}/checkout-invoice/create`, {
+      method: "POST", headers: tiPaydunyaHeaders(), body: JSON.stringify(payload),
+    });
+    const data = await pdRes.json();
+    if (data.response_code !== "00") return res.status(502).json({ error: "gateway_error", detail: data.response_text || data.message });
+    res.json({ checkoutUrl: data.url, token: data.token });
+  } catch (err) {
+    console.error("Erreur PayDunya (création):", err.message);
+    res.status(502).json({ error: "gateway_unreachable" });
+  }
+});
+
+// GET /payment-gateway/confirm/:token — vérifie le statut réel du paiement
+// auprès de PayDunya puis, si confirmé, finalise l'échéance (loyer, dépôt
+// ou paiement autonome) correspondante. Ne fait jamais confiance à un
+// paramètre de retour côté client : le statut ne vient que de PayDunya.
+router.get("/payment-gateway/confirm/:token", authenticate, async (req, res) => {
+  if (!tiPaydunyaConfigured()) return res.status(503).json({ error: "gateway_not_configured" });
+  try {
+    const pdRes = await fetch(`${tiPaydunyaBaseUrl()}/checkout-invoice/confirm/${req.params.token}`, { headers: tiPaydunyaHeaders() });
+    const data = await pdRes.json();
+    if (data.status !== "completed") return res.json({ status: data.status || "pending" });
+
+    const custom = data.custom_data || {};
+    if (custom.userId && custom.userId !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ error: "forbidden" });
+    }
+    const method = "paydunya";
+    if (custom.purpose === "deposit" && custom.bookingId) {
+      const booking = await Booking.findOne({ id: custom.bookingId });
+      if (booking && booking.rental) {
+        await Booking.findOneAndUpdate({ id: custom.bookingId }, {
+          "rental.deposit.status": "paid", "rental.deposit.paidAt": new Date().toISOString(), "rental.deposit.method": method,
+        });
+      }
+    } else if (custom.purpose === "schedule" && custom.bookingId && custom.scheduleId) {
+      const booking = await Booking.findOne({ id: custom.bookingId });
+      if (booking && booking.rental) {
+        const schedule = booking.rental.schedule.map(item =>
+          item.id === custom.scheduleId ? { ...item.toObject ? item.toObject() : item, status: "paid", paidAt: new Date().toISOString(), method } : item
+        );
+        await Booking.findOneAndUpdate({ id: custom.bookingId }, { "rental.schedule": schedule });
+      }
+    } else if (custom.purpose === "rent") {
+      await Payment.create({
+        id: "pay_" + Date.now(), propertyId: custom.propertyId, userId: custom.userId,
+        amount: data.invoice?.total_amount, method, status: "paid", createdAt: new Date().toISOString(),
+      });
+    }
+    res.json({ status: "completed" });
+  } catch (err) {
+    console.error("Erreur PayDunya (confirmation):", err.message);
+    res.status(502).json({ error: "gateway_unreachable" });
+  }
+});
+
 module.exports = router;

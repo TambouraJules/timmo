@@ -1089,6 +1089,37 @@ const TiDB = {
     }
     return inv;
   },
+  /** Crée une session de paiement réelle (Wave, Orange Money, carte via
+   *  PayDunya) et renvoie l'URL hébergée vers laquelle rediriger le
+   *  client. En mode local (démo), simule un succès instantané puisqu'il
+   *  n'y a pas de vraie passerelle à contacter. */
+  async createPaymentCheckout(params) {
+    if (TI_BACKEND === "api") {
+      const res = await tiApiFetch(`${TI_API_BASE}/payment-gateway/checkout`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params),
+      });
+      return res.json();
+    }
+    // Mode local : pas de vraie passerelle — applique directement le
+    // résultat visé par ce paiement, comme si la confirmation avait réussi.
+    await this._applyLocalPaymentSuccess(params);
+    return { checkoutUrl: null, simulated: true };
+  },
+  /** Vérifie le statut réel d'un paiement auprès de la passerelle. En
+   *  mode local, le paiement a déjà été appliqué à la création (voir
+   *  ci-dessus) — renvoie directement "completed". */
+  async confirmPaymentCheckout(token) {
+    if (TI_BACKEND === "api") {
+      return (await tiApiFetch(`${TI_API_BASE}/payment-gateway/confirm/${token}`)).json();
+    }
+    return { status: "completed" };
+  },
+  async _applyLocalPaymentSuccess(params) {
+    const { purpose, bookingId, scheduleId, propertyId, method } = params;
+    if (purpose === "deposit" && bookingId) await this.payRentalDeposit(bookingId, method || "wave");
+    else if (purpose === "schedule" && bookingId && scheduleId) await this.payRentalScheduleItem(bookingId, scheduleId, method || "wave");
+    else if (purpose === "rent") await this.createPayment({ propertyId, userId: tiGetSession()?.id, amount: params.amount, method: method || "wave", status: "paid" });
+  },
   async createPayment(payment) {
     payment.id = "pay_" + Date.now();
     payment.createdAt = new Date().toISOString();
