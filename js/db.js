@@ -41,7 +41,7 @@ async function tiApiFetch(url, options = {}) {
   const token = localStorage.getItem("ti_api_token");
   const headers = { ...(options.headers || {}) };
   if (token) headers["Authorization"] = "Bearer " + token;
-  const res = await fetch(url, { ...options, headers });
+  const res = await fetch(url, { ...options, headers, cache: "no-store" });
   if (!res.ok) {
     let detail = "";
     try { detail = (await res.clone().json()).error || ""; } catch (e) { /* le corps n'était pas du JSON */ }

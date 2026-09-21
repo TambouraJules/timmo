@@ -14,6 +14,7 @@ const usersRoutes = require("./routes/users");
 const miscRoutes = require("./routes/misc");
 
 const app = express();
+app.set("etag", false); // les données changent en continu (annonces, statuts...) ; jamais de 304 basé sur un cache potentiellement périmé
 app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 
