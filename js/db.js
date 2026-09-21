@@ -254,30 +254,30 @@ const TiDB = {
      après examen (ou la refuser, ce qui restaure l'élément). Dans les deux
      cas, l'agence demandeuse est notifiée. */
   async requestPropertyDeletion(id, reason, requestedByName) {
-    const all = tiLoad("ti_properties", TI_PROPERTIES);
-    const p = all.find(p => p.id === id);
+    const p = await this.getProperty(id);
     if (!p) return null;
     p.deletionStatus = "pending";
     p.deletionReason = reason;
     p.deletionRequestedAt = new Date().toISOString();
     p.deletionRequestedBy = requestedByName;
-    tiSave("ti_properties", all);
+    await this.saveProperty(p);
     return p;
   },
   async cancelPropertyDeletion(id) {
-    const all = tiLoad("ti_properties", TI_PROPERTIES);
-    const p = all.find(p => p.id === id);
-    if (p) { delete p.deletionStatus; delete p.deletionReason; delete p.deletionRequestedAt; delete p.deletionRequestedBy; tiSave("ti_properties", all); }
+    const p = await this.getProperty(id);
+    if (p) {
+      p.deletionStatus = null; p.deletionReason = null; p.deletionRequestedAt = null; p.deletionRequestedBy = null;
+      await this.saveProperty(p);
+    }
     return p;
   },
   async getPendingPropertyDeletions() {
-    return tiLoad("ti_properties", TI_PROPERTIES).filter(p => p.deletionStatus === "pending");
+    return (await this.getProperties()).filter(p => p.deletionStatus === "pending");
   },
   async approvePropertyDeletion(id, adminName) {
-    const all = tiLoad("ti_properties", TI_PROPERTIES);
-    const p = all.find(p => p.id === id);
+    const p = await this.getProperty(id);
     if (!p) return null;
-    tiSave("ti_properties", all.filter(pr => pr.id !== id));
+    await this.deleteProperty(id);
     await this.broadcastNotification({
       title: "Suppression définitive validée",
       message: `L'annonce « ${p.title} » a été définitivement supprimée après validation par l'administration.`,
@@ -286,11 +286,10 @@ const TiDB = {
     return true;
   },
   async rejectPropertyDeletion(id, adminName) {
-    const all = tiLoad("ti_properties", TI_PROPERTIES);
-    const p = all.find(p => p.id === id);
+    const p = await this.getProperty(id);
     if (!p) return null;
-    delete p.deletionStatus; delete p.deletionReason; delete p.deletionRequestedAt; delete p.deletionRequestedBy;
-    tiSave("ti_properties", all);
+    p.deletionStatus = null; p.deletionReason = null; p.deletionRequestedAt = null; p.deletionRequestedBy = null;
+    await this.saveProperty(p);
     await this.broadcastNotification({
       title: "Demande de suppression refusée",
       message: `La suppression de l'annonce « ${p.title} » a été refusée par l'administration ; elle reste active.`,
