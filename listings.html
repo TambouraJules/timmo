@@ -24,7 +24,7 @@
       <div class="ti-filters-scrim" id="ti-filters-scrim" onclick="tiToggleMobileFilters(false)"></div>
       <aside class="ti-filters" id="ti-filters-panel">
         <div class="ti-filters-head">
-          <h3 style="margin:0;font-family:var(--font-body);font-size:1rem;font-weight:800;">Filtres</h3>
+          <h3 style="margin:0;font-family:var(--font-body);font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px;"><span class="ti-filters-head-icon"></span>Filtres</h3>
           <button class="ti-filters-reset-link" id="ti-filters-reset-link" onclick="tiResetFilters()" style="display:none;" data-i18n="filter_reset"></button>
         </div>
 
@@ -38,11 +38,11 @@
 
         <div class="ti-filter-section">
           <h4 data-i18n="field_type"></h4>
-          <div class="ti-chip-group" id="f-type-chips">
-            <span class="ti-chip" data-val="apartment" data-i18n="type_apartment"></span>
-            <span class="ti-chip" data-val="house" data-i18n="type_house"></span>
-            <span class="ti-chip" data-val="office" data-i18n="type_office"></span>
-            <span class="ti-chip" data-val="land" data-i18n="type_land"></span>
+          <div class="ti-chip-group ti-chip-group-icons" id="f-type-chips">
+            <span class="ti-chip" data-val="apartment"><span class="ti-chip-icon" data-icon="home"></span><span data-i18n="type_apartment"></span></span>
+            <span class="ti-chip" data-val="house"><span class="ti-chip-icon" data-icon="home"></span><span data-i18n="type_house"></span></span>
+            <span class="ti-chip" data-val="office"><span class="ti-chip-icon" data-icon="office"></span><span data-i18n="type_office"></span></span>
+            <span class="ti-chip" data-val="land"><span class="ti-chip-icon" data-icon="land"></span><span data-i18n="type_land"></span></span>
           </div>
         </div>
 
@@ -135,12 +135,11 @@
   let TI_SEARCH_MAP = null;
   let TI_MAP_MARKERS = {};
   let TI_MAP_LAST_FILTERED_LIST = [];
-  let TI_MAP_SUPPRESS_MOVEEND = false;
 
-  function tiCreateMarkerIcon(highlighted) {
+  function tiCreateMarkerIcon(priceLabel, highlighted) {
     return L.divIcon({
-      className: '', html: `<div class="ti-map-pin${highlighted ? ' highlighted' : ''}"></div>`,
-      iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -24],
+      className: '', html: `<div class="ti-map-price-pin${highlighted ? ' highlighted' : ''}">${priceLabel}</div>`,
+      iconSize: [0, 0], iconAnchor: [0, 0], popupAnchor: [0, -34],
     });
   }
 
@@ -166,7 +165,6 @@
     }
     TI_SEARCH_MAP = L.map(container).setView([14.7167, -17.4677], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(TI_SEARCH_MAP);
-    TI_SEARCH_MAP.on('moveend', () => { if (!TI_MAP_SUPPRESS_MOVEEND) tiUpdateListFromMapBounds(); });
     setTimeout(() => TI_SEARCH_MAP.invalidateSize(), 100);
   }
 
@@ -177,36 +175,24 @@
     TI_MAP_MARKERS = {};
     const withCoords = list.filter(p => p.lat != null && p.lng != null);
     withCoords.forEach(p => {
-      const marker = L.marker([p.lat, p.lng], { icon: tiCreateMarkerIcon(false) })
+      const priceLabel = tiFormatPrice(p.price);
+      const marker = L.marker([p.lat, p.lng], { icon: tiCreateMarkerIcon(priceLabel, false) })
         .addTo(TI_SEARCH_MAP)
         .bindPopup(`
           <a class="ti-map-popup" href="property.html?id=${p.id}">
             <img src="${p.cover}" alt="">
-            <span class="ti-map-popup-body"><strong>${tiPropertyTitle(p)}</strong><span>${tiFormatPrice(p.price)}</span></span>
+            <span class="ti-map-popup-body"><strong>${tiPropertyTitle(p)}</strong><span>${priceLabel}</span></span>
           </a>`);
+      marker._tiPriceLabel = priceLabel;
       marker.on('mouseover', () => tiHighlightCard(p.id, true));
       marker.on('mouseout', () => tiHighlightCard(p.id, false));
       TI_MAP_MARKERS[p.id] = marker;
     });
     if (fitBounds && withCoords.length) {
-      TI_MAP_SUPPRESS_MOVEEND = true;
       TI_SEARCH_MAP.fitBounds(L.latLngBounds(withCoords.map(p => [p.lat, p.lng])).pad(0.25));
-      setTimeout(() => { TI_MAP_SUPPRESS_MOVEEND = false; }, 300);
     }
-    tiUpdateListFromMapBounds();
-  }
-
-  function tiUpdateListFromMapBounds() {
-    if (!TI_SEARCH_MAP) return;
-    const bounds = TI_SEARCH_MAP.getBounds();
-    const visible = TI_MAP_LAST_FILTERED_LIST.filter(p => p.lat != null && p.lng != null && bounds.contains([p.lat, p.lng]));
-    document.getElementById('ti-listings-mount').innerHTML = visible.length
-      ? visible.map(p => tiPropertyCardHtml(p, TI_FAVS)).join('')
-      : `<p style="color:var(--ink-soft)">${t('empty_listings')}</p>`;
-    document.getElementById('ti-map-bounds-note').textContent = `${visible.length} ${t('visible_on_map')}`;
-    document.getElementById('ti-listings-sticky-count').textContent = `${visible.length} ${t('listings_results')}`;
-    tiWireCardMapHover();
-    tiObserveReveals();
+    const noteEl = document.getElementById('ti-map-bounds-note');
+    if (noteEl) noteEl.textContent = `${withCoords.length} ${t('visible_on_map')}`;
   }
 
   function tiHighlightCard(propId, on) {
@@ -216,7 +202,7 @@
   function tiHighlightMarker(propId, on) {
     const marker = TI_MAP_MARKERS[propId];
     if (!marker) return;
-    marker.setIcon(tiCreateMarkerIcon(on));
+    marker.setIcon(tiCreateMarkerIcon(marker._tiPriceLabel, on));
     marker.setZIndexOffset(on ? 1000 : 0);
   }
   function tiWireCardMapHover() {
@@ -365,6 +351,7 @@
       tiRenderMapMarkers(list, true);
     }
     tiRenderActiveChips(list.length);
+    tiWireCardMapHover();
     tiObserveReveals();
   }
 
@@ -378,6 +365,9 @@
 
   async function tiListingsInit() {
     document.getElementById("ti-listings-mount").innerHTML = tiSkeletonCardsHtml(6);
+    const headIcon = document.querySelector(".ti-filters-head-icon");
+    if (headIcon) headIcon.innerHTML = TI_ICONS.sliders;
+    document.querySelectorAll(".ti-chip-icon[data-icon]").forEach(el => { el.innerHTML = TI_ICONS[el.dataset.icon] || ""; });
     tiChipToggle('f-type-chips', 'type');
     tiChipToggle('f-bed-chips', 'beds');
 
