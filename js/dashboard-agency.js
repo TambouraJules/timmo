@@ -1332,9 +1332,13 @@ function tiCancelEditListing() {
 
 async function tiSubmitNewListing(e) {
   e.preventDefault();
+  const submitBtn = document.getElementById("nl-submit-btn");
+  if (submitBtn && submitBtn.classList.contains("is-loading")) return false; // soumission déjà en cours — ignore les clics répétés
+  tiSetBtnLoading(submitBtn, true);
   const editId = document.getElementById("nl-edit-id").value;
   if (!editId && !(await TiDB.canAddListing(TI_SESSION.agencyId))) {
     tiToast(t("listing_limit_reached"));
+    tiSetBtnLoading(submitBtn, false);
     return false;
   }
   const type = document.getElementById("nl-type").value;
@@ -1396,7 +1400,11 @@ async function tiSubmitNewListing(e) {
     prop.titleVerification.docType = docType; // allow changing the doc type label without re-uploading
   }
 
-  await TiDB.saveProperty(prop);
+  try {
+    await TiDB.saveProperty(prop);
+  } finally {
+    tiSetBtnLoading(submitBtn, false);
+  }
   tiToast(editId ? t("save_changes") + " ✓" : t("publish") + " ✓ — " + t("pending_validation_notice"));
   tiCancelEditListing();
   tiShowPanel("listings");

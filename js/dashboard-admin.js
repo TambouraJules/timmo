@@ -653,6 +653,9 @@ function tiOpenAgencyModal(id) {
 
 async function tiSubmitAgencyForm(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if (submitBtn && submitBtn.classList.contains("is-loading")) return false; // soumission déjà en cours
+  tiSetBtnLoading(submitBtn, true);
   const editId = document.getElementById("ag-edit-id").value;
   const name = document.getElementById("ag-name").value;
   const tier = document.querySelector('input[name="ag-tier"]:checked')?.value || "standard";
@@ -681,24 +684,34 @@ async function tiSubmitAgencyForm(e) {
     agency.subscribedSince = new Date().toISOString().slice(0, 10);
   }
 
+  let respName, respEmail, respPhone, respPassword;
   if (!editId) {
-    const respName = document.getElementById("ag-resp-name").value.trim();
-    const respEmail = document.getElementById("ag-resp-email").value.trim();
-    const respPhone = document.getElementById("ag-resp-phone").value.trim();
-    const respPassword = document.getElementById("ag-resp-password").value;
+    respName = document.getElementById("ag-resp-name").value.trim();
+    respEmail = document.getElementById("ag-resp-email").value.trim();
+    respPhone = document.getElementById("ag-resp-phone").value.trim();
+    respPassword = document.getElementById("ag-resp-password").value;
     if (!respName || !respEmail || !respPassword) {
       tiToast(t("responsible_required_note"));
+      tiSetBtnLoading(submitBtn, false);
       return false;
     }
     const existing = await TiDB.findUserByEmail(respEmail);
     if (existing) {
       tiToast(t("agent_email_exists"));
+      tiSetBtnLoading(submitBtn, false);
       return false;
     }
-    await TiDB.saveAgency(agency);
-    await TiDB.createAgencySupervisor({ name: respName, email: respEmail, phone: respPhone, password: respPassword, agencyId: agency.id });
-  } else {
-    await TiDB.saveAgency(agency);
+  }
+
+  try {
+    if (!editId) {
+      await TiDB.saveAgency(agency);
+      await TiDB.createAgencySupervisor({ name: respName, email: respEmail, phone: respPhone, password: respPassword, agencyId: agency.id });
+    } else {
+      await TiDB.saveAgency(agency);
+    }
+  } finally {
+    tiSetBtnLoading(submitBtn, false);
   }
 
   tiToast(t("save_changes") + " ✓");
