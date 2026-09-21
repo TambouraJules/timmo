@@ -1095,10 +1095,14 @@ const TiDB = {
    *  n'y a pas de vraie passerelle à contacter. */
   async createPaymentCheckout(params) {
     if (TI_BACKEND === "api") {
-      const res = await tiApiFetch(`${TI_API_BASE}/payment-gateway/checkout`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params),
-      });
-      return res.json();
+      try {
+        const res = await tiApiFetch(`${TI_API_BASE}/payment-gateway/checkout`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params),
+        });
+        return res.json();
+      } catch (err) {
+        throw new Error(err.status === 503 ? "gateway_not_configured" : "gateway_error");
+      }
     }
     // Mode local : pas de vraie passerelle — applique directement le
     // résultat visé par ce paiement, comme si la confirmation avait réussi.
@@ -1110,7 +1114,11 @@ const TiDB = {
    *  ci-dessus) — renvoie directement "completed". */
   async confirmPaymentCheckout(token) {
     if (TI_BACKEND === "api") {
-      return (await tiApiFetch(`${TI_API_BASE}/payment-gateway/confirm/${token}`)).json();
+      try {
+        return (await tiApiFetch(`${TI_API_BASE}/payment-gateway/confirm/${token}`)).json();
+      } catch (err) {
+        return { status: "error" };
+      }
     }
     return { status: "completed" };
   },
