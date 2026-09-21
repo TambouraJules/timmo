@@ -37,11 +37,19 @@ const TI_API_BASE = "https://timmo-api.onrender.com/api";
  *  le jeton d'authentification stocké (s'il existe) à l'en-tête
  *  Authorization — pour que chacun des appels fetch() ci-dessous n'ait pas
  *  à le répéter individuellement. */
-function tiApiFetch(url, options = {}) {
+async function tiApiFetch(url, options = {}) {
   const token = localStorage.getItem("ti_api_token");
   const headers = { ...(options.headers || {}) };
   if (token) headers["Authorization"] = "Bearer " + token;
-  return fetch(url, { ...options, headers });
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    let detail = "";
+    try { detail = (await res.clone().json()).error || ""; } catch (e) { /* le corps n'était pas du JSON */ }
+    const err = new Error(`API ${res.status}${detail ? " (" + detail + ")" : ""} — ${(options.method || "GET")} ${url}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res;
 }
 
 function tiLoad(key, fallback) {

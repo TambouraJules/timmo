@@ -773,17 +773,22 @@ async function tiSubmitDeletionRequest(e) {
   const reason = document.getElementById("deletion-reason").value.trim();
   const { type, id } = TI_DELETION_REQUEST_CONTEXT;
   const requestedBy = TI_SESSION.name;
-  if (type === "property") {
-    const prop = TI_AGENCY_ALL_PROPS.find(p => p.id === id);
-    await TiDB.requestPropertyDeletion(id, reason, requestedBy);
-    tiLogAgencyAction("property_deletion_requested", "property", id, prop ? tiPropertyTitle(prop) : id, reason);
-    await tiRefreshPanel("listings");
-  } else if (type === "agent") {
-    const agent = TI_AGENTS_CACHE.find(a => a.id === id);
-    await TiDB.requestAgentDeletion(id, reason, requestedBy);
-    tiLogAgencyAction("agent_deletion_requested", "agent", id, agent ? agent.name : id, reason);
-    tiCloseModal("modal-agent-detail");
-    await tiRefreshPanel("agents");
+  try {
+    if (type === "property") {
+      const prop = TI_AGENCY_ALL_PROPS.find(p => p.id === id);
+      await TiDB.requestPropertyDeletion(id, reason, requestedBy);
+      tiLogAgencyAction("property_deletion_requested", "property", id, prop ? tiPropertyTitle(prop) : id, reason);
+      await tiRefreshPanel("listings");
+    } else if (type === "agent") {
+      const agent = TI_AGENTS_CACHE.find(a => a.id === id);
+      await TiDB.requestAgentDeletion(id, reason, requestedBy);
+      tiLogAgencyAction("agent_deletion_requested", "agent", id, agent ? agent.name : id, reason);
+      tiCloseModal("modal-agent-detail");
+      await tiRefreshPanel("agents");
+    }
+  } catch (err) {
+    tiToast(t('deletion_request_failed'));
+    return false;
   }
   tiCloseModal("modal-deletion-request");
   tiToast(t('deletion_request_sent') + " ✓");
