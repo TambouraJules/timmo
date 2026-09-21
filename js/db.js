@@ -369,6 +369,15 @@ const TiDB = {
     if (p && ["under_contract", "sold", "rented"].includes(status)) await this.notifyFavoritesOfStatusChange(p);
     return p;
   },
+  async setTitleVerificationStatus(id, status, rejectionNote) {
+    const prop = await this.getProperty(id);
+    if (!prop || !prop.titleVerification) return null;
+    prop.titleVerification.status = status;
+    prop.titleVerification.rejectionNote = status === "rejected" ? (rejectionNote || null) : null;
+    prop.titleVerification.verifiedAt = new Date().toISOString();
+    await this.saveProperty(prop);
+    return prop;
+  },
   async notifyFavoritesOfStatusChange(property) {
     const favoriters = tiLoad("ti_favorites", []).filter(f => f.propertyId === property.id);
     if (!favoriters.length) return;

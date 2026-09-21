@@ -47,6 +47,7 @@ async function tiRenderPropertyContent() {
       <span class="ti-breadcrumb-current">${tiPropertyTitle(p)}</span>
     </nav>
     <div class="ti-card-hood" style="margin-bottom:6px;">${tiNeighborhoodName(p.neighborhood)} · ${tiAgencyName(p.agencyId)}${p.reference ? ` · <span class="ti-card-ref" style="display:inline;">${t('reference_label')} ${p.reference}</span>` : ''}</div>
+    ${p.titleVerification && p.titleVerification.status === 'verified' ? `<div style="margin-bottom:10px;"><span class="ti-verified-badge ti-verified-badge-lg" title="${t('title_verified_tooltip')}">${TI_ICONS.shield}${t('title_verified_badge')}</span></div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
       <h1 id="ti-prop-title" style="margin-bottom:8px;max-width:38ch;"></h1>
       <button class="ti-fav-pill ${isFav ? 'active' : ''}" id="ti-fav-btn" onclick="tiTogglePropertyFav()">

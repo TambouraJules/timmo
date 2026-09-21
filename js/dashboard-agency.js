@@ -813,6 +813,39 @@ function tiPopulateHoodSelectNL() {
 let TI_LOCATION_MAP = null;
 let TI_LOCATION_MARKER = null;
 let TI_NL_PIN = null; // { lat, lng } once the agent has clicked the map; null = use quartier default
+let TI_NL_TITLE_DOC = null; // { fileName, fileData } once uploaded this session; null = keep existing (when editing) or none (new listing)
+
+async function tiHandleTitleDocFile(file) {
+  if (!file) return;
+  if (file.size > TI_MAX_DOC_PREVIEW_SIZE) { tiToast(t("doc_too_large")); return; }
+  try {
+    const fileData = file.type.startsWith("image/") ? await tiCompressImageFile(file, 1600, 0.85) : await tiReadFileAsDataUrl(file);
+    TI_NL_TITLE_DOC = { fileName: file.name, fileData };
+    tiRenderTitleDocCurrent();
+  } catch (err) { /* ignore unreadable file */ }
+}
+function tiTitleVerificationStatusLabel(status) {
+  const key = "title_verification_status_" + (status || "none");
+  return t(key);
+}
+function tiRenderTitleDocCurrent() {
+  const mount = document.getElementById("nl-title-doc-current-mount");
+  if (!mount) return;
+  const existing = TI_EDITING_PROPERTY && TI_EDITING_PROPERTY.titleVerification;
+  const doc = TI_NL_TITLE_DOC || (existing && existing.fileName ? existing : null);
+  if (!doc) { mount.innerHTML = `<p style="font-size:.82rem;color:var(--ink-soft);margin-top:10px;">${t('title_doc_no_file_yet')}</p>`; return; }
+  const status = TI_NL_TITLE_DOC ? "pending" : (existing ? existing.status : "none");
+  mount.innerHTML = `
+    <div class="ti-title-doc-current">
+      ${TI_ICONS.document}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);">${t('title_doc_current_file')}</div>
+        <strong style="display:block;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tiEscapeHtml(doc.fileName)}</strong>
+        <span style="font-size:.78rem;color:var(--ink-soft);">${tiTitleVerificationStatusLabel(status)}</span>
+        ${status === "rejected" && existing && existing.rejectionNote ? `<div style="font-size:.78rem;color:var(--danger);margin-top:2px;">${t('title_verification_rejection_note')}: ${tiEscapeHtml(existing.rejectionNote)}</div>` : ''}
+      </div>
+    </div>`;
+}
 
 function tiPopulateRegionSelect() {
   const sel = document.getElementById("nl-region");
@@ -1076,12 +1109,12 @@ let TI_BLOCKED_CAL_STATE = null;
 
 /* ---------- Assistant de nouvelle annonce (étapes + aperçu en direct) ---------- */
 let TI_WIZARD_STEP = 1;
-const TI_WIZARD_TOTAL_STEPS = 5;
+const TI_WIZARD_TOTAL_STEPS = 6;
 
 function tiRenderWizardProgress() {
   const mount = document.getElementById("nl-wizard-progress");
   if (!mount) return;
-  const labels = ["wizard_step1_short", "wizard_step2_short", "wizard_step3_short", "wizard_step4_short", "wizard_step5_short"];
+  const labels = ["wizard_step1_short", "wizard_step2_short", "wizard_step3_short", "wizard_step4_short", "wizard_step5_short", "wizard_step6_short"];
   mount.innerHTML = labels.map((key, i) => {
     const n = i + 1;
     const state = n < TI_WIZARD_STEP ? "done" : (n === TI_WIZARD_STEP ? "active" : "");
@@ -1248,6 +1281,9 @@ function tiEditListing(id) {
     document.getElementById("nl-available-from").value = p.availableFrom || "";
     tiToggleAvailabilityFields();
     if (document.getElementById("nl-assign-agent")) document.getElementById("nl-assign-agent").value = p.assignedAgentId || "";
+    TI_NL_TITLE_DOC = null;
+    document.getElementById("nl-title-doc-type").value = (p.titleVerification && p.titleVerification.docType) || "titre_foncier";
+    tiRenderTitleDocCurrent();
     if (p.shortStay) {
       const bookings = await TiDB.getBookings({ propertyId: p.id });
       const bookedDates = [];
@@ -1276,6 +1312,9 @@ function tiCancelEditListing() {
   TI_BLOCKED_CAL_STATE = null;
   tiToggleAvailabilityFields();
   TI_NL_PIN = null;
+  TI_NL_TITLE_DOC = null;
+  if (document.getElementById("nl-title-doc-type")) document.getElementById("nl-title-doc-type").value = "titre_foncier";
+  tiRenderTitleDocCurrent();
   tiPopulateRegionSelect();
   document.getElementById("new-listing-form-title").textContent = t("dash_agency_new");
   document.getElementById("nl-submit-btn").textContent = t("publish");
@@ -1328,6 +1367,18 @@ async function tiSubmitNewListing(e) {
     const nb = TI_NEIGHBORHOODS.find(n => n.id === prop.neighborhood);
     prop.lat = nb.lat + (Math.random() - 0.5) * 0.01;
     prop.lng = nb.lng + (Math.random() - 0.5) * 0.01;
+  }
+
+  const docType = document.getElementById("nl-title-doc-type")?.value || "titre_foncier";
+  if (TI_NL_TITLE_DOC) {
+    const wasDecided = prop.titleVerification && ["verified", "rejected"].includes(prop.titleVerification.status);
+    prop.titleVerification = {
+      status: "pending", docType, fileName: TI_NL_TITLE_DOC.fileName, fileData: TI_NL_TITLE_DOC.fileData,
+      submittedAt: new Date().toISOString(), verifiedAt: null, verifiedBy: null, rejectionNote: null,
+    };
+    if (wasDecided) tiToast(t("title_resubmitted_notice"));
+  } else if (prop.titleVerification) {
+    prop.titleVerification.docType = docType; // allow changing the doc type label without re-uploading
   }
 
   await TiDB.saveProperty(prop);

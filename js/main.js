@@ -890,7 +890,7 @@ function tiPropertyCardHtml(p, favIds = [], removeOnUnfav = false) {
       <button class="ti-card-fav ${isFav ? 'active' : ''}" onclick="${favClickFn}(event,'${p.id}',this)">${isFav ? TI_ICONS.heartFilled : TI_ICONS.heart}</button>
     </a>
     <div class="ti-card-body">
-      <div class="ti-card-hood">${tiNeighborhoodName(p.neighborhood)}</div>
+      <div class="ti-card-hood">${tiNeighborhoodName(p.neighborhood)} ${p.titleVerification && p.titleVerification.status === 'verified' ? `<span class="ti-verified-badge">${TI_ICONS.shield}${t('title_verified_badge')}</span>` : ''}</div>
       <h3 class="ti-card-title"><a href="property.html?id=${p.id}">${tiPropertyTitle(p)}</a></h3>
       ${p.reference ? `<div class="ti-card-ref">${t('reference_label')} ${p.reference}</div>` : ''}
       <div class="ti-card-meta">

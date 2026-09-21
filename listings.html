@@ -63,6 +63,13 @@
           </select>
         </div>
 
+        <div class="ti-filter-section">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.88rem;">
+            <input type="checkbox" id="f-verified-only" onchange="tiRenderListings()">
+            <span data-i18n="filter_verified_only"></span>
+          </label>
+        </div>
+
         <button class="btn btn-dark btn-block ti-filters-mobile-cta" onclick="tiToggleMobileFilters(false)">
           <span data-i18n="see_all">Voir les résultats</span> <span id="ti-filters-mobile-count"></span>
         </button>
@@ -249,6 +256,7 @@
     TI_FILTER.type = null; TI_FILTER.beds = null; TI_FILTER.hood = ''; TI_FILTER.minPrice = null; TI_FILTER.maxPrice = null;
     document.querySelectorAll('.ti-chip').forEach(c => c.classList.remove('active'));
     document.getElementById('f-hood').value = '';
+    if (document.getElementById('f-verified-only')) document.getElementById('f-verified-only').checked = false;
     document.getElementById('f-min-price').value = '';
     document.getElementById('f-max-price').value = '';
     const params = new URLSearchParams(window.location.search);
@@ -328,6 +336,7 @@
     if (TI_FILTER.type) list = list.filter(p => p.type === TI_FILTER.type);
     if (TI_FILTER.beds) list = list.filter(p => p.bedrooms >= parseInt(TI_FILTER.beds));
     if (TI_FILTER.hood) list = list.filter(p => p.neighborhood === TI_FILTER.hood);
+    if (document.getElementById('f-verified-only')?.checked) list = list.filter(p => p.titleVerification && p.titleVerification.status === 'verified');
     if (q) list = list.filter(p => tiNeighborhoodName(p.neighborhood).toLowerCase().includes(q.toLowerCase()) || tiPropertyTitle(p).toLowerCase().includes(q.toLowerCase()) || (p.reference || '').toLowerCase().includes(q.toLowerCase()));
     if (budget) list = list.filter(p => p.price <= parseFloat(budget));
 

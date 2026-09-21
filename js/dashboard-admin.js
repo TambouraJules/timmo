@@ -777,7 +777,7 @@ function tiApplyAdminListingsFilter() {
     <div class="ti-list-row">
       <img src="${p.cover}" alt="" onerror="this.style.display='none'">
       <div class="ti-list-row-body">
-        <strong>${tiPropertyTitle(p)}</strong> ${tiListingStatusBadge(p.listingStatus)}<br>
+        <strong>${tiPropertyTitle(p)}</strong> ${tiListingStatusBadge(p.listingStatus)} ${tiTitleVerificationBadge(p)}<br>
         <span style="color:var(--ink-soft);font-size:.85rem;">${tiNeighborhoodName(p.neighborhood)} · ${tiEscapeHtml(tiAgencyName(p.agencyId))} · <span data-price-xof="${p.price}">${tiFormatPrice(p.price)}</span>${p.reference ? ` · <span class="ti-card-ref" style="display:inline;">${t('reference_label')} ${p.reference}</span>` : ''}</span>
       </div>
       <div class="ti-list-row-actions">
@@ -787,9 +787,49 @@ function tiApplyAdminListingsFilter() {
           <button class="btn btn-primary btn-sm" onclick="tiApproveListing('${p.id}')">${t('action_approve')}</button>
           <button class="btn btn-outline btn-sm" onclick="tiRejectListing('${p.id}')">${t('action_reject')}</button>
         ` : ''}
+        ${p.titleVerification && p.titleVerification.status === 'pending' ? `
+          <button class="btn btn-outline btn-sm" onclick="tiViewTitleDoc('${p.id}')">${t('action_view_title_doc')}</button>
+          <button class="btn btn-primary btn-sm" onclick="tiApproveTitleVerification('${p.id}')">${t('action_verify_title')}</button>
+          <button class="btn btn-outline btn-sm" onclick="tiRejectTitleVerification('${p.id}')">${t('action_reject_title')}</button>
+        ` : ''}
         <button class="btn btn-danger btn-sm" onclick="tiAdminDeleteListing('${p.id}')" data-i18n="action_delete">${t('action_delete')}</button>
       </div>
     </div>`).join('') : `<p style="color:var(--ink-soft)">${t('filter_no_results')}</p>`;
+}
+function tiTitleVerificationBadge(p) {
+  const status = p.titleVerification && p.titleVerification.status;
+  if (status === 'verified') return `<span class="ti-verified-badge">${TI_ICONS.shield}${t('title_verified_badge')}</span>`;
+  if (status === 'pending') return `<span class="badge badge-pending">${t('title_verification_status_pending')}</span>`;
+  if (status === 'rejected') return `<span class="badge badge-cancelled">${t('title_verification_status_rejected')}</span>`;
+  return '';
+}
+function tiViewTitleDoc(id) {
+  const prop = TI_ADMIN_ALL_PROPS.find(p => p.id === id);
+  if (!prop || !prop.titleVerification || !prop.titleVerification.fileData) return;
+  const w = window.open("");
+  if (!w) return;
+  const isPdf = prop.titleVerification.fileData.startsWith("data:application/pdf");
+  w.document.write(isPdf
+    ? `<iframe src="${prop.titleVerification.fileData}" style="border:0;width:100vw;height:100vh;"></iframe>`
+    : `<img src="${prop.titleVerification.fileData}" style="max-width:100%;display:block;margin:0 auto;">`);
+}
+async function tiApproveTitleVerification(id) {
+  const prop = TI_ADMIN_ALL_PROPS.find(p => p.id === id);
+  if (!prop) return;
+  await TiDB.setTitleVerificationStatus(id, "verified", null);
+  tiToast(t("action_verify_title") + " ✓");
+  tiLogAdminAction("title_verified", "property", id, tiPropertyTitle(prop));
+  await tiRefreshPanel("listings");
+}
+async function tiRejectTitleVerification(id) {
+  const prop = TI_ADMIN_ALL_PROPS.find(p => p.id === id);
+  if (!prop) return;
+  const note = prompt(t("title_reject_reason_prompt"));
+  if (note === null) return;
+  await TiDB.setTitleVerificationStatus(id, "rejected", note);
+  tiToast(t("action_reject_title") + " ✓");
+  tiLogAdminAction("title_rejected", "property", id, tiPropertyTitle(prop));
+  await tiRefreshPanel("listings");
 }
 
 async function tiApproveListing(id) {
@@ -895,6 +935,7 @@ async function tiRenderAmenityCatalog() {
 async function tiRenderAdminListings() {
   const [props, agencies] = await Promise.all([TiDB.getProperties(), TiDB.getAgencies()]);
   TI_ADMIN_ALL_PROPS = props;
+  tiSetNavBadge("listings", props.filter(p => p.titleVerification && p.titleVerification.status === "pending").length);
   tiRenderAdminListingsFilterBar(agencies);
   tiApplyAdminListingsFilter();
 }

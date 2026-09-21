@@ -361,12 +361,23 @@ body { padding-top: var(--header-h, 68px); }
 .ti-card-media img.loaded { opacity: 1; }
 .ti-card:hover .ti-card-media img { transform: scale(1.07); }
 .ti-card-badge { position: absolute; top: 12px; left: 12px; background: var(--deep); color: #fff; font-size: .72rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; }
+.ti-verified-badge {
+  display: inline-flex; align-items: center; gap: 4px; background: #DCEFE1; color: var(--ok);
+  font-size: .72rem; font-weight: 800; padding: 3px 9px 3px 7px; border-radius: 999px; white-space: nowrap;
+}
+.ti-verified-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+.ti-verified-badge-lg { font-size: .82rem; padding: 6px 14px 6px 10px; gap: 6px; }
+.ti-verified-badge-lg svg { width: 15px; height: 15px; }
+.ti-title-doc-upload { border: 2px dashed var(--line); border-radius: var(--radius-m); padding: 18px; text-align: center; cursor: pointer; transition: border-color .2s var(--ease), background .2s var(--ease); }
+.ti-title-doc-upload:hover { border-color: var(--clay); background: rgba(196,122,74,.04); }
+.ti-title-doc-current { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--paper-raised); border-radius: var(--radius-s); border: 1px solid var(--line); margin-top: 10px; }
 .ti-card-fav { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.9); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .2s var(--ease), background .2s var(--ease); }
 .ti-card-fav:hover { transform: scale(1.1); background: #fff; }
 .ti-card-fav.active { color: var(--clay); }
 .ti-card-fav.pulse svg { animation: ti-heart-pulse .5s var(--ease); }
 .ti-card-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.ti-card-hood { font-size: .78rem; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.ti-card-hood { font-size: .78rem; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ti-card-hood .ti-verified-badge { text-transform: none; letter-spacing: normal; }
 .ti-card-ref { font-size: .72rem; color: var(--ink-soft); font-family: ui-monospace, "SF Mono", Consolas, monospace; opacity: .75; margin-top: 1px; }
 .ti-card-title { font-family: var(--font-display); font-size: 1.08rem; font-weight: 600; margin: 0; }
 .ti-card-title a { transition: color .2s var(--ease), background-size .35s var(--ease); background-image: linear-gradient(var(--clay), var(--clay)); background-position: 0 100%; background-repeat: no-repeat; background-size: 0% 2px; padding-bottom: 1px; }

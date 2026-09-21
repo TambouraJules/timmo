@@ -192,6 +192,28 @@
             </div>
           </div>
 
+          <div class="ti-wizard-step" data-step="6" style="display:none;">
+            <h4 data-i18n="wizard_step6_title"></h4>
+            <p style="font-size:.85rem;color:var(--ink-soft);margin:-4px 0 16px;" data-i18n="title_verification_intro"></p>
+            <div class="field">
+              <label data-i18n="title_doc_type_label"></label>
+              <select id="nl-title-doc-type">
+                <option value="titre_foncier" data-i18n="title_doc_type_titre_foncier"></option>
+                <option value="bail" data-i18n="title_doc_type_bail"></option>
+                <option value="autre" data-i18n="title_doc_type_autre"></option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-i18n="title_doc_upload_label"></label>
+              <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 10px;" data-i18n="title_doc_upload_hint"></p>
+              <div class="ti-title-doc-upload" onclick="document.getElementById('nl-title-doc-file-input').click()">
+                <span data-i18n="title_doc_choose_file"></span>
+                <input type="file" id="nl-title-doc-file-input" accept="image/*,application/pdf" style="display:none;" onchange="tiHandleTitleDocFile(this.files[0])">
+              </div>
+              <div id="nl-title-doc-current-mount"></div>
+            </div>
+          </div>
+
           <div class="ti-wizard-nav">
             <button type="button" class="btn btn-outline" id="nl-wizard-prev" onclick="tiWizardPrev()" style="display:none;" data-i18n="wizard_previous"></button>
             <button type="button" class="btn btn-primary" id="nl-wizard-next" onclick="tiWizardNext()" data-i18n="wizard_next"></button>
