@@ -229,7 +229,10 @@
 
   function tiPopulateHoodSelect() {
     const sel = document.getElementById('f-hood');
-    TI_NEIGHBORHOODS.forEach(n => {
+    const hoods = [...new Set(TI_ALL_PROPS.map(p => p.neighborhood).filter(Boolean))]
+      .map(id => ({ id, name: tiNeighborhoodName(id) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    hoods.forEach(n => {
       const opt = document.createElement('option');
       opt.value = n.id; opt.textContent = n.name;
       sel.appendChild(opt);
@@ -375,7 +378,6 @@
 
   async function tiListingsInit() {
     document.getElementById("ti-listings-mount").innerHTML = tiSkeletonCardsHtml(6);
-    tiPopulateHoodSelect();
     tiChipToggle('f-type-chips', 'type');
     tiChipToggle('f-bed-chips', 'beds');
 
@@ -396,6 +398,7 @@
     await new Promise(r => setTimeout(r, 400));
     TI_ALL_PROPS = (await TiDB.getProperties()).filter(tiIsPubliclyVisible);
     if (TI_SUBSITE_AGENCY) TI_ALL_PROPS = TI_ALL_PROPS.filter(p => p.agencyId === TI_SUBSITE_AGENCY.id);
+    tiPopulateHoodSelect();
     const s = tiGetSession();
     TI_FAVS = s ? (await TiDB.getFavorites(s.id)).map(f => f.propertyId) : [];
 

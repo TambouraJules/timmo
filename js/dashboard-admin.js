@@ -98,12 +98,12 @@ function tiSwitchAgenciesTrendPeriod(period) {
   tiRenderAgenciesTrendChart();
 }
 
-/* Biens par localité — basé sur les vraies données de quartier. */
+/* Biens par localité — basé sur les vraies données de quartier/commune. */
 function tiRenderLocalitiesChart(props) {
   const counts = {};
-  props.forEach(p => { counts[p.neighborhood] = (counts[p.neighborhood] || 0) + 1; });
-  const items = TI_NEIGHBORHOODS.map(n => ({ label: n.name, value: counts[n.id] || 0, color: "var(--clay)" }))
-    .filter(i => i.value > 0)
+  props.forEach(p => { if (p.neighborhood) counts[p.neighborhood] = (counts[p.neighborhood] || 0) + 1; });
+  const items = Object.entries(counts)
+    .map(([id, value]) => ({ label: tiNeighborhoodName(id), value, color: "var(--clay)" }))
     .sort((a, b) => b.value - a.value);
   document.getElementById("localities-chart-mount").innerHTML = tiBarChartHtml(t("chart_localities_title"), items);
 }
@@ -712,8 +712,11 @@ let TI_ADMIN_ALL_PROPS = [];
 const TI_ADMIN_LISTINGS_FILTER = { q: "", hood: "", agency: "", type: "", minPrice: null, maxPrice: null };
 let tiAdminFilterDebounce = null;
 
-function tiRenderAdminListingsFilterBar(agencies) {
+function tiRenderAdminListingsFilterBar(agencies, props) {
   const mount = document.getElementById("admin-listings-filters");
+  const hoods = [...new Set(props.map(p => p.neighborhood).filter(Boolean))]
+    .map(id => ({ id, name: tiNeighborhoodName(id) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
   mount.innerHTML = `
     <div class="ti-admin-filter-bar">
       <div class="ti-filter-search">
@@ -722,7 +725,7 @@ function tiRenderAdminListingsFilterBar(agencies) {
       </div>
       <select id="al-hood">
         <option value="">${t('filter_all_neighborhoods')}</option>
-        ${TI_NEIGHBORHOODS.map(n => `<option value="${n.id}">${n.name}</option>`).join('')}
+        ${hoods.map(n => `<option value="${n.id}">${tiEscapeHtml(n.name)}</option>`).join('')}
       </select>
       <select id="al-agency">
         <option value="">${t('filter_all_agencies')}</option>
@@ -947,7 +950,7 @@ async function tiRenderAdminListings() {
   const [props, agencies] = await Promise.all([TiDB.getProperties(), TiDB.getAgencies()]);
   TI_ADMIN_ALL_PROPS = props;
   tiSetNavBadge("listings", props.filter(p => p.titleVerification && p.titleVerification.status === "pending").length);
-  tiRenderAdminListingsFilterBar(agencies);
+  tiRenderAdminListingsFilterBar(agencies, props);
   tiApplyAdminListingsFilter();
 }
 async function tiAdminDeleteListing(id) {

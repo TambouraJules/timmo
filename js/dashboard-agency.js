@@ -228,6 +228,9 @@ let tiAgencyFilterDebounce = null;
 
 function tiRenderAgencyListingsFilterBar() {
   const mount = document.getElementById("agency-listings-filters");
+  const hoods = [...new Set(TI_AGENCY_ALL_PROPS.map(p => p.neighborhood).filter(Boolean))]
+    .map(id => ({ id, name: tiNeighborhoodName(id) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
   mount.innerHTML = `
     <div class="ti-admin-filter-bar">
       <div class="ti-filter-search">
@@ -236,7 +239,7 @@ function tiRenderAgencyListingsFilterBar() {
       </div>
       <select id="ml-hood">
         <option value="">${t('filter_all_neighborhoods')}</option>
-        ${TI_NEIGHBORHOODS.map(n => `<option value="${n.id}">${n.name}</option>`).join('')}
+        ${hoods.map(n => `<option value="${n.id}">${tiEscapeHtml(n.name)}</option>`).join('')}
       </select>
       <select id="ml-status">
         ${tiPropertyStateOptionsHtml()}
