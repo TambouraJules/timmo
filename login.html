@@ -27,6 +27,7 @@
     <form id="form-login" onsubmit="return tiHandleLogin(event)">
       <div class="field"><label data-i18n="email"></label><input type="email" id="login-email" required></div>
       <div class="field"><label data-i18n="password"></label><input type="password" id="login-password" required></div>
+      <p style="text-align:right;margin:-10px 0 16px;"><a href="forgot-password.html" style="color:var(--clay);font-size:.85rem;font-weight:600;" data-i18n="forgot_password_link"></a></p>
       <button type="submit" class="btn btn-primary btn-block" data-i18n="login_btn"></button>
     </form>
 
@@ -88,6 +89,10 @@
         : res.error === 'locked_out' ? `Trop de tentatives. Réessayez dans ${res.lockedFor}s. / Too many attempts. Try again in ${res.lockedFor}s.`
         : 'Identifiants invalides. / Invalid credentials.';
       errBox.innerHTML = `<div class="ti-error">${errMsg}</div>`;
+      return false;
+    }
+    if (res.user.mustChangePassword) {
+      window.location.href = `reset-password.html?next=dashboard-${res.user.role}.html`;
       return false;
     }
     window.location.href = `dashboard-${res.user.role}.html`;

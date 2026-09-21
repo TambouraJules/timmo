@@ -158,6 +158,55 @@ async function tiLogin(email, password, expectedRole) {
   return { ok: true, user };
 }
 
+/** Demande un mot de passe temporaire par e-mail. Renvoie toujours { ok: true }
+ *  côté API que le compte existe ou non — protection contre l'énumération
+ *  de comptes, jamais de message différent selon que l'e-mail est inscrit. */
+async function tiRequestPasswordReset(email) {
+  if (TI_BACKEND === "api") {
+    try {
+      const res = await fetch(`${TI_API_BASE}/auth/forgot-password`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      return res.ok;
+    } catch (err) { return false; }
+  }
+  // Mode local (démo) : pas de vrai envoi d'e-mail — le mot de passe temporaire
+  // est simplement journalisé dans la console pour rester utilisable en test.
+  const users = tiLoad("ti_users", []);
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (user) {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    let pwd = ""; for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+    await tiSetUserPassword(user, pwd);
+    user.mustChangePassword = true;
+    tiSave("ti_users", users);
+    console.log("[Mode démo] Mot de passe temporaire pour " + email + " : " + pwd);
+  }
+  return true;
+}
+/** Change le mot de passe de l'utilisateur actuellement connecté (après une
+ *  connexion avec un mot de passe temporaire, ou à sa propre initiative). */
+async function tiChangePassword(newPassword) {
+  if (TI_BACKEND === "api") {
+    try {
+      const res = await tiApiFetch(`${TI_API_BASE}/auth/change-password`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
+      return res.ok;
+    } catch (err) { return false; }
+  }
+  const session = tiGetSession();
+  const users = tiLoad("ti_users", []);
+  const user = users.find(u => u.id === session.id);
+  if (!user) return false;
+  await tiSetUserPassword(user, newPassword);
+  user.mustChangePassword = false;
+  tiSave("ti_users", users);
+  return true;
+}
+
 async function tiRegisterClient({ name, email, password }) {
   if (TI_BACKEND === "api") {
     const res = await fetch(`${TI_API_BASE}/auth/register`, {

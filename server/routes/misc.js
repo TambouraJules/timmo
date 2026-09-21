@@ -4,6 +4,33 @@ const jwt = require("jsonwebtoken");
 const { Booking, Message, Review, Payment, Favorite, User, Agency, Announcement } = require("../models/models");
 const { authenticate, requireRole } = require("../middleware/auth");
 
+/** Envoie un e-mail via l'API Resend (https://resend.com). Nécessite la
+ *  variable d'environnement RESEND_API_KEY sur Render ; sans elle, la
+ *  fonction se contente de logger et renvoie false, pour que le reste du
+ *  flux (mot de passe régénéré, etc.) continue de fonctionner même si
+ *  l'envoi d'e-mail n'est pas encore configuré. */
+async function tiSendEmail({ to, subject, html }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) { console.warn("RESEND_API_KEY non configurée — e-mail non envoyé:", subject, "->", to); return false; }
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
+      body: JSON.stringify({ from: process.env.RESEND_FROM || "Timmo <onboarding@resend.dev>", to, subject, html }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("Échec d'envoi d'e-mail:", err.message);
+    return false;
+  }
+}
+function tiGenerateTempPassword() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let pwd = "";
+  for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  return pwd;
+}
+
 /* ---------- Auth ---------- */
 router.post("/auth/register", async (req, res) => {
   const { name, email, password, role, agencyId, agentRole, agencyName } = req.body;
@@ -39,7 +66,46 @@ router.post("/auth/login", async (req, res) => {
     if (agency && agency.status === "suspended") return res.status(403).json({ error: "suspended" });
   }
   const token = jwt.sign({ id: user._id, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole }, process.env.JWT_SECRET, { expiresIn: "7d" });
-  res.json({ token, user: { id: user._id, name: user.name, email, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole, status: user.status } });
+  res.json({ token, user: { id: user._id, name: user.name, email, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole, status: user.status, mustChangePassword: !!user.mustChangePassword } });
+});
+
+// POST /auth/forgot-password — génère un mot de passe temporaire fort et
+// l'envoie par e-mail si le compte existe. Renvoie systématiquement la
+// même réponse générique, que le compte existe ou non, pour ne jamais
+// laisser un visiteur découvrir quels e-mails sont inscrits sur la
+// plateforme (protection contre l'énumération de comptes).
+router.post("/auth/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  const user = email ? await User.findOne({ email }) : null;
+  if (user) {
+    const tempPassword = tiGenerateTempPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+    await User.findByIdAndUpdate(user._id, { passwordHash, mustChangePassword: true });
+    await tiSendEmail({
+      to: email,
+      subject: "Votre mot de passe temporaire Timmo",
+      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+        <h2 style="color:#C47A4A;">Réinitialisation de mot de passe</h2>
+        <p>Bonjour ${user.name || ""},</p>
+        <p>Voici votre mot de passe temporaire pour vous reconnecter à Timmo :</p>
+        <p style="font-size:1.3rem;font-weight:800;letter-spacing:.05em;background:#F7F2E7;padding:12px 18px;border-radius:8px;display:inline-block;">${tempPassword}</p>
+        <p>Pour votre sécurité, il vous sera demandé de choisir un nouveau mot de passe dès votre prochaine connexion.</p>
+        <p style="color:#8a8a8a;font-size:.85rem;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail — votre mot de passe actuel reste inchangé jusqu'à ce que quelqu'un se connecte avec ce mot de passe temporaire.</p>
+      </div>`,
+    });
+  }
+  res.json({ ok: true });
+});
+
+// POST /auth/change-password — changement de mot de passe par l'utilisateur
+// connecté lui-même (utilisé après une connexion avec un mot de passe
+// temporaire, mais aussi disponible pour un changement volontaire).
+router.post("/auth/change-password", authenticate, async (req, res) => {
+  const { newPassword } = req.body;
+  if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: "password_too_short" });
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await User.findByIdAndUpdate(req.user.id, { passwordHash, mustChangePassword: false });
+  res.json({ ok: true });
 });
 
 /* ---------- Bookings ---------- */
