@@ -1094,10 +1094,34 @@ async function tiRenderAdminPayments() {
     </tr>`).join('')}
     </tbody></table>` : '';
 
+  const rentRemindersHtml = `
+    <div class="ti-stat-card" style="margin-top:30px;padding:16px 18px;text-align:left;">
+      <h4 style="margin:0 0 6px;">${t('rent_reminders_title')}</h4>
+      <p style="color:var(--ink-soft);font-size:.88rem;margin:0 0 12px;">${t('rent_reminders_desc')}</p>
+      <button class="btn btn-outline btn-sm" onclick="tiRunRentRemindersNow(this)">${t('rent_reminders_run_button')}</button>
+      <span id="rent-reminders-result" style="margin-left:10px;color:var(--ink-soft);font-size:.88rem;"></span>
+    </div>`;
+
   document.getElementById("admin-payments-mount").insertAdjacentHTML("beforebegin", statsHtml);
   tiRenderAdminPaymentsFilterBar();
   tiApplyAdminPaymentsFilter();
-  document.getElementById("admin-payments-mount").insertAdjacentHTML("afterend", otherPaymentsHtml);
+  document.getElementById("admin-payments-mount").insertAdjacentHTML("afterend", otherPaymentsHtml + rentRemindersHtml);
+}
+
+async function tiRunRentRemindersNow(btn) {
+  tiSetBtnLoading(btn, true);
+  const out = document.getElementById("rent-reminders-result");
+  try {
+    const res = await TiDB.runRentReminders();
+    if (out) {
+      out.textContent = res.error === "sms_not_configured"
+        ? t('rent_reminders_not_configured')
+        : t('rent_reminders_result').replace('{count}', res.sent ?? 0);
+    }
+  } catch (err) {
+    if (out) out.textContent = t('rent_reminders_not_configured');
+  }
+  tiSetBtnLoading(btn, false);
 }
 
 function tiShowInvoiceHistory(agencyId) {

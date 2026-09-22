@@ -1027,6 +1027,14 @@ const TiDB = {
     return all.slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   },
 
+  // Déclenche manuellement une passe de rappels de loyer par SMS (admin
+  // uniquement) — utile pour tester sans attendre le cycle automatique
+  // quotidien côté serveur.
+  async runRentReminders() {
+    const res = await tiApiFetch(`${TI_API_BASE}/admin/rent-reminders/run`, { method: "POST" });
+    return res.json();
+  },
+
   async getPayments(filter = {}) {
     if (TI_BACKEND === "api") {
       const params = new URLSearchParams(filter).toString();
