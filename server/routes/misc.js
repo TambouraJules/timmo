@@ -41,9 +41,6 @@ router.post("/auth/register", async (req, res) => {
   let finalAgencyId = agencyId;
   let finalAgentRole = agentRole;
   if (role === "agency" && !agencyId && agencyName) {
-    // Agency self-registration: create the agency record and make this
-    // first account its supervisor — mirrors the local-mode behavior in
-    // js/auth.js's tiRegisterAgency.
     finalAgencyId = "ag_" + Date.now();
     await Agency.create({ id: finalAgencyId, name: agencyName, email, phone: "", verified: false, status: "active" });
     finalAgentRole = "supervisor";
@@ -69,11 +66,6 @@ router.post("/auth/login", async (req, res) => {
   res.json({ token, user: { id: user._id, name: user.name, email, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole, status: user.status, mustChangePassword: !!user.mustChangePassword } });
 });
 
-// POST /auth/forgot-password — génère un mot de passe temporaire fort et
-// l'envoie par e-mail si le compte existe. Renvoie systématiquement la
-// même réponse générique, que le compte existe ou non, pour ne jamais
-// laisser un visiteur découvrir quels e-mails sont inscrits sur la
-// plateforme (protection contre l'énumération de comptes).
 router.post("/auth/forgot-password", async (req, res) => {
   const { email } = req.body;
   const user = email ? await User.findOne({ email }) : null;
@@ -97,9 +89,6 @@ router.post("/auth/forgot-password", async (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /auth/change-password — changement de mot de passe par l'utilisateur
-// connecté lui-même (utilisé après une connexion avec un mot de passe
-// temporaire, mais aussi disponible pour un changement volontaire).
 router.post("/auth/change-password", authenticate, async (req, res) => {
   const { newPassword } = req.body;
   if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: "password_too_short" });
@@ -110,10 +99,6 @@ router.post("/auth/change-password", authenticate, async (req, res) => {
 
 /* ---------- Bookings ---------- */
 router.get("/bookings", async (req, res, next) => {
-  // Property-only filter (no userId/agencyId) is the public short-stay
-  // availability calendar on the property page — stays unauthenticated,
-  // but strips personal fields (name/phone/email/price/etc.) so it only
-  // ever reveals which dates are taken, never who booked them.
   if (req.query.propertyId && !req.query.userId && !req.query.agencyId) {
     const bookings = await Booking.find({ propertyId: req.query.propertyId }).sort({ createdAt: -1 });
     return res.json(bookings.map(b => ({ id: b.id, propertyId: b.propertyId, checkin: b.checkin, checkout: b.checkout, status: b.status })));
@@ -134,7 +119,7 @@ router.get("/bookings", async (req, res, next) => {
 router.post("/bookings", authenticate, async (req, res) => {
   const data = req.body;
   const existing = data.id ? await Booking.findOne({ id: data.id }) : null;
-  const target = existing || data; // ownership check against the existing record when updating, else the new data
+  const target = existing || data;
   const owns = req.user.role === "admin" || req.user.id === target.userId || (req.user.agencyId && req.user.agencyId === target.agencyId);
   if (!owns) return res.status(403).json({ error: "forbidden" });
   const saved = await Booking.findOneAndUpdate({ id: data.id }, data, { upsert: true, new: true, setDefaultsOnInsert: true });
@@ -176,10 +161,6 @@ router.post("/messages", authenticate, async (req, res) => {
 router.get("/reviews", async (req, res) => {
   const filter = {};
   if (req.query.propertyId) filter.propertyId = req.query.propertyId;
-  // Full, unfiltered access (every review regardless of approval — used for
-  // admin moderation) requires a valid admin session. Anyone else — logged
-  // in or not — only ever sees approved reviews, which is what a property
-  // page's public review section should show.
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   let isAdmin = false;
@@ -313,12 +294,50 @@ router.post("/payment-gateway/checkout", authenticate, async (req, res) => {
     });
     const data = await pdRes.json();
     if (data.response_code !== "00") return res.status(502).json({ error: "gateway_error", detail: data.response_text || data.message });
+    // PayDunya renvoie l'URL de paiement dans response_text (pas dans un
+    // champ "url") lorsque response_code === "00" — cf. leur documentation.
     res.json({ checkoutUrl: data.response_text, token: data.token });
   } catch (err) {
     console.error("Erreur PayDunya (création):", err.message);
     res.status(502).json({ error: "gateway_unreachable" });
   }
 });
+
+// Finalise un paiement PayDunya confirmé (statut "completed") : met à jour
+// le dépôt, l'échéance de loyer, ou enregistre le paiement autonome
+// correspondant. Partagée par la confirmation déclenchée par le client (au
+// retour sur le site) et par l'IPN ci-dessous — dans les deux cas, `data`
+// vient d'un vrai appel à l'API de confirmation PayDunya, jamais d'une
+// valeur envoyée telle quelle par le client ou par le corps du callback.
+async function tiFinalizePaydunyaPayment(data) {
+  const custom = data.custom_data || {};
+  const method = "paydunya";
+  if (custom.purpose === "deposit" && custom.bookingId) {
+    const booking = await Booking.findOne({ id: custom.bookingId });
+    if (booking && booking.rental) {
+      await Booking.findOneAndUpdate({ id: custom.bookingId }, {
+        "rental.deposit.status": "paid", "rental.deposit.paidAt": new Date().toISOString(), "rental.deposit.method": method,
+      });
+    }
+  } else if (custom.purpose === "schedule" && custom.bookingId && custom.scheduleId) {
+    const booking = await Booking.findOne({ id: custom.bookingId });
+    if (booking && booking.rental) {
+      const schedule = booking.rental.schedule.map(item =>
+        item.id === custom.scheduleId ? { ...item.toObject ? item.toObject() : item, status: "paid", paidAt: new Date().toISOString(), method } : item
+      );
+      await Booking.findOneAndUpdate({ id: custom.bookingId }, { "rental.schedule": schedule });
+    }
+  } else if (custom.purpose === "rent") {
+    const already = data.token && await Payment.findOne({ paydunyaToken: data.token });
+    if (!already) {
+      await Payment.create({
+        id: "pay_" + Date.now(), propertyId: custom.propertyId, userId: custom.userId,
+        amount: data.invoice?.total_amount, method, status: "paid", createdAt: new Date().toISOString(),
+        paydunyaToken: data.token,
+      });
+    }
+  }
+}
 
 // GET /payment-gateway/confirm/:token — vérifie le statut réel du paiement
 // auprès de PayDunya puis, si confirmé, finalise l'échéance (loyer, dépôt
@@ -335,32 +354,34 @@ router.get("/payment-gateway/confirm/:token", authenticate, async (req, res) => 
     if (custom.userId && custom.userId !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({ error: "forbidden" });
     }
-    const method = "paydunya";
-    if (custom.purpose === "deposit" && custom.bookingId) {
-      const booking = await Booking.findOne({ id: custom.bookingId });
-      if (booking && booking.rental) {
-        await Booking.findOneAndUpdate({ id: custom.bookingId }, {
-          "rental.deposit.status": "paid", "rental.deposit.paidAt": new Date().toISOString(), "rental.deposit.method": method,
-        });
-      }
-    } else if (custom.purpose === "schedule" && custom.bookingId && custom.scheduleId) {
-      const booking = await Booking.findOne({ id: custom.bookingId });
-      if (booking && booking.rental) {
-        const schedule = booking.rental.schedule.map(item =>
-          item.id === custom.scheduleId ? { ...item.toObject ? item.toObject() : item, status: "paid", paidAt: new Date().toISOString(), method } : item
-        );
-        await Booking.findOneAndUpdate({ id: custom.bookingId }, { "rental.schedule": schedule });
-      }
-    } else if (custom.purpose === "rent") {
-      await Payment.create({
-        id: "pay_" + Date.now(), propertyId: custom.propertyId, userId: custom.userId,
-        amount: data.invoice?.total_amount, method, status: "paid", createdAt: new Date().toISOString(),
-      });
-    }
+    await tiFinalizePaydunyaPayment(data);
     res.json({ status: "completed" });
   } catch (err) {
     console.error("Erreur PayDunya (confirmation):", err.message);
     res.status(502).json({ error: "gateway_unreachable" });
+  }
+});
+
+// POST /payment-gateway/ipn — callback serveur-à-serveur appelé directement
+// par PayDunya dès qu'un paiement est confirmé, indépendamment du retour du
+// client sur le site (utile s'il ferme l'onglet avant de revenir : sans ce
+// callback, son paiement resterait marqué "en attente" côté Timmo). Aucune
+// authentification n'est possible ici (PayDunya n'a pas de session Timmo) :
+// la sécurité vient de la re-vérification du token auprès de l'API PayDunya
+// elle-même, jamais du contenu brut envoyé par le callback.
+router.post("/payment-gateway/ipn", async (req, res) => {
+  if (!tiPaydunyaConfigured()) return res.sendStatus(503);
+  try {
+    const payload = req.body.data || req.body;
+    const token = payload.token || payload.invoice_token || (payload.invoice && payload.invoice.token);
+    if (!token) return res.sendStatus(400);
+    const pdRes = await fetch(`${tiPaydunyaBaseUrl()}/checkout-invoice/confirm/${token}`, { headers: tiPaydunyaHeaders() });
+    const data = await pdRes.json();
+    if (data.status === "completed") await tiFinalizePaydunyaPayment(data);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Erreur PayDunya (IPN):", err.message);
+    res.sendStatus(500);
   }
 });
 
