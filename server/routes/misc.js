@@ -327,12 +327,15 @@ async function tiFinalizePaydunyaPayment(data) {
       );
       await Booking.findOneAndUpdate({ id: custom.bookingId }, { "rental.schedule": schedule });
     }
-      } else if (custom.purpose === "rent" && data.token) {
+            } else if (custom.purpose === "rent" && data.token) {
     const property = custom.propertyId ? await Property.findOne({ id: custom.propertyId }) : null;
+    // agencyId permet de distinguer, dans le dashboard admin, deux biens
+    // qui portent le même titre mais appartiennent à des agences différentes.
     await Payment.findOneAndUpdate(
       { paydunyaToken: data.token },
       { $setOnInsert: {
           id: "pay_" + Date.now(), propertyId: custom.propertyId, propertyTitle: property?.title || "",
+          agencyId: property?.agencyId || "",
           userId: custom.userId, amount: data.invoice?.total_amount, method, status: "paid",
           createdAt: new Date().toISOString(), paydunyaToken: data.token,
         } },
