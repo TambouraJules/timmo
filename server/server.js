@@ -35,6 +35,18 @@ mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log("MongoDB connected");
     app.listen(PORT, () => console.log(`Timmo API listening on http://localhost:${PORT}`));
+
+    // Rappels de loyer par SMS : une passe peu après le démarrage (utile en
+    // test), puis une fois par jour. Ne fait rien tant que TWILIO_* n'est
+    // pas configuré (voir server/.env.example) et ne bloque jamais le
+    // démarrage du serveur en cas d'erreur.
+    if (miscRoutes.tiCheckRentReminders) {
+      const runReminders = () => miscRoutes.tiCheckRentReminders()
+        .then(r => console.log("Rappels de loyer (SMS):", r))
+        .catch(err => console.error("Erreur rappels de loyer (SMS):", err.message));
+      setTimeout(runReminders, 30000);
+      setInterval(runReminders, 24 * 60 * 60 * 1000);
+    }
   })
   .catch(err => {
     console.error("MongoDB connection error:", err.message);
