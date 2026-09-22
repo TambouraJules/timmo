@@ -17,6 +17,9 @@ const app = express();
 app.set("etag", false); // les données changent en continu (annonces, statuts...) ; jamais de 304 basé sur un cache potentiellement périmé
 app.use(cors());
 app.use(express.json({ limit: "12mb" }));
+// PayDunya envoie son callback IPN en application/x-www-form-urlencoded
+// (champ "data" imbriqué) — nécessaire pour /api/payment-gateway/ipn.
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/properties", propertiesRoutes);
 app.use("/api/agencies", agenciesRoutes);
