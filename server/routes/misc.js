@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { Booking, Message, Review, Payment, Favorite, User, Agency, Announcement } = require("../models/models");
+const { Booking, Message, Review, Payment, Favorite, User, Agency, Announcement, Property } = require("../models/models");
 const { authenticate, requireRole } = require("../middleware/auth");
 
 /** Envoie un e-mail via l'API Resend (https://resend.com). Nécessite la
@@ -327,13 +327,14 @@ async function tiFinalizePaydunyaPayment(data) {
       );
       await Booking.findOneAndUpdate({ id: custom.bookingId }, { "rental.schedule": schedule });
     }
-  } else if (custom.purpose === "rent") {
+    } else if (custom.purpose === "rent") {
     const already = data.token && await Payment.findOne({ paydunyaToken: data.token });
     if (!already) {
+      const property = custom.propertyId ? await Property.findOne({ id: custom.propertyId }) : null;
       await Payment.create({
-        id: "pay_" + Date.now(), propertyId: custom.propertyId, userId: custom.userId,
-        amount: data.invoice?.total_amount, method, status: "paid", createdAt: new Date().toISOString(),
-        paydunyaToken: data.token,
+        id: "pay_" + Date.now(), propertyId: custom.propertyId, propertyTitle: property?.title || "",
+        userId: custom.userId, amount: data.invoice?.total_amount, method, status: "paid",
+        createdAt: new Date().toISOString(), paydunyaToken: data.token,
       });
     }
   }
