@@ -390,4 +390,96 @@ router.post("/payment-gateway/ipn", async (req, res) => {
   }
 });
 
+/* ---------- Rappels de loyer par SMS (Twilio) ---------- */
+function tiTwilioConfigured() {
+  return !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER);
+}
+
+// Met un numéro local sénégalais ("77 123 45 67", "771234567"...) au format
+// international E.164 (+221771234567) requis par Twilio. Laisse tel quel un
+// numéro déjà au format international (commence par "+").
+function tiFormatPhoneSenegal(phone) {
+  if (!phone) return null;
+  const digits = String(phone).replace(/[^\d+]/g, "");
+  if (digits.startsWith("+")) return digits;
+  const local = digits.replace(/^221/, ""); // au cas où le "221" a été tapé sans le "+"
+  return "+221" + local;
+}
+
+async function tiSendSms({ to, body }) {
+  if (!tiTwilioConfigured()) { console.warn("Twilio non configuré — SMS non envoyé:", body); return false; }
+  const phone = tiFormatPhoneSenegal(to);
+  if (!phone) return false;
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  try {
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic " + Buffer.from(`${sid}:${process.env.TWILIO_AUTH_TOKEN}`).toString("base64"),
+      },
+      body: new URLSearchParams({ To: phone, From: process.env.TWILIO_PHONE_NUMBER, Body: body }),
+    });
+    if (!res.ok) { console.error("Échec d'envoi SMS Twilio:", res.status, await res.text()); return false; }
+    return true;
+  } catch (err) {
+    console.error("Échec d'envoi SMS:", err.message);
+    return false;
+  }
+}
+
+// Parcourt toutes les réservations avec un échéancier de loyer et envoie un
+// rappel SMS 3 jours avant chaque échéance impayée, puis un rappel de
+// retard si elle reste impayée après sa date d'échéance — chaque rappel
+// n'est envoyé qu'une seule fois par échéance (marqué sur l'échéance
+// elle-même, comme les autres champs de rental.schedule). Conçue pour
+// tourner une fois par jour (voir server.js) ; peut aussi être déclenchée
+// manuellement par un admin via POST /admin/rent-reminders/run.
+async function tiCheckRentReminders() {
+  if (!tiTwilioConfigured()) return { sent: 0, skipped: "not_configured" };
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const in3days = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+
+  const bookings = await Booking.find({ "rental.schedule": { $exists: true } });
+  let sent = 0;
+  for (const booking of bookings) {
+    if (!booking.phone || !booking.rental || !Array.isArray(booking.rental.schedule)) continue;
+    const schedule = booking.rental.schedule.map(item => (item.toObject ? item.toObject() : item));
+    let changed = false;
+    for (const item of schedule) {
+      if (item.status !== "pending") continue;
+      const total = item.rent + (item.chargesAmount || 0);
+      if (item.dueDate === in3days && !item.reminderSentAt) {
+        const ok = await tiSendSms({
+          to: booking.phone,
+          body: `Timmo: votre loyer de ${total} FCFA pour "${booking.propertyTitle}" est dû le ${item.dueDate}. Merci de régulariser votre paiement sur timmo-six.vercel.app`,
+        });
+        if (ok) { item.reminderSentAt = new Date().toISOString(); changed = true; sent++; }
+      } else if (item.dueDate < todayIso && !item.overdueReminderSentAt) {
+        const ok = await tiSendSms({
+          to: booking.phone,
+          body: `Timmo: votre loyer de ${total} FCFA pour "${booking.propertyTitle}" est en retard (échéance du ${item.dueDate}). Merci de régulariser rapidement sur timmo-six.vercel.app`,
+        });
+        if (ok) { item.overdueReminderSentAt = new Date().toISOString(); changed = true; sent++; }
+      }
+    }
+    if (changed) await Booking.findOneAndUpdate({ id: booking.id }, { "rental.schedule": schedule });
+  }
+  return { sent };
+}
+
+// POST /admin/rent-reminders/run — déclenche manuellement une passe de
+// rappels de loyer par SMS, pour tester sans attendre le cycle automatique
+// quotidien lancé depuis server.js.
+router.post("/admin/rent-reminders/run", authenticate, requireRole("admin"), async (req, res) => {
+  if (!tiTwilioConfigured()) return res.status(503).json({ error: "sms_not_configured" });
+  try {
+    res.json({ ok: true, ...(await tiCheckRentReminders()) });
+  } catch (err) {
+    console.error("Erreur rappels de loyer:", err.message);
+    res.status(500).json({ error: "failed" });
+  }
+});
+
 module.exports = router;
+module.exports.tiCheckRentReminders = tiCheckRentReminders;
