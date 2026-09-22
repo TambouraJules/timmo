@@ -313,7 +313,7 @@ router.post("/payment-gateway/checkout", authenticate, async (req, res) => {
     });
     const data = await pdRes.json();
     if (data.response_code !== "00") return res.status(502).json({ error: "gateway_error", detail: data.response_text || data.message });
-    res.json({ checkoutUrl: data.url, token: data.token });
+    res.json({ checkoutUrl: data.response_text, token: data.token });
   } catch (err) {
     console.error("Erreur PayDunya (création):", err.message);
     res.status(502).json({ error: "gateway_unreachable" });
