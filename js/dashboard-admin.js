@@ -1075,10 +1075,24 @@ async function tiRenderAdminPayments() {
     </div>
     ${mrrTrendHtml}`;
 
-  const clientPayments = await TiDB.getPayments();
+    const clientPayments = await TiDB.getPayments();
+  // Nom de l'agence à partir de son id : évite d'afficher un titre de bien
+  // ambigu quand deux agences différentes ont un bien du même nom.
+  const agencyNameById = Object.fromEntries(agencies.map(a => [a.id, a.name]));
   const otherPaymentsHtml = clientPayments.length ? `
     <h4 style="margin:30px 0 14px;">${t('other_payments_title')}</h4>
     <table><thead><tr>
+      <th>${t('field_title')}</th><th>${t('agency_name')}</th><th>${t('pay_method')}</th><th>${t('pay_amount')}</th><th>${t('created_at_label')}</th><th></th>
+    </tr></thead><tbody>
+    ${clientPayments.map(p => `<tr>
+      <td>${p.propertyTitle || '—'}</td>
+      <td>${agencyNameById[p.agencyId] || p.agencyId || '—'}</td>
+      <td style="text-transform:uppercase;">${p.method}</td>
+      <td data-price-xof="${p.amount}">${tiFormatPrice(p.amount)}</td>
+      <td>${p.createdAt ? tiFormatDateTime(p.createdAt) : '—'}</td>
+      <td><span class="badge badge-paid">${t('status_paid')}</span></td>
+    </tr>`).join('')}
+    </tbody></table>` : '';
       <th>${t('field_title')}</th><th>${t('pay_method')}</th><th>${t('pay_amount')}</th><th></th>
     </tr></thead><tbody>
     ${clientPayments.map(p => `<tr>
