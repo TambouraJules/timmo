@@ -974,18 +974,6 @@ async function tiAdminDeleteListing(id) {
   await tiRefreshPanel("listings");
 }
 
-function tiSubscriptionStatusBadge(status) {
-  if (status === "active") return `<span class="badge badge-confirmed">${t('sub_status_active')}</span>`;
-  if (status === "past_due") return `<span class="badge badge-cancelled">${t('sub_status_past_due')}</span>`;
-  if (status === "trial") return `<span class="badge badge-pending">${t('sub_status_trial')}</span>`;
-  return `<span class="badge badge-review">${status}</span>`;
-}
-function tiInvoiceStatusBadge(status) {
-  if (status === "paid") return `<span class="badge badge-paid">${t('status_paid')}</span>`;
-  if (status === "overdue") return `<span class="badge badge-cancelled">${t('rental_status_overdue')}</span>`;
-  if (status === "trial") return `<span class="badge badge-pending">${t('sub_status_trial')}</span>`;
-  return `<span class="badge badge-pending">${t('status_pending')}</span>`;
-}
 
 let TI_ADMIN_SUBS_CACHE = [];
 function tiRenderAdminPaymentsFilterBar() {
@@ -1028,7 +1016,7 @@ function tiApplyAdminPaymentsFilter() {
         <td>${sub.subscribedSince ? tiFormatMonth(sub.subscribedSince) : '—'}</td>
         <td style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn btn-outline btn-sm" onclick="tiShowInvoiceHistory('${agency.id}')">${t('view_invoices')}</button>
-          ${sub.status === 'past_due' && latestInvoice ? `<button class="btn btn-sm btn-primary" onclick="tiAdminMarkInvoicePaid('${agency.id}','${latestInvoice.id}')">${t('mark_paid')}</button>` : ''}
+          ${latestInvoice && latestInvoice.status !== 'paid' ? `<button class="btn btn-sm btn-primary" onclick="tiAdminMarkInvoicePaid('${agency.id}','${latestInvoice.id}')">${t('mark_paid')}</button>` : ''}
         </td>
       </tr>`;
     }).join('')}
@@ -1036,11 +1024,15 @@ function tiApplyAdminPaymentsFilter() {
 }
 
 async function tiRenderAdminPayments() {
-  const agencies = await TiDB.getAgencies();
+  // Une seule requête pour toutes les factures (réelles, créées côté serveur) plutôt qu'une par agence.
+  const [agencies, allInvoices] = await Promise.all([TiDB.getAgencies(), TiDB.getAllInvoices()]);
   const subsData = await Promise.all(agencies.map(async agency => {
-    const sub = await TiDB.getAgencySubscription(agency.id);
-    const invoices = await TiDB.getAgencyInvoices(agency.id);
-    return { agency, sub, invoices, latestInvoice: invoices[invoices.length - 1] };
+    const baseSub = await TiDB.getAgencySubscription(agency.id, agency);
+    const invoices = allInvoices.filter(i => i.agencyId === agency.id).sort((a, b) => a.period.localeCompare(b.period));
+    const latestInvoice = invoices[invoices.length - 1];
+    // Le statut affiché découle de la dernière facture (payée, en retard, essai).
+    const sub = { ...baseSub, status: tiEffectiveSubscriptionStatus(baseSub, latestInvoice) };
+    return { agency, sub, invoices, latestInvoice };
   }));
   TI_ADMIN_SUBS_CACHE = subsData;
 
@@ -1054,7 +1046,7 @@ async function tiRenderAdminPayments() {
 
   // Vraie tendance du MRR sur 6 mois, agrégée à partir des factures réellement émises pour chaque agence.
   const byPeriod = {};
-  subsData.forEach(s => s.invoices.forEach(inv => { byPeriod[inv.period] = (byPeriod[inv.period] || 0) + inv.amount; }));
+  subsData.forEach(s => s.invoices.forEach(inv => { if (inv.status === "paid") byPeriod[inv.period] = (byPeriod[inv.period] || 0) + inv.amount; }));
   const periods = Object.keys(byPeriod).sort();
   const mrrTrendHtml = periods.length ? tiLineChartHtml(
     t('mrr_trend_title'),
@@ -1075,53 +1067,28 @@ async function tiRenderAdminPayments() {
     </div>
     ${mrrTrendHtml}`;
 
-  const clientPayments = await TiDB.getPayments();
-  // Nom de l'agence à partir de son id : évite d'afficher un titre de bien
-  // ambigu quand deux agences différentes ont un bien du même nom.
-  const agencyNameById = Object.fromEntries(agencies.map(a => [a.id, a.name]));
-  const otherPaymentsHtml = clientPayments.length ? `
-    <h4 style="margin:30px 0 14px;">${t('other_payments_title')}</h4>
-    <table><thead><tr>
-      <th>${t('field_title')}</th><th>${t('agency_name')}</th><th>${t('pay_method')}</th><th>${t('pay_amount')}</th><th>${t('created_at_label')}</th><th></th>
+  // Paiements d'abonnement reçus (mobile money via la passerelle, ou enregistrés par l'administration).
+  const received = allInvoices.filter(i => i.status === "paid" && i.paidAt)
+    .sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt)).slice(0, 30);
+  const agencyNameOf = id => (agencies.find(a => a.id === id) || {}).name || id;
+  const otherPaymentsHtml = `
+    <h4 style="margin:30px 0 14px;">${t('sub_payments_received_title')}</h4>
+    ${received.length ? `<table><thead><tr>
+      <th>${t('agency_name')}</th><th>${t('period_label')}</th><th>${t('pay_amount')}</th><th>${t('pay_method')}</th><th>${t('paid_on_label')}</th>
     </tr></thead><tbody>
-    ${clientPayments.map(p => `<tr>
-      <td>${p.propertyTitle || '—'}</td>
-      <td>${agencyNameById[p.agencyId] || p.agencyId || '—'}</td>
-      <td style="text-transform:uppercase;">${p.method}</td>
-      <td data-price-xof="${p.amount}">${tiFormatPrice(p.amount)}</td>
-      <td>${p.createdAt ? tiFormatDateTime(p.createdAt) : '—'}</td>
-      <td><span class="badge badge-paid">${t('status_paid')}</span></td>
+    ${received.map(inv => `<tr>
+      <td><strong>${tiEscapeHtml(agencyNameOf(inv.agencyId))}</strong></td>
+      <td>${tiFormatMonth(inv.period + "-01")}</td>
+      <td data-price-xof="${inv.amount}">${tiFormatPrice(inv.amount)}</td>
+      <td>${tiPaymentMethodLabel(inv.method)}</td>
+      <td>${tiFormatDateTime(inv.paidAt)}</td>
     </tr>`).join('')}
-    </tbody></table>` : '';
-
-  const rentRemindersHtml = `
-    <div class="ti-stat-card" style="margin-top:30px;padding:16px 18px;text-align:left;">
-      <h4 style="margin:0 0 6px;">${t('rent_reminders_title')}</h4>
-      <p style="color:var(--ink-soft);font-size:.88rem;margin:0 0 12px;">${t('rent_reminders_desc')}</p>
-      <button class="btn btn-outline btn-sm" onclick="tiRunRentRemindersNow(this)">${t('rent_reminders_run_button')}</button>
-      <span id="rent-reminders-result" style="margin-left:10px;color:var(--ink-soft);font-size:.88rem;"></span>
-    </div>`;
+    </tbody></table>` : `<p style="color:var(--ink-soft)">${t('sub_payments_none')}</p>`}`;
 
   document.getElementById("admin-payments-mount").insertAdjacentHTML("beforebegin", statsHtml);
   tiRenderAdminPaymentsFilterBar();
   tiApplyAdminPaymentsFilter();
-  document.getElementById("admin-payments-mount").insertAdjacentHTML("afterend", otherPaymentsHtml + rentRemindersHtml);
-}
-
-async function tiRunRentRemindersNow(btn) {
-  tiSetBtnLoading(btn, true);
-  const out = document.getElementById("rent-reminders-result");
-  try {
-    const res = await TiDB.runRentReminders();
-    if (out) {
-      out.textContent = res.error === "sms_not_configured"
-        ? t('rent_reminders_not_configured')
-        : t('rent_reminders_result').replace('{count}', res.sent ?? 0);
-    }
-  } catch (err) {
-    if (out) out.textContent = t('rent_reminders_not_configured');
-  }
-  tiSetBtnLoading(btn, false);
+  document.getElementById("admin-payments-mount").insertAdjacentHTML("afterend", otherPaymentsHtml);
 }
 
 function tiShowInvoiceHistory(agencyId) {
@@ -1136,7 +1103,7 @@ function tiShowInvoiceHistory(agencyId) {
       ${invoices.slice().reverse().map(inv => `<tr>
         <td>${tiFormatMonth(inv.period + "-01")}</td>
         <td data-price-xof="${inv.amount}">${tiFormatPrice(inv.amount)}</td>
-        <td style="text-transform:uppercase;">${inv.method || '—'}</td>
+        <td>${tiPaymentMethodLabel(inv.method)}</td>
         <td>${inv.paidAt ? tiFormatDateTime(inv.paidAt) : '—'}</td>
         <td>${tiInvoiceStatusBadge(inv.status)}</td>
       </tr>`).join('')}

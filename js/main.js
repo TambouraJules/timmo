@@ -1025,6 +1025,48 @@ function tiApplyPanelFromUrl(validPanels) {
   const requested = new URLSearchParams(window.location.search).get("panel");
   if (requested && validPanels.includes(requested)) tiShowPanel(requested);
 }
+/* ---------- Abonnement des agences : libellés partagés (admin + agence) ---------- */
+function tiSubscriptionStatusBadge(status) {
+  if (status === "active") return `<span class="badge badge-confirmed">${t('sub_status_active')}</span>`;
+  if (status === "past_due") return `<span class="badge badge-cancelled">${t('sub_status_past_due')}</span>`;
+  if (status === "trial") return `<span class="badge badge-pending">${t('sub_status_trial')}</span>`;
+  return `<span class="badge badge-review">${status}</span>`;
+}
+function tiInvoiceStatusBadge(status) {
+  if (status === "paid") return `<span class="badge badge-paid">${t('status_paid')}</span>`;
+  if (status === "overdue") return `<span class="badge badge-cancelled">${t('rental_status_overdue')}</span>`;
+  if (status === "trial") return `<span class="badge badge-pending">${t('sub_status_trial')}</span>`;
+  return `<span class="badge badge-pending">${t('status_pending')}</span>`;
+}
+/** Statut d'abonnement « réel » d'une agence d'après sa dernière facture : payée → actif,
+ *  en retard → en retard, essai → essai ; sinon le statut enregistré sur l'agence. */
+function tiEffectiveSubscriptionStatus(sub, latestInvoice) {
+  if (latestInvoice) {
+    if (latestInvoice.status === "paid") return "active";
+    if (latestInvoice.status === "overdue") return "past_due";
+    if (latestInvoice.status === "trial") return "trial";
+  }
+  return sub.status;
+}
+/** Libellé lisible du moyen de règlement enregistré sur une facture. */
+function tiPaymentMethodLabel(method) {
+  if (!method) return "—";
+  const keys = { paydunya: "method_mobile_money", manual: "method_manual", direct: "method_direct" };
+  if (keys[method]) return t(keys[method]);
+  return { wave: "Wave", om: "Orange Money", card: "Carte" }[method] || String(method).toUpperCase();
+}
+
+/** Lit le retour de la passerelle de paiement dans l'adresse. PayDunya
+ *  « ajoute ?token=... » à notre return_url ; comme celle-ci contient déjà
+ *  une chaîne de requête, le résultat peut être « ...&pd_return=1?token=abc »
+ *  ou « ...&pd_return=1&token=abc » — on lit donc l'adresse brute plutôt que
+ *  de dépendre d'un découpage strict des paramètres. */
+function tiReadGatewayReturn() {
+  const raw = window.location.search || "";
+  if (!/(^|[?&])pd_return=1/.test(raw)) return null;
+  const m = raw.match(/(?:[?&]|%3F)token(?:=|%3D)([^&?#%]+)/i);
+  return { token: m ? decodeURIComponent(m[1]) : null };
+}
 function tiSetBtnLoading(btn, loading) {
   if (!btn) return;
   if (loading) { btn.dataset.label = btn.textContent; btn.classList.add("is-loading"); btn.disabled = true; }

@@ -77,21 +77,6 @@
 </div>
 
 <!-- Rent/deposit payment modal -->
-<div class="ti-modal-backdrop" id="modal-pay-schedule">
-  <div class="ti-modal">
-    <button class="ti-modal-close" onclick="tiCloseModal('modal-pay-schedule')">&times;</button>
-    <h3 data-i18n="pay_title"></h3>
-    <form onsubmit="return tiSubmitSchedulePayment(event)">
-      <div class="field">
-        <label data-i18n="pay_amount"></label>
-        <div style="font-family:var(--font-display);font-size:1.4rem;color:var(--deep);" id="schedule-pay-amount"></div>
-      </div>
-      <p style="font-size:.85rem;color:var(--ink-soft);margin:-4px 0 16px;" data-i18n="pay_redirect_note"></p>
-      <div id="schedule-pay-gateway-error" style="display:none;"></div>
-      <button type="submit" class="btn btn-primary btn-block" data-i18n="pay_submit"></button>
-    </form>
-  </div>
-</div>
 
 <div class="ti-modal-backdrop" id="modal-view-text-doc">
   <div class="ti-modal">

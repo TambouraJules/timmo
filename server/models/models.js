@@ -95,6 +95,18 @@ const PaymentSchema = new Schema({
   status: String,
 }, { timestamps: true, strict: false });
 
+// Facture mensuelle d'abonnement d'une agence à la plateforme (payée par mobile money
+// via la passerelle, ou enregistrée manuellement par l'administration).
+const InvoiceSchema = new Schema({
+  id: { type: String, unique: true },
+  agencyId: String,
+  period: String, // "AAAA-MM"
+  amount: Number,
+  status: String, // pending | trial | paid
+  method: String,
+  paidAt: String,
+}, { timestamps: true, strict: false });
+
 const AnnouncementSchema = new Schema({
   id: { type: String, unique: true },
   agencyId: String,
@@ -116,6 +128,7 @@ module.exports = {
   Message: mongoose.model("Message", MessageSchema),
   Review: mongoose.model("Review", ReviewSchema),
   Payment: mongoose.model("Payment", PaymentSchema),
+  Invoice: mongoose.model("Invoice", InvoiceSchema),
   Favorite: mongoose.model("Favorite", FavoriteSchema),
   Announcement: mongoose.model("Announcement", AnnouncementSchema),
 };

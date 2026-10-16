@@ -3,6 +3,9 @@
    ============================================================ */
 
 const TI_SESSION = tiRequireRole("agency");
+// Retour de la passerelle de paiement : lu dès le chargement du script, car tiShowPanel()
+// réécrit l'adresse (et encode le « ?token= » ajouté par PayDunya) avant le gestionnaire de retour.
+const TI_GATEWAY_RETURN = tiReadGatewayReturn();
 let TI_EDITING_PROPERTY = null;
 
 function tiShowPanel(name) {
@@ -42,6 +45,8 @@ async function tiRefreshPanel(panelName) {
     await tiRenderAgencyMessages();
   } else if (panelName === "favorites") {
     await tiRenderFavorites();
+  } else if (panelName === "subscription") {
+    if (isSupervisor) await tiRenderSubscription();
   }
 }
 
@@ -1606,6 +1611,7 @@ function tiAgencyBookingCardHtml(b) {
             <span>${t('deposit_label')}</span>
             <span class="ti-rental-deposit-amount" data-price-xof="${b.rental.deposit.amount}">${tiFormatPrice(b.rental.deposit.amount)}</span>
             ${tiRentalStatusBadge(b.rental.deposit.status)}
+            ${b.rental.deposit.status !== 'paid' ? `<button class="btn btn-sm btn-outline" onclick="tiMarkRentalReceived('${b.id}','deposit')">${t('rental_mark_received')}</button>` : ''}
           </div>
           ${b.rental.deposit.status === 'paid' ? tiAgencyDepositEscrowHtml(b) : ''}
           ${b.rental.charges.some(c => c.enabled) ? `
@@ -1622,7 +1628,7 @@ function tiAgencyBookingCardHtml(b) {
                 <td data-price-xof="${item.rent}">${tiFormatPrice(item.rent)}</td>
                 <td data-price-xof="${item.chargesAmount}">${tiFormatPrice(item.chargesAmount)}</td>
                 <td data-price-xof="${item.rent + item.chargesAmount}"><strong>${tiFormatPrice(item.rent + item.chargesAmount)}</strong></td>
-                <td>${tiRentalStatusBadge(item.status, overdue)}</td>
+                <td>${tiRentalStatusBadge(item.status, overdue)}${item.status !== 'paid' ? ` <button class="btn btn-sm btn-outline" onclick="tiMarkRentalReceived('${b.id}','${item.id}')">${t('rental_mark_received')}</button>` : ''}</td>
               </tr>`;
               }).join('')}
             </tbody>
@@ -1685,6 +1691,120 @@ function tiRentalStatusBadge(status, overdue) {
 function tiChargeLabel(c) { return tiGetLang() === "en" ? c.labelEn : c.label; }
 
 let TI_CHARGES_BOOKING_ID = null;
+/* ---------- Abonnement à la plateforme (superviseur de l'agence) ---------- */
+async function tiRenderSubscription() {
+  const mount = document.getElementById("subscription-mount");
+  if (!mount || TI_SESSION.agentRole !== "supervisor") return;
+  const [sub, invoices, agency] = await Promise.all([
+    TiDB.getAgencySubscription(TI_SESSION.agencyId), TiDB.getAgencyInvoices(TI_SESSION.agencyId), TiDB.getAgency(TI_SESSION.agencyId),
+  ]);
+  if (!sub) { mount.innerHTML = ""; return; }
+  const tier = TI_AGENCY_TIERS.find(x => x.id === sub.tierId) || TI_AGENCY_TIERS[0];
+  const maxAgents = agency && agency.maxAgents != null ? agency.maxAgents : tier.maxAgents;
+  const maxListings = agency && agency.maxListings != null ? agency.maxListings : tier.maxListings;
+  const unpaid = invoices.filter(i => i.status !== "paid");
+  const status = tiEffectiveSubscriptionStatus(sub, invoices[invoices.length - 1]);
+  mount.innerHTML = `
+    <div class="ti-dash-head" style="margin-bottom:18px;">
+      <h3 style="margin:0;">${t('dash_agency_subscription')}</h3>
+      <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;">${t('subscription_sub')}</p>
+    </div>
+    <div style="background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius-m);padding:18px 20px;margin-bottom:22px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+        <div><span style="color:var(--ink-soft);font-size:.82rem;">${t('plan_label')}</span><br><strong style="font-size:1.2rem;">${tiGetLang() === 'en' ? tier.labelEn : tier.label}</strong></div>
+        <div><span style="color:var(--ink-soft);font-size:.82rem;">${t('sub_monthly_fee_label')}</span><br><strong style="font-size:1.2rem;" data-price-xof="${sub.monthlyFee}">${tiFormatPrice(sub.monthlyFee)}</strong></div>
+        <div><span style="color:var(--ink-soft);font-size:.82rem;">${t('sub_status_label')}</span><br>${tiSubscriptionStatusBadge(status)}</div>
+      </div>
+      <p style="color:var(--ink-soft);font-size:.85rem;margin:12px 0 0;">${t('sub_limits').replace('{agents}', maxAgents).replace('{listings}', maxListings)}</p>
+    </div>
+    ${unpaid.length ? `
+      <h4 style="margin:0 0 10px;">${t('sub_to_pay_title')}</h4>
+      ${unpaid.slice().reverse().map(inv => `
+        <div class="ti-escrow-box" style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div>
+              <strong>${tiFormatMonth(inv.period + "-01")}</strong> ${tiInvoiceStatusBadge(inv.status)}<br>
+              <span data-price-xof="${inv.amount}">${tiFormatPrice(inv.amount)}</span>
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="tiOpenSubscriptionPayModal('${inv.id}',${inv.amount},'${inv.period}')">${t('sub_pay_action')}</button>
+          </div>
+        </div>`).join('')}`
+      : `<p class="ti-escrow-box" style="margin:0;">${t('sub_all_paid')}</p>`}
+    <h4 style="margin:26px 0 10px;">${t('invoice_history_title')}</h4>
+    <table><thead><tr>
+      <th>${t('period_label')}</th><th>${t('pay_amount')}</th><th>${t('pay_method')}</th><th>${t('paid_on_label')}</th><th>${t('status_label')}</th>
+    </tr></thead><tbody>
+    ${invoices.slice().reverse().map(inv => `<tr>
+      <td>${tiFormatMonth(inv.period + "-01")}</td>
+      <td data-price-xof="${inv.amount}">${tiFormatPrice(inv.amount)}</td>
+      <td>${tiPaymentMethodLabel(inv.method)}</td>
+      <td>${inv.paidAt ? tiFormatDateTime(inv.paidAt) : '—'}</td>
+      <td>${tiInvoiceStatusBadge(inv.status)}</td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+let TI_SUB_PAY_CTX = null;
+function tiOpenSubscriptionPayModal(invoiceId, amount, period) {
+  TI_SUB_PAY_CTX = { invoiceId, amount, period };
+  document.getElementById("sub-pay-amount").textContent = tiFormatPrice(amount);
+  document.getElementById("sub-pay-period").textContent = tiFormatMonth(period + "-01");
+  document.getElementById("sub-pay-gateway-error").style.display = "none";
+  tiOpenModal("modal-pay-subscription");
+}
+async function tiSubmitSubscriptionPayment(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector("button[type=submit]");
+  const errBox = document.getElementById("sub-pay-gateway-error");
+  errBox.style.display = "none";
+  tiSetBtnLoading(btn, true);
+  const returnUrl = `${window.location.origin}/dashboard-agency.html?panel=subscription&pd_return=1`;
+  try {
+    const result = await TiDB.createPaymentCheckout({
+      invoiceId: TI_SUB_PAY_CTX.invoiceId, agencyId: TI_SESSION.agencyId, returnUrl, cancelUrl: returnUrl,
+    });
+    if (result.simulated) {
+      tiSetBtnLoading(btn, false);
+      tiCloseModal("modal-pay-subscription");
+      tiToast(t("sub_paid_success"));
+      await tiRenderSubscription();
+      return false;
+    }
+    if (!result.checkoutUrl) throw new Error(result.error || "gateway_error");
+    window.location.href = result.checkoutUrl;
+  } catch (err) {
+    tiSetBtnLoading(btn, false);
+    errBox.style.display = "";
+    errBox.innerHTML = `<div class="ti-error">${err.message === "gateway_not_configured" ? t("pay_gateway_not_configured") : t("pay_gateway_error")}</div>`;
+  }
+  return false;
+}
+/** Au retour de la passerelle, vérifie le statut réel auprès de PayDunya avant d'annoncer
+ *  quoi que ce soit — le simple fait d'être revenu sur cette page ne prouve rien. */
+async function tiHandleSubscriptionReturn() {
+  const ret = TI_GATEWAY_RETURN;
+  if (!ret) return;
+  window.history.replaceState({}, "", window.location.pathname + "?panel=subscription");
+  if (!ret.token) return;
+  const result = await TiDB.confirmPaymentCheckout(ret.token);
+  tiToast(result.status === "completed" ? t("sub_paid_success") : t("pay_pending_or_failed"));
+  if (result.status === "completed") await tiRenderSubscription();
+}
+
+/* ---------- Loyer et dépôt : règlement reçu directement par l'agence ---------- */
+async function tiMarkRentalReceived(bookingId, scheduleId) {
+  if (!confirm(t('rental_mark_received_confirm'))) return;
+  try {
+    if (scheduleId === "deposit") await TiDB.payRentalDeposit(bookingId, "direct");
+    else await TiDB.payRentalScheduleItem(bookingId, scheduleId, "direct");
+  } catch (err) {
+    tiToast(t('rental_mark_received_failed'));
+    return;
+  }
+  tiLogAgencyAction("rental_payment_recorded", "booking", bookingId, bookingId, scheduleId === "deposit" ? t('deposit_label') : scheduleId);
+  tiToast(t('rental_mark_received_done'));
+  await tiRefreshPanel("bookings");
+}
+
 /** Affiche, côté agence, l'état du séquestre et les actions possibles une
  *  fois le dépôt payé : libération immédiate et intégrale, ou ouverture
  *  du formulaire de répartition partielle avec motif. */
@@ -2079,16 +2199,19 @@ async function tiInitAgencyDashboard() {
   if (navAgents) navAgents.style.display = isSupervisor ? "" : "none";
   const navAudit = document.getElementById("nav-audit");
   if (navAudit) navAudit.style.display = isSupervisor ? "" : "none";
+  const navSubscription = document.getElementById("nav-subscription");
+  if (navSubscription) navSubscription.style.display = isSupervisor ? "" : "none";
   const assignWrap = document.getElementById("nl-assign-wrap");
   if (assignWrap) assignWrap.style.display = isSupervisor ? "" : "none";
   await tiLoadAgentsCache();
   tiPopulateAssignAgentSelect();
   await new Promise(r => setTimeout(r, 350));
   const tasks = [tiRenderStats(), tiRenderAgencyListings(), tiRenderAgencyBookings(), tiRenderAgencyMessages(), tiRenderAgencyReviews(), tiRenderAnnouncementsPage(), tiRenderWelcomeKit()];
-  if (isSupervisor) { tasks.push(tiRenderAgents()); tasks.push(tiRenderAudit()); }
+  if (isSupervisor) { tasks.push(tiRenderAgents()); tasks.push(tiRenderAudit()); tasks.push(tiRenderSubscription()); }
   await Promise.all(tasks);
   await tiRenderClientsPipeline();
   await tiRenderFavorites();
-  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "announcements", "welcomekit", "messages", "reviews", "agents", "audit", "reports", "favorites"]);
+  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "announcements", "welcomekit", "messages", "reviews", "agents", "audit", "reports", "subscription", "favorites"]);
+  await tiHandleSubscriptionReturn();
 }
 if (TI_SESSION) tiInitAgencyDashboard();

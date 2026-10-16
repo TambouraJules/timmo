@@ -348,12 +348,13 @@ async function tiRenderPayments() {
           <strong data-price-xof="${monthlyRent + monthlyCharges}">${tiFormatPrice(monthlyRent + monthlyCharges)}</strong>
           <span class="ti-monthly-breakdown">(${t('rent_label')} <span data-price-xof="${monthlyRent}">${tiFormatPrice(monthlyRent)}</span>${monthlyCharges ? ` + ${t('charges_label')} <span data-price-xof="${monthlyCharges}">${tiFormatPrice(monthlyCharges)}</span>` : ''})</span>
         </div>
+        <p class="ti-rental-no-charges">${t('rental_pay_direct_note')}</p>
         <div class="ti-rental-deposit-row">
           <span>${t('deposit_label')}</span>
           <span class="ti-rental-deposit-amount" data-price-xof="${b.rental.deposit.amount}">${tiFormatPrice(b.rental.deposit.amount)}</span>
           ${b.rental.deposit.status === 'paid'
             ? `<span class="badge badge-paid">${t('status_paid')}</span>`
-            : `<button class="btn btn-sm btn-primary" onclick="tiOpenSchedulePayModal('${b.id}','deposit',${b.rental.deposit.amount},'${b.agencyId}')">${t('pay_now')}</button>`}
+            : `<span class="badge badge-pending">${t('status_pending')}</span>`}
         </div>
         ${b.rental.deposit.status === 'paid' ? tiDepositEscrowStatusHtml(b) : ''}
         <div class="ti-month-list">
@@ -383,11 +384,6 @@ async function tiRenderPayments() {
                   <span class="ti-charge-status-amount" data-price-xof="${c.amount}">${tiFormatPrice(c.amount)}</span>
                   ${item.status === 'paid' ? `<span class="badge badge-paid">${t('status_paid')}</span>` : `<span class="badge badge-pending">${t('status_pending')}</span>`}
                 </div>`).join('')}
-                <div class="ti-month-breakdown-action">
-                  ${item.status === 'paid'
-                    ? `<span class="badge badge-paid">${t('status_paid')}</span>`
-                    : `<button class="btn btn-sm ${overdue ? 'btn-danger' : 'btn-outline'}" onclick="tiOpenSchedulePayModal('${b.id}','${item.id}',${total},'${b.agencyId}')">${t('pay_now')}</button>`}
-                </div>
               </div>
             </div>`;
           }).join('')}
@@ -422,7 +418,6 @@ function tiToggleMonthBreakdown(rowId) {
 
 function tiChargeLabel(c) { return tiGetLang() === "en" ? c.labelEn : c.label; }
 
-let TI_SCHEDULE_PAY_CTX = null;
 /** Affiche l'état du séquestre du dépôt une fois celui-ci payé : en attente
  *  de restitution, répartition proposée par l'agence (avec actions
  *  accepter/contester), litige en cours d'arbitrage, ou solde final réglé. */
@@ -458,56 +453,6 @@ async function tiRespondDepositProposal(bookingId, accept) {
   tiToast(accept ? t('escrow_accepted_toast') : t('escrow_disputed_toast'));
   await tiRefreshPanel("payments");
 }
-function tiOpenSchedulePayModal(bookingId, scheduleId, amount, agencyId) {
-  TI_SCHEDULE_PAY_CTX = { bookingId, scheduleId, amount, agencyId };
-  document.getElementById("schedule-pay-amount").textContent = tiFormatPrice(amount);
-  document.getElementById("schedule-pay-gateway-error").style.display = "none";
-  tiOpenModal("modal-pay-schedule");
-}
-async function tiSubmitSchedulePayment(e) {
-  e.preventDefault();
-  const btn = e.target.querySelector("button[type=submit]");
-  const errBox = document.getElementById("schedule-pay-gateway-error");
-  errBox.style.display = "none";
-  tiSetBtnLoading(btn, true);
-  const { bookingId, scheduleId, amount, agencyId } = TI_SCHEDULE_PAY_CTX;
-  const returnUrl = `${window.location.origin}/dashboard-client.html?panel=payments&pd_return=1`;
-  try {
-    const result = await TiDB.createPaymentCheckout({
-      amount, description: t("pay_title"),
-      purpose: scheduleId === "deposit" ? "deposit" : "schedule",
-      bookingId, scheduleId: scheduleId === "deposit" ? undefined : scheduleId, agencyId,
-      returnUrl, cancelUrl: returnUrl,
-    });
-    if (result.simulated) {
-      tiSetBtnLoading(btn, false);
-      tiCloseModal("modal-pay-schedule");
-      tiToast(t("pay_success"));
-      await tiRefreshPanel("payments");
-      return false;
-    }
-    if (!result.checkoutUrl) throw new Error(result.error || "gateway_error");
-    window.location.href = result.checkoutUrl;
-  } catch (err) {
-    tiSetBtnLoading(btn, false);
-    errBox.style.display = "";
-    errBox.innerHTML = `<div class="ti-error">${err.message === "gateway_not_configured" ? t("pay_gateway_not_configured") : t("pay_gateway_error")}</div>`;
-  }
-  return false;
-}
-/** Au retour de la passerelle de paiement, vérifie le statut réel avant
- *  de rafraîchir l'affichage — ne fait jamais confiance au simple fait
- *  d'être revenu sur cette page. */
-async function tiHandlePaymentReturn() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("pd_return") !== "1") return;
-  const token = params.get("token");
-  window.history.replaceState({}, "", window.location.pathname + "?panel=payments");
-  if (!token) return;
-  const result = await TiDB.confirmPaymentCheckout(token);
-  tiToast(result.status === "completed" ? t("pay_success") : t("pay_pending_or_failed"));
-  if (result.status === "completed") await tiRefreshPanel("payments");
-}
 
 async function tiInitClientDashboard() {
   tiRenderHeader();
@@ -523,6 +468,5 @@ async function tiInitClientDashboard() {
   const navPayments = document.getElementById("nav-client-payments");
   if (navPayments) navPayments.style.display = hasActiveClient ? "" : "none";
   tiApplyPanelFromUrl(["overview", "bookings", "favorites", "messages", "documents", "payments", "profile"]);
-  await tiHandlePaymentReturn();
 }
 if (TI_SESSION) tiInitClientDashboard();

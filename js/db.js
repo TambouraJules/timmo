@@ -691,6 +691,16 @@ const TiDB = {
   },
   /** Point de passage unique pour créer/sauvegarder une réservation —
    *  upsert par id métier, aussi bien en local qu'à travers l'API. */
+  /** Lit UNE réservation par identifiant. En API, GET /bookings/:id est ouvert au
+   *  client concerné, à l'agence propriétaire et à l'administration — alors que
+   *  charger toutes les réservations (sans filtre) est réservé à l'administration. */
+  async _bookingById(id) {
+    if (TI_BACKEND === "api") {
+      try { return await (await tiApiFetch(`${TI_API_BASE}/bookings/${encodeURIComponent(id)}`)).json(); }
+      catch (err) { if (err.status === 404) return undefined; throw err; }
+    }
+    return tiLoad("ti_bookings", []).find(b => b.id === id);
+  },
   async _bookingSave(booking) {
     if (TI_BACKEND === "api") {
       return (await tiApiFetch(`${TI_API_BASE}/bookings`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(booking) })).json();
@@ -711,8 +721,7 @@ const TiDB = {
     return this._bookingSave(booking);
   },
   async updateBookingStatus(id, status) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === id);
+    const b = await this._bookingById(id);
     if (b) { b.status = status; await this._bookingSave(b); }
     if (status === "confirmed") {
       if (b && !b.dossierStatus) await this.requestDocuments(id, TI_DEFAULT_SCREENING_DOCS);
@@ -721,8 +730,7 @@ const TiDB = {
     return b;
   },
   async updateBooking(id, patch) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === id);
+    const b = await this._bookingById(id);
     if (b) { Object.assign(b, patch); await this._bookingSave(b); }
     return b;
   },
@@ -747,8 +755,7 @@ const TiDB = {
     return b;
   },
   async sendContract(bookingId, fileName, fileData) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b) return null;
     b.contracts = b.contracts || [];
     b.contracts.push({ id: "ctr_" + Date.now(), fileName, fileData: fileData || null, sentAt: new Date().toISOString() });
@@ -763,8 +770,7 @@ const TiDB = {
     return b;
   },
   async signContract(bookingId, contractId) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.contracts) return null;
     const ctr = b.contracts.find(c => c.id === contractId);
     if (ctr) { ctr.signed = true; ctr.signedAt = new Date().toISOString(); }
@@ -773,8 +779,7 @@ const TiDB = {
     return b;
   },
   async submitDocument(bookingId, docKey, fileName, fileData) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.documentRequests) return null;
     const doc = b.documentRequests.find(d => d.key === docKey);
     if (doc) { doc.status = "submitted"; doc.fileName = fileName; doc.fileData = fileData || null; doc.submittedAt = new Date().toISOString(); doc.note = null; }
@@ -793,8 +798,7 @@ const TiDB = {
   },
   async reviewDocument(bookingId, docKey, status, note) {
     // status : "approved" | "rejected"
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.documentRequests) return null;
     const doc = b.documentRequests.find(d => d.key === docKey);
     if (doc) { doc.status = status; doc.note = note || null; }
@@ -822,8 +826,7 @@ const TiDB = {
      charges (eau, électricité, internet...) démarrent désactivées — l'agence
      active celles qui s'appliquent à ce bail et fixe leur montant mensuel. */
   async ensureRentalLedger(bookingId) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || b.rental) return b;
     const prop = await this.getProperty(b.propertyId);
     const depositAmount = (prop && prop.depositAmount) || b.price;
@@ -855,8 +858,7 @@ const TiDB = {
     return b;
   },
   async setRentalCharges(bookingId, charges) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.rental) return null;
     b.rental.charges = charges;
     const chargesTotal = charges.filter(c => c.enabled).reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
@@ -867,8 +869,7 @@ const TiDB = {
     return b;
   },
   async payRentalDeposit(bookingId, method) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.rental) return null;
     b.rental.deposit.status = "paid";
     b.rental.deposit.paidAt = new Date().toISOString();
@@ -877,8 +878,7 @@ const TiDB = {
     return b;
   },
   async payRentalScheduleItem(bookingId, scheduleId, method) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.rental) return null;
     const item = b.rental.schedule.find(s => s.id === scheduleId);
     if (item) { item.status = "paid"; item.paidAt = new Date().toISOString(); item.method = method; }
@@ -909,8 +909,7 @@ const TiDB = {
     return msg;
   },
   async maybeSendWelcome(bookingId) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || b.welcomed) return;
     if (tiComputeBookingStage(b) !== "active") return;
     b.welcomed = true;
@@ -1027,14 +1026,6 @@ const TiDB = {
     return all.slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   },
 
-  // Déclenche manuellement une passe de rappels de loyer par SMS (admin
-  // uniquement) — utile pour tester sans attendre le cycle automatique
-  // quotidien côté serveur.
-  async runRentReminders() {
-    const res = await tiApiFetch(`${TI_API_BASE}/admin/rent-reminders/run`, { method: "POST" });
-    return res.json();
-  },
-
   async getPayments(filter = {}) {
     if (TI_BACKEND === "api") {
       const params = new URLSearchParams(filter).toString();
@@ -1045,8 +1036,8 @@ const TiDB = {
     return all;
   },
 
-  async getAgencySubscription(agencyId) {
-    const agency = await this.getAgency(agencyId);
+  async getAgencySubscription(agencyId, agencyObj) {
+    const agency = agencyObj || await this.getAgency(agencyId);
     if (!agency) return null;
     const tier = TI_AGENCY_TIERS.find(t2 => t2.id === agency.tier) || TI_AGENCY_TIERS[0];
     return {
@@ -1056,12 +1047,16 @@ const TiDB = {
     };
   },
   async getAgencyInvoices(agencyId) {
+    if (TI_BACKEND === "api") {
+      return (await tiApiFetch(`${TI_API_BASE}/invoices?agencyId=${encodeURIComponent(agencyId)}`)).json();
+    }
     const agency = await this.getAgency(agencyId);
     if (!agency) return [];
     const stored = tiLoad("ti_agency_invoices", {});
     if (stored[agencyId]) return stored[agencyId];
-    // Génère un historique de facturation réaliste au premier accès
-    // (déterministe par agence, puis persisté pour rester stable entre rechargements).
+    // Mode démo uniquement : génère un historique de facturation fictif au premier
+    // accès (déterministe par agence, puis persisté). En production, les factures
+    // sont réelles et créées par le serveur (voir server/routes/misc.js).
     const tier = TI_AGENCY_TIERS.find(t2 => t2.id === agency.tier) || TI_AGENCY_TIERS[0];
     const methods = ["wave", "om", "card"];
     const months = 6;
@@ -1085,7 +1080,24 @@ const TiDB = {
     tiSave("ti_agency_invoices", stored);
     return invoices;
   },
+  /** Toutes les factures de toutes les agences (administration) — une seule requête
+   *  en production plutôt qu'une par agence. Chaque facture porte son agencyId. */
+  async getAllInvoices() {
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/invoices`)).json();
+    const agencies = await this.getAgencies();
+    const lists = await Promise.all(agencies.map(a => this.getAgencyInvoices(a.id)));
+    return lists.flatMap((list, i) => list.map(inv => ({ ...inv, agencyId: agencies[i].id })));
+  },
+  /** Enregistre un règlement d'abonnement : en production, réservé à
+   *  l'administration (règlement reçu hors plateforme) ; en démo, aussi utilisé
+   *  par la simulation du paiement mobile money. */
   async markInvoicePaid(agencyId, invoiceId, method) {
+    if (TI_BACKEND === "api") {
+      await tiApiFetch(`${TI_API_BASE}/invoices/${encodeURIComponent(invoiceId)}/mark-paid`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ method }),
+      });
+      return { id: invoiceId, status: "paid" };
+    }
     const stored = tiLoad("ti_agency_invoices", {});
     const list = stored[agencyId] || [];
     const inv = list.find(i => i.id === invoiceId);
@@ -1097,29 +1109,27 @@ const TiDB = {
     }
     return inv;
   },
-  /** Crée une session de paiement réelle (Wave, Orange Money, carte via
-   *  PayDunya) et renvoie l'URL hébergée vers laquelle rediriger le
-   *  client. En mode local (démo), simule un succès instantané puisqu'il
-   *  n'y a pas de vraie passerelle à contacter. */
+  /** Crée une session de paiement mobile money (Wave, Orange Money, carte via
+   *  PayDunya) pour une facture d'abonnement et renvoie l'URL hébergée vers
+   *  laquelle rediriger l'agence. Le montant n'est pas envoyé : le serveur le lit
+   *  dans la facture. En mode démo, simule un succès instantané. */
   async createPaymentCheckout(params) {
     if (TI_BACKEND === "api") {
       try {
         const res = await tiApiFetch(`${TI_API_BASE}/payment-gateway/checkout`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params),
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ purpose: "subscription", invoiceId: params.invoiceId, returnUrl: params.returnUrl, cancelUrl: params.cancelUrl }),
         });
         return res.json();
       } catch (err) {
         throw new Error(err.status === 503 ? "gateway_not_configured" : "gateway_error");
       }
     }
-    // Mode local : pas de vraie passerelle — applique directement le
-    // résultat visé par ce paiement, comme si la confirmation avait réussi.
-    await this._applyLocalPaymentSuccess(params);
+    await this.markInvoicePaid(params.agencyId, params.invoiceId, "wave");
     return { checkoutUrl: null, simulated: true };
   },
-  /** Vérifie le statut réel d'un paiement auprès de la passerelle. En
-   *  mode local, le paiement a déjà été appliqué à la création (voir
-   *  ci-dessus) — renvoie directement "completed". */
+  /** Vérifie le statut réel d'un paiement auprès de la passerelle (jamais déduit
+   *  d'un simple retour sur le site). En mode démo, déjà appliqué à la création. */
   async confirmPaymentCheckout(token) {
     if (TI_BACKEND === "api") {
       try {
@@ -1129,12 +1139,6 @@ const TiDB = {
       }
     }
     return { status: "completed" };
-  },
-  async _applyLocalPaymentSuccess(params) {
-    const { purpose, bookingId, scheduleId, propertyId, method } = params;
-    if (purpose === "deposit" && bookingId) await this.payRentalDeposit(bookingId, method || "wave");
-    else if (purpose === "schedule" && bookingId && scheduleId) await this.payRentalScheduleItem(bookingId, scheduleId, method || "wave");
-    else if (purpose === "rent") await this.createPayment({ propertyId, userId: tiGetSession()?.id, amount: params.amount, method: method || "wave", status: "paid" });
   },
   async createPayment(payment) {
     payment.id = "pay_" + Date.now();
@@ -1150,8 +1154,7 @@ const TiDB = {
    *  retenu par l'agence (avec un motif) — les deux doivent totaliser
    *  le dépôt payé. */
   async proposeDepositSettlement(bookingId, releaseAmount, claimAmount, claimReason) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.rental) return false;
     Object.assign(b.rental.deposit, {
       escrowStatus: "proposed", releaseAmount, claimAmount,
@@ -1163,8 +1166,7 @@ const TiDB = {
   /** Le locataire accepte la répartition proposée (réglé) ou la conteste
    *  (litige transmis à l'administration pour arbitrage). */
   async respondToDepositProposal(bookingId, accept) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.rental) return false;
     b.rental.deposit.escrowStatus = accept ? "settled" : "disputed";
     b.rental.deposit.settledAt = accept ? new Date().toISOString() : null;
@@ -1174,8 +1176,7 @@ const TiDB = {
   /** L'administration tranche un litige avec une répartition finale et
    *  contraignante. */
   async resolveDepositDispute(bookingId, releaseAmount, claimAmount, note) {
-    const all = await this._bookingsAll();
-    const b = all.find(b => b.id === bookingId);
+    const b = await this._bookingById(bookingId);
     if (!b || !b.rental) return false;
     Object.assign(b.rental.deposit, {
       escrowStatus: "settled", releaseAmount, claimAmount,
