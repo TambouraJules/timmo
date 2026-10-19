@@ -47,6 +47,7 @@ async function tiApiFetch(url, options = {}) {
     try { detail = (await res.clone().json()).error || ""; } catch (e) { /* le corps n'était pas du JSON */ }
     const err = new Error(`API ${res.status}${detail ? " (" + detail + ")" : ""} — ${(options.method || "GET")} ${url}`);
     err.status = res.status;
+    err.code = detail; // code d'erreur renvoyé par le serveur (ex. wrong_current_password)
     throw err;
   }
   return res;

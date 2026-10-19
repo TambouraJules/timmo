@@ -158,7 +158,7 @@ async function tiLogin(email, password, expectedRole) {
   return { ok: true, user };
 }
 
-/** Demande un mot de passe temporaire par e-mail. Renvoie toujours { ok: true }
+/** Demande un lien de réinitialisation par e-mail. Renvoie toujours { ok: true }
  *  côté API que le compte existe ou non — protection contre l'énumération
  *  de comptes, jamais de message différent selon que l'e-mail est inscrit. */
 async function tiRequestPasswordReset(email) {
@@ -171,40 +171,89 @@ async function tiRequestPasswordReset(email) {
       return res.ok;
     } catch (err) { return false; }
   }
-  // Mode local (démo) : pas de vrai envoi d'e-mail — le mot de passe temporaire
+  // Mode local (démo) : pas de vrai envoi d'e-mail — le lien de réinitialisation
   // est simplement journalisé dans la console pour rester utilisable en test.
   const users = tiLoad("ti_users", []);
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
   if (user) {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-    let pwd = ""; for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
-    await tiSetUserPassword(user, pwd);
-    user.mustChangePassword = true;
+    const bytes = new Uint8Array(32); crypto.getRandomValues(bytes);
+    const token = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+    user.resetToken = token;
+    user.resetTokenExpires = Date.now() + 30 * 60 * 1000;
     tiSave("ti_users", users);
-    console.log("[Mode démo] Mot de passe temporaire pour " + email + " : " + pwd);
+    const base = window.location.href.replace(/[^/]*$/, "");
+    console.log("[Mode démo] Lien de réinitialisation pour " + email + " : " + base + "reset-password.html?token=" + token);
   }
   return true;
 }
-/** Change le mot de passe de l'utilisateur actuellement connecté (après une
- *  connexion avec un mot de passe temporaire, ou à sa propre initiative). */
-async function tiChangePassword(newPassword) {
+/** Vérifie qu'un lien de réinitialisation est encore valide (non expiré, non utilisé). */
+async function tiVerifyResetToken(token) {
+  if (!token) return false;
   if (TI_BACKEND === "api") {
     try {
-      const res = await tiApiFetch(`${TI_API_BASE}/auth/change-password`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword }),
-      });
-      return res.ok;
+      const res = await fetch(`${TI_API_BASE}/auth/reset-password/verify?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+      return res.ok && !!(await res.json()).valid;
     } catch (err) { return false; }
+  }
+  const users = tiLoad("ti_users", []);
+  return users.some(u => u.resetToken === token && u.resetTokenExpires > Date.now());
+}
+/** Enregistre un nouveau mot de passe à partir du lien reçu par e-mail.
+ *  Renvoie { ok: true, email } ou { ok: false, error } avec error parmi :
+ *  invalid_or_expired, password_too_short, failed. */
+async function tiResetPasswordWithToken(token, newPassword) {
+  if (TI_BACKEND === "api") {
+    try {
+      const res = await fetch(`${TI_API_BASE}/auth/reset-password`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, newPassword }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok) return { ok: true, email: body.email };
+      return { ok: false, error: ["invalid_or_expired", "password_too_short"].includes(body.error) ? body.error : "failed" };
+    } catch (err) { return { ok: false, error: "failed" }; }
+  }
+  if (!newPassword || newPassword.length < 8) return { ok: false, error: "password_too_short" };
+  const users = tiLoad("ti_users", []);
+  const user = users.find(u => u.resetToken === token && u.resetTokenExpires > Date.now());
+  if (!user) return { ok: false, error: "invalid_or_expired" };
+  await tiSetUserPassword(user, newPassword);
+  user.mustChangePassword = false;
+  delete user.resetToken; delete user.resetTokenExpires;
+  tiSave("ti_users", users);
+  return { ok: true, email: user.email };
+}
+/** Change le mot de passe de l'utilisateur actuellement connecté. Renvoie
+ *  { ok: true } ou { ok: false, error } avec error parmi : wrong_current_password,
+ *  too_many_attempts, same_password, password_too_short, failed.
+ *  currentPassword est exigé pour un changement volontaire ; il ne l'est pas juste
+ *  après une connexion avec un mot de passe temporaire (mustChangePassword). */
+async function tiChangePassword(newPassword, currentPassword) {
+  if (TI_BACKEND === "api") {
+    try {
+      await tiApiFetch(`${TI_API_BASE}/auth/change-password`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword, currentPassword }),
+      });
+      return { ok: true };
+    } catch (err) {
+      const known = ["wrong_current_password", "too_many_attempts", "same_password", "password_too_short"];
+      return { ok: false, error: known.includes(err.code) ? err.code : "failed" };
+    }
   }
   const session = tiGetSession();
   const users = tiLoad("ti_users", []);
   const user = users.find(u => u.id === session.id);
-  if (!user) return false;
+  if (!user) return { ok: false, error: "failed" };
+  if (newPassword.length < 8) return { ok: false, error: "password_too_short" };
+  if (!user.mustChangePassword) {
+    if (!currentPassword || !(await tiVerifyUserPassword(user, currentPassword))) return { ok: false, error: "wrong_current_password" };
+  }
+  if (user.passwordHash && await dcodeIO.bcrypt.compare(newPassword, user.passwordHash)) return { ok: false, error: "same_password" };
   await tiSetUserPassword(user, newPassword);
   user.mustChangePassword = false;
   tiSave("ti_users", users);
-  return true;
+  return { ok: true };
 }
 
 async function tiRegisterClient({ name, email, password }) {

@@ -34,6 +34,10 @@ const UserSchema = new Schema({
   passwordHash: String,
   agencyId: String,
   status: { type: String, default: "active" }, // "active" | "suspended"
+  mustChangePassword: Boolean,
+  // Lien « mot de passe oublié » : empreinte SHA-256 du jeton envoyé par e-mail + date d'expiration
+  resetTokenHash: { type: String, index: true },
+  resetTokenExpires: Date,
 }, { timestamps: true, strict: false });
 
 // strict:false — the agency object carries many evolving fields (welcome

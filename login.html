@@ -72,6 +72,16 @@
   tiSetLoginRoleUI();
   document.addEventListener('ti:langchange', tiSetLoginRoleUI);
 
+  // Retour depuis reset-password.html après réinitialisation par lien e-mail
+  if (new URLSearchParams(window.location.search).get('reset') === '1') {
+    document.getElementById('login-error').innerHTML = `<div class="ti-success">${t('login_after_reset')}</div>`;
+    try {
+      const resetEmail = sessionStorage.getItem('ti_reset_email');
+      if (resetEmail) { document.getElementById('login-email').value = resetEmail; sessionStorage.removeItem('ti_reset_email'); }
+    } catch (e) { /* stockage indisponible : l'utilisateur saisit son e-mail */ }
+    setTimeout(() => document.getElementById('login-password').focus(), 50);
+  }
+
   async function tiHandleLogin(e) {
     e.preventDefault();
     const btn = e.target.querySelector('button[type=submit]');

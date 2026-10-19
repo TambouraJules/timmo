@@ -94,40 +94,129 @@ router.post("/auth/login", async (req, res) => {
   res.json({ token, user: { id: user._id, name: user.name, email, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole, status: user.status, mustChangePassword: !!user.mustChangePassword } });
 });
 
-// POST /auth/forgot-password — génère un mot de passe temporaire fort et
-// l'envoie par e-mail si le compte existe. Renvoie systématiquement la
-// même réponse générique, que le compte existe ou non, pour ne jamais
-// laisser un visiteur découvrir quels e-mails sont inscrits sur la
-// plateforme (protection contre l'énumération de comptes).
+// ---------- Réinitialisation du mot de passe par lien sécurisé ----------
+// POST /auth/forgot-password — si le compte existe, envoie par e-mail un lien
+// « Réinitialiser mon mot de passe » valable 30 minutes et utilisable une seule fois.
+//  - Le mot de passe actuel n'est PAS modifié à ce stade : quelqu'un qui saisit
+//    l'e-mail d'un autre ne peut ni bloquer ni modifier son compte.
+//  - Seule l'empreinte SHA-256 du jeton est stockée en base : une fuite de la base
+//    ne permet pas d'utiliser les liens en cours.
+//  - La réponse est toujours la même, que le compte existe ou non (pas
+//    d'énumération des e-mails inscrits), et les demandes sont limitées
+//    (3 par tranche de 15 min et par adresse) pour éviter de spammer quelqu'un.
+const crypto = require("crypto");
+const TI_RESET_TTL_MS = 30 * 60 * 1000;
+const tiResetRequests = new Map(); // email -> { count, first }
+const TI_RESET_MAX = 3, TI_RESET_WINDOW_MS = 15 * 60 * 1000;
+const tiHashToken = token => crypto.createHash("sha256").update(String(token)).digest("hex");
+
+/** Adresse du site (Vercel) utilisée dans le lien de l'e-mail. FRONTEND_URL est
+ *  fortement recommandée sur Render ; à défaut on prend l'origine de la requête
+ *  seulement si c'est un domaine Vercel ou localhost (jamais une origine arbitraire,
+ *  sinon un attaquant pourrait faire pointer le lien vers son propre site). */
+function tiFrontendUrl(req) {
+  if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL.replace(/\/+$/, "");
+  const origin = req.get("origin") || "";
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return origin;
+  return null;
+}
+
 router.post("/auth/forgot-password", async (req, res) => {
-  const { email } = req.body;
-  const user = email ? await User.findOne({ email }) : null;
+  const email = typeof req.body.email === "string" ? req.body.email.trim() : "";
+  if (!email) return res.json({ ok: true });
+
+  const key = email.toLowerCase(), now = Date.now();
+  let rec = tiResetRequests.get(key);
+  if (rec && now - rec.first > TI_RESET_WINDOW_MS) { tiResetRequests.delete(key); rec = null; }
+  if (rec && rec.count >= TI_RESET_MAX) return res.json({ ok: true }); // même réponse, rien n'est envoyé
+  tiResetRequests.set(key, { count: (rec ? rec.count : 0) + 1, first: rec ? rec.first : now });
+
+  const user = await User.findOne({ email: new RegExp("^" + email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i") });
   if (user) {
-    const tempPassword = tiGenerateTempPassword();
-    const passwordHash = await bcrypt.hash(tempPassword, 10);
-    await User.findByIdAndUpdate(user._id, { passwordHash, mustChangePassword: true });
+    const base = tiFrontendUrl(req);
+    if (!base) {
+      console.warn("FRONTEND_URL non configurée sur Render — lien de réinitialisation non envoyé à", email);
+      return res.json({ ok: true });
+    }
+    const token = crypto.randomBytes(32).toString("hex");
+    await User.findByIdAndUpdate(user._id, { resetTokenHash: tiHashToken(token), resetTokenExpires: new Date(now + TI_RESET_TTL_MS) });
+    const link = `${base}/reset-password.html?token=${token}`;
     await tiSendEmail({
-      to: email,
-      subject: "Votre mot de passe temporaire Timmo",
+      to: user.email,
+      subject: "Réinitialisez votre mot de passe Timmo",
       html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
         <h2 style="color:#C47A4A;">Réinitialisation de mot de passe</h2>
         <p>Bonjour ${user.name || ""},</p>
-        <p>Voici votre mot de passe temporaire pour vous reconnecter à Timmo :</p>
-        <p style="font-size:1.3rem;font-weight:800;letter-spacing:.05em;background:#F7F2E7;padding:12px 18px;border-radius:8px;display:inline-block;">${tempPassword}</p>
-        <p>Pour votre sécurité, il vous sera demandé de choisir un nouveau mot de passe dès votre prochaine connexion.</p>
-        <p style="color:#8a8a8a;font-size:.85rem;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail — votre mot de passe actuel reste inchangé jusqu'à ce que quelqu'un se connecte avec ce mot de passe temporaire.</p>
+        <p>Nous avons reçu une demande de réinitialisation du mot de passe de votre compte Timmo. Cliquez sur le bouton ci-dessous pour en choisir un nouveau :</p>
+        <p style="margin:24px 0;"><a href="${link}" style="background:#C47A4A;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;display:inline-block;">Réinitialiser mon mot de passe</a></p>
+        <p style="font-size:.85rem;">Ce lien est valable <strong>30 minutes</strong> et ne peut servir qu'une seule fois.</p>
+        <p style="font-size:.8rem;color:#8a8a8a;word-break:break-all;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>${link}</p>
+        <p style="color:#8a8a8a;font-size:.85rem;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe actuel reste inchangé.</p>
+        <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+        <p style="color:#8a8a8a;font-size:.8rem;"><em>Reset your Timmo password: open the link above within 30 minutes. If you didn't ask for this, just ignore this email.</em></p>
       </div>`,
     });
   }
   res.json({ ok: true });
 });
 
-// POST /auth/change-password — changement de mot de passe par l'utilisateur
-// connecté lui-même (utilisé après une connexion avec un mot de passe
-// temporaire, mais aussi disponible pour un changement volontaire).
+/** Retrouve l'utilisateur correspondant à un jeton de réinitialisation encore valide. */
+async function tiUserFromResetToken(token) {
+  if (typeof token !== "string" || !/^[a-f0-9]{64}$/.test(token)) return null;
+  return User.findOne({ resetTokenHash: tiHashToken(token), resetTokenExpires: { $gt: new Date() } });
+}
+
+// GET /auth/reset-password/verify?token=… — la page vérifie le lien avant
+// d'afficher le formulaire (lien expiré ou déjà utilisé → message clair).
+router.get("/auth/reset-password/verify", async (req, res) => {
+  const user = await tiUserFromResetToken(req.query.token);
+  res.json({ valid: !!user });
+});
+
+// POST /auth/reset-password — { token, newPassword } : enregistre le nouveau
+// mot de passe et invalide le lien (usage unique).
+router.post("/auth/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) return res.status(400).json({ error: "password_too_short" });
+  const user = await tiUserFromResetToken(token);
+  if (!user) return res.status(400).json({ error: "invalid_or_expired" });
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await User.findByIdAndUpdate(user._id, {
+    passwordHash, mustChangePassword: false,
+    $unset: { resetTokenHash: 1, resetTokenExpires: 1 },
+  });
+  res.json({ ok: true, email: user.email });
+});
+
+// POST /auth/change-password — changement de mot de passe par l'utilisateur connecté.
+//  - Après une connexion avec un mot de passe temporaire (mustChangePassword), il vient
+//    d'être saisi : aucun mot de passe actuel n'est redemandé.
+//  - Sinon (changement volontaire), le mot de passe ACTUEL est exigé : une session laissée
+//    ouverte ne suffit pas pour prendre le contrôle du compte. Les essais ratés sont limités
+//    (5 par tranche de 15 min et par compte, comptés en mémoire du serveur).
+const tiPwAttempts = new Map(); // idUtilisateur -> { count, first }
+const TI_PW_MAX_FAILS = 5, TI_PW_WINDOW_MS = 15 * 60 * 1000;
 router.post("/auth/change-password", authenticate, async (req, res) => {
-  const { newPassword } = req.body;
+  const { newPassword, currentPassword } = req.body;
   if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: "password_too_short" });
+  const user = await User.findById(req.user.id);
+  if (!user) return res.status(404).json({ error: "not_found" });
+
+  if (!user.mustChangePassword) {
+    const key = String(req.user.id), now = Date.now();
+    let rec = tiPwAttempts.get(key);
+    if (rec && now - rec.first > TI_PW_WINDOW_MS) { tiPwAttempts.delete(key); rec = null; }
+    if (rec && rec.count >= TI_PW_MAX_FAILS) return res.status(429).json({ error: "too_many_attempts" });
+    const valid = typeof currentPassword === "string" && currentPassword.length > 0
+      && await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      tiPwAttempts.set(key, { count: (rec ? rec.count : 0) + 1, first: rec ? rec.first : now });
+      return res.status(403).json({ error: "wrong_current_password" });
+    }
+    tiPwAttempts.delete(key);
+  }
+  if (await bcrypt.compare(newPassword, user.passwordHash)) return res.status(400).json({ error: "same_password" });
+
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await User.findByIdAndUpdate(req.user.id, { passwordHash, mustChangePassword: false });
   res.json({ ok: true });

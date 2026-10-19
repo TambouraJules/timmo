@@ -128,6 +128,7 @@ function tiRenderHeader(active, subsite) {
                  </div>
                  <a href="dashboard-${s.role}.html">${TI_ICONS.grid} <span data-i18n="nav_dashboard">${t("nav_dashboard")}</span></a>
                  ${s.role === 'client' ? `<a href="dashboard-client.html?panel=favorites">${TI_ICONS.heart} <span data-i18n="dash_favorites">${t("dash_favorites")}</span></a>` : ''}
+                 <button onclick="tiOpenChangePasswordModal()">${TI_ICONS.lock} <span data-i18n="change_password">${t("change_password")}</span></button>
                  <button onclick="tiLogout()" class="ti-account-logout">${TI_ICONS.logout} <span data-i18n="nav_logout">${t("nav_logout")}</span></button>
                </div>
              </div>`
@@ -843,6 +844,55 @@ function tiToast(msg) {
 }
 
 /* ---------- Fenêtre modale ---------- */
+/* ---------- Changer mon mot de passe (tous les comptes) ----------
+   Fenêtre créée à la demande : disponible sur toutes les pages, pour tous les rôles,
+   depuis le menu du compte. Exige le mot de passe actuel. */
+function tiOpenChangePasswordModal() {
+  tiToggleAccountMenu(false);
+  let modal = document.getElementById("modal-change-password");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "ti-modal-backdrop";
+    modal.id = "modal-change-password";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div class="ti-modal">
+      <button class="ti-modal-close" onclick="tiCloseModal('modal-change-password')">&times;</button>
+      <h3>${t('change_password')}</h3>
+      <div id="cp-error"></div>
+      <form onsubmit="return tiSubmitChangePassword(event)">
+        <div class="field"><label>${t('current_password')}</label><input type="password" id="cp-current" autocomplete="current-password" required></div>
+        <div class="field"><label>${t('new_password')}</label><input type="password" id="cp-new" autocomplete="new-password" minlength="8" required></div>
+        <div class="field"><label>${t('confirm_password')}</label><input type="password" id="cp-confirm" autocomplete="new-password" minlength="8" required></div>
+        <p style="font-size:.8rem;color:var(--ink-soft);margin:-4px 0 16px;">${t('password_min_length_hint')}</p>
+        <button type="submit" class="btn btn-primary btn-block">${t('reset_password_submit')}</button>
+      </form>
+    </div>`;
+  tiOpenModal("modal-change-password");
+  setTimeout(() => { const el = document.getElementById("cp-current"); if (el) el.focus(); }, 50);
+}
+async function tiSubmitChangePassword(e) {
+  e.preventDefault();
+  const errBox = document.getElementById("cp-error");
+  const showError = key => { errBox.innerHTML = `<div class="ti-error">${t(key)}</div>`; return false; };
+  errBox.innerHTML = "";
+  const current = document.getElementById("cp-current").value;
+  const next = document.getElementById("cp-new").value;
+  if (next !== document.getElementById("cp-confirm").value) return showError("passwords_dont_match");
+  const btn = e.target.querySelector("button[type=submit]");
+  tiSetBtnLoading(btn, true);
+  const result = await tiChangePassword(next, current);
+  tiSetBtnLoading(btn, false);
+  if (!result.ok) {
+    const keys = { wrong_current_password: "cp_wrong_current", too_many_attempts: "cp_too_many", same_password: "cp_same", password_too_short: "password_min_length_hint" };
+    return showError(keys[result.error] || "cp_failed");
+  }
+  tiCloseModal("modal-change-password");
+  tiToast(t("cp_success"));
+  return false;
+}
+
 function tiOpenModal(id) { document.getElementById(id).classList.add("open"); }
 function tiCloseModal(id) { document.getElementById(id).classList.remove("open"); }
 
