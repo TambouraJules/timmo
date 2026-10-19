@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/legal.css">
 </head>
 <body>
 <header id="ti-header"></header>
@@ -27,6 +28,10 @@
       <div class="field" id="reg-agency-field" style="display:none;"><label data-i18n="agency_name"></label><input type="text" id="reg-agency-name"></div>
       <div class="field"><label data-i18n="email"></label><input type="email" id="reg-email" required></div>
       <div class="field"><label data-i18n="password"></label><input type="password" id="reg-password" required minlength="6"></div>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-size:.85rem;color:var(--ink-soft);margin:-2px 0 16px;cursor:pointer;line-height:1.45;">
+        <input type="checkbox" id="reg-terms" required style="width:auto;margin-top:3px;flex-shrink:0;">
+        <span id="reg-terms-label"></span>
+      </label>
       <button type="submit" class="btn btn-primary btn-block" data-i18n="register_btn"></button>
     </form>
 
@@ -51,6 +56,11 @@
   tiRenderHeader();
   tiRenderFooter();
 
+  // Case d'acceptation des CGU (le libellé contient des liens, d'où innerHTML)
+  function tiRenderTermsLabel() { document.getElementById('reg-terms-label').innerHTML = t('register_accept_terms'); }
+  tiRenderTermsLabel();
+  document.addEventListener('ti:langchange', tiRenderTermsLabel);
+
   let TI_REG_ROLE = 'client';
   document.querySelectorAll('#reg-role-tabs button').forEach(b => {
     b.addEventListener('click', () => {
@@ -73,9 +83,9 @@
     await new Promise(r => setTimeout(r, 350));
     let res;
     if (TI_REG_ROLE === 'agency') {
-      res = await tiRegisterAgency({ name, agencyName: document.getElementById('reg-agency-name').value, email, password });
+      res = await tiRegisterAgency({ name, agencyName: document.getElementById('reg-agency-name').value, email, password, acceptTerms: true });
     } else {
-      res = await tiRegisterClient({ name, email, password });
+      res = await tiRegisterClient({ name, email, password, acceptTerms: true });
     }
     if (!res.ok) {
       tiSetBtnLoading(btn, false);

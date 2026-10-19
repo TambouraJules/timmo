@@ -1,0 +1,42 @@
+/* ============================================================
+   Timmo — pages juridiques (CGU, politique de confidentialité)
+   ============================================================ */
+.ti-legal-hero { background: var(--deep); color: #fff; padding: 56px 0 44px; }
+.ti-legal-hero h1 { font-family: var(--font-display); font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 0 0 8px; }
+.ti-legal-hero p { color: rgba(255,255,255,.7); margin: 0; font-size: .95rem; }
+.ti-legal-hero .ti-legal-switch { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.ti-legal-hero .ti-legal-switch a { color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 6px 14px; font-size: .85rem; text-decoration: none; }
+.ti-legal-hero .ti-legal-switch a.active { background: var(--clay); border-color: var(--clay); }
+
+.ti-legal { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; padding: 48px 24px 80px; }
+.ti-legal-toc { position: sticky; top: 90px; align-self: start; font-size: .88rem; }
+.ti-legal-toc strong { display: block; margin-bottom: 10px; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.ti-legal-toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+.ti-legal-toc a { display: block; padding: 5px 0 5px 14px; color: var(--ink-soft); text-decoration: none; line-height: 1.35; }
+.ti-legal-toc a:hover { color: var(--clay); }
+
+.ti-legal-body { max-width: 72ch; color: var(--ink); line-height: 1.7; font-size: .97rem; }
+.ti-legal-body h2 { font-family: var(--font-display); font-size: 1.25rem; margin: 40px 0 10px; padding-top: 8px; scroll-margin-top: 90px; }
+.ti-legal-body h2:first-of-type { margin-top: 0; }
+.ti-legal-body h3 { font-size: 1rem; margin: 22px 0 6px; }
+.ti-legal-body p, .ti-legal-body li { color: #2b3440; }
+.ti-legal-body ul { padding-left: 20px; }
+.ti-legal-body li { margin: 4px 0; }
+.ti-legal-body a { color: var(--clay); }
+.ti-legal-body table { width: 100%; border-collapse: collapse; margin: 14px 0 6px; font-size: .9rem; }
+.ti-legal-body th, .ti-legal-body td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.ti-legal-body th { background: var(--paper); font-weight: 700; }
+.ti-legal-table-wrap { overflow-x: auto; }
+
+.ti-legal-note { background: var(--gold-soft); border-radius: var(--radius-s); padding: 12px 16px; font-size: .9rem; margin: 0 0 28px; }
+.ti-legal-todo { background: #FFF3CD; color: #7a5a00; padding: 0 4px; border-radius: 4px; font-weight: 600; }
+.ti-legal-en { display: none; }
+html[lang="en"] .ti-legal-en { display: block; }
+
+@media (max-width: 860px) {
+  .ti-legal { grid-template-columns: 1fr; gap: 24px; padding: 32px 16px 64px; }
+  .ti-legal-toc { position: static; }
+}
+
+/* Lien CGU dans la case d'acceptation du formulaire d'inscription */
+#reg-terms-label a { color: var(--clay); font-weight: 600; }

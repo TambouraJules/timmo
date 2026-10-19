@@ -41,7 +41,7 @@ function tiOptionalUser(req) {
 }
 
 router.post("/auth/register", async (req, res) => {
-  const { name, email, password, role, agencyId, agentRole, agencyName } = req.body;
+  const { name, email, password, role, agencyId, agentRole, agencyName, acceptTerms } = req.body;
   const caller = tiOptionalUser(req);
 
   // Le rôle n'est jamais pris tel quel dans la requête :
@@ -74,7 +74,9 @@ router.post("/auth/register", async (req, res) => {
   const passwordHash = await bcrypt.hash(password, 10);
   if (newAgency) await Agency.create(newAgency);
 
-  const user = await User.create({ name, email, passwordHash, role: finalRole, agencyId: finalAgencyId, agentRole: finalAgentRole });
+  // Trace de l'acceptation des CGU / politique de confidentialité (case cochée à l'inscription)
+  const termsAcceptedAt = acceptTerms === true ? new Date() : undefined;
+  const user = await User.create({ name, email, passwordHash, role: finalRole, agencyId: finalAgencyId, agentRole: finalAgentRole, termsAcceptedAt });
   const token = jwt.sign({ id: user._id, role: user.role, agencyId: finalAgencyId, agentRole: finalAgentRole }, process.env.JWT_SECRET, { expiresIn: "7d" });
   res.json({ token, user: { id: user._id, name, email, role: user.role, agencyId: finalAgencyId, agentRole: finalAgentRole, status: user.status } });
 });

@@ -256,11 +256,11 @@ async function tiChangePassword(newPassword, currentPassword) {
   return { ok: true };
 }
 
-async function tiRegisterClient({ name, email, password }) {
+async function tiRegisterClient({ name, email, password, acceptTerms }) {
   if (TI_BACKEND === "api") {
     const res = await fetch(`${TI_API_BASE}/auth/register`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role: "client" }),
+      body: JSON.stringify({ name, email, password, role: "client", acceptTerms: !!acceptTerms }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -280,11 +280,11 @@ async function tiRegisterClient({ name, email, password }) {
   return { ok: true, user };
 }
 
-async function tiRegisterAgency({ name, agencyName, email, password }) {
+async function tiRegisterAgency({ name, agencyName, email, password, acceptTerms }) {
   if (TI_BACKEND === "api") {
     const res = await fetch(`${TI_API_BASE}/auth/register`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role: "agency", agencyName }),
+      body: JSON.stringify({ name, email, password, role: "agency", agencyName, acceptTerms: !!acceptTerms }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));

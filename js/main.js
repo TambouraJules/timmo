@@ -274,7 +274,8 @@ function tiRenderFooter(subsite) {
             <h4><img src="assets/brand/timmo-symbol-white.svg" alt="" class="ti-footer-h4-icon">${t("brand")}</h4>
             <a href="#">${t("footer_about")}</a>
             <a href="#">${t("footer_contact")}</a>
-            <a href="#">${t("footer_legal")}</a>
+            <a href="cgu.html">${t("footer_legal")}</a>
+            <a href="confidentialite.html">${t("footer_privacy")}</a>
             <a href="#">${t("footer_help")}</a>
           </div>
           <div>
