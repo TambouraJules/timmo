@@ -31,7 +31,6 @@
       <button type="submit" class="btn btn-primary btn-block" data-i18n="login_btn"></button>
     </form>
 
-    <div class="ti-demo-box" id="demo-box"></div>
 
     <p style="margin-top:18px;text-align:center;font-size:.9rem;">
       <span data-i18n="no_account"></span>
@@ -55,16 +54,8 @@
   tiRenderFooter();
 
   let TI_LOGIN_ROLE = new URLSearchParams(window.location.search).get('role') || 'client';
-  const demoCreds = {
-    client: 'client@demo.sn',
-    agency: 'agence@demo.sn',
-    admin: 'admin@demo.sn'
-  };
-
   function tiSetLoginRoleUI() {
     document.querySelectorAll('#role-tabs button').forEach(b => b.classList.toggle('active', b.dataset.role === TI_LOGIN_ROLE));
-    document.getElementById('demo-box').innerHTML =
-      `<span data-i18n="login_demo">${t('login_demo')}</span> : <code>${demoCreds[TI_LOGIN_ROLE]}</code> / <code>demo1234</code>`;
   }
   document.querySelectorAll('#role-tabs button').forEach(b => {
     b.addEventListener('click', () => { TI_LOGIN_ROLE = b.dataset.role; tiSetLoginRoleUI(); });
