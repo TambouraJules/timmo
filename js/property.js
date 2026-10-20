@@ -146,6 +146,7 @@ async function tiRenderPropertyContent() {
   `;
   document.getElementById("ti-prop-title").textContent = tiPropertyTitle(p);
   document.getElementById("ti-prop-desc").textContent = tiPropertyDesc(p);
+  tiUpdatePropertySeo(p);
   tiApplyLang();
   tiApplyCurrency();
   // Différé à la prochaine frame pour que le navigateur ait déjà validé la mise
@@ -540,3 +541,25 @@ async function tiRenderReviews() {
 }
 
 tiRenderPropertyPage();
+
+
+/* ---------- Référencement de la fiche (titre, description, lien canonique) ----------
+   Google exécute le JavaScript : ces balises, mises à jour une fois le bien chargé,
+   donnent à chaque annonce un titre et un résumé propres dans les résultats de recherche
+   et lors d'un partage (WhatsApp, Facebook...). */
+function tiUpdatePropertySeo(p) {
+  const title = tiPropertyTitle(p);
+  const hood = typeof tiNeighborhoodName === "function" ? tiNeighborhoodName(p.neighborhood) : "";
+  const fullTitle = `${title}${hood ? " — " + hood : ""} | Timmo`;
+  const desc = (tiPropertyDesc(p) || "").replace(/\s+/g, " ").trim().slice(0, 155);
+  const url = `https://www.timmo.sn/property.html?id=${encodeURIComponent(p.id)}`;
+  const image = (p.cover || (p.photos && p.photos[0]) || "");
+  document.title = fullTitle;
+  const setMeta = (selector, attr, value) => { const el = document.querySelector(selector); if (el && value) el.setAttribute(attr, value); };
+  setMeta('meta[name="description"]', "content", desc);
+  setMeta('link[rel="canonical"]', "href", url);
+  setMeta('meta[property="og:title"]', "content", fullTitle);
+  setMeta('meta[property="og:description"]', "content", desc);
+  setMeta('meta[property="og:url"]', "content", url);
+  if (/^https:\/\//.test(image)) setMeta('meta[property="og:image"]', "content", image);
+}

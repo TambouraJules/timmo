@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard-admin.html
+Disallow: /dashboard-agency.html
+Disallow: /dashboard-client.html
+Disallow: /reset-password.html
+Disallow: /forgot-password.html
+
+Sitemap: https://www.timmo.sn/sitemap.xml
