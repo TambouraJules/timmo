@@ -1019,6 +1019,7 @@ function tiRenderPhotoPreview() {
   const dropzone = document.getElementById("nl-photo-dropzone");
   if (hint) hint.textContent = `${TI_NL_PHOTOS.length}/${TI_NL_PHOTO_MAX} ${t('photo_count_suffix')}`;
   if (dropzone) dropzone.classList.toggle("ti-photo-dropzone-full", TI_NL_PHOTOS.length >= TI_NL_PHOTO_MAX);
+  if (dropzone && TI_NL_PHOTOS.length) dropzone.style.borderColor = "";
   mount.innerHTML = TI_NL_PHOTOS.map((url, i) => `
     <div class="ti-photo-thumb" draggable="true" ondragstart="tiPhotoDragStart(${i})" ondragover="event.preventDefault();" ondrop="tiPhotoDrop(${i})">
       ${i === 0 ? `<span class="ti-photo-cover-badge">${t('photo_cover_badge')}</span>` : ''}
@@ -1164,6 +1165,12 @@ function tiWizardNext() {
   const currentStepEl = document.querySelector(`.ti-wizard-step[data-step="${TI_WIZARD_STEP}"]`);
   const invalidField = currentStepEl && [...currentStepEl.querySelectorAll("input,select,textarea")].find(el => !el.checkValidity());
   if (invalidField) { invalidField.reportValidity(); return; }
+  // Étape photos : au moins une vraie photo du bien est obligatoire.
+  if (currentStepEl && currentStepEl.querySelector("#nl-photo-dropzone") && !tiGetPhotoUrlsFromForm().length) {
+    tiToast(t("photo_required"));
+    document.getElementById("nl-photo-dropzone").style.borderColor = "var(--danger)";
+    return;
+  }
   if (TI_WIZARD_STEP < TI_WIZARD_TOTAL_STEPS) tiWizardGoToStep(TI_WIZARD_STEP + 1);
 }
 function tiWizardPrev() {
@@ -1182,7 +1189,7 @@ function tiUpdateListingPreview() {
   const baths = document.getElementById("nl-baths").value || "0";
   const area = document.getElementById("nl-area").value || "0";
   const photos = tiGetPhotoUrlsFromForm();
-  const cover = photos[0] || TI_PHOTO_SETS[type][0];
+  const cover = photos[0] || ""; // pas de photo générique : l'aperçu reste vide tant qu'aucune vraie photo n'est ajoutée
   const priceSuffix = kind === "sale" ? "" : (kind === "short" ? ` <small style="font-weight:600;">${t('per_night')}</small>` : ` <small style="font-weight:600;">${t('per_month')}</small>`);
 
   mount.innerHTML = `
@@ -1357,7 +1364,17 @@ async function tiSubmitNewListing(e) {
   const title = document.getElementById("nl-title").value;
   const photos = tiGetPhotoUrlsFromForm();
   const amenities = tiReadCheckedAmenities();
-  const finalPhotos = photos.length ? photos : TI_PHOTO_SETS[type];
+  // Au moins une vraie photo : on ne remplace plus jamais par des photos d'illustration,
+  // qui feraient croire au client qu'il voit le bien.
+  if (!photos.length) {
+    tiToast(t("photo_required"));
+    tiSetBtnLoading(submitBtn, false);
+    const photoStep = document.querySelector('.ti-wizard-step #nl-photo-dropzone');
+    const stepEl = photoStep && photoStep.closest('.ti-wizard-step');
+    if (stepEl) tiWizardGoToStep(Number(stepEl.dataset.step));
+    return false;
+  }
+  const finalPhotos = photos.slice(0, TI_NL_PHOTO_MAX);
 
   const prop = editId ? { ...TI_EDITING_PROPERTY } : {
     id: "p_" + Date.now(), agencyId: TI_SESSION.agencyId, rating: 0, reviews: 0, listingStatus: "pending", views: 0, createdAt: new Date().toISOString(),

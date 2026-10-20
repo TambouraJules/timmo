@@ -35,6 +35,9 @@ router.post("/", authenticate, async (req, res) => {
     if (!data.photos.includes(data.cover)) data.cover = data.photos[0];
   }
   const existing = data.id ? await Property.findOne({ id: data.id }) : null;
+  // Au moins une vraie photo : à la création, et à chaque modification qui envoie la liste.
+  const photosSent = Array.isArray(data.photos);
+  if ((photosSent && data.photos.length === 0) || (!existing && !photosSent)) return res.status(400).json({ error: "photo_required" });
   const targetAgencyId = existing ? existing.agencyId : data.agencyId;
   const owns = req.user.role === "admin" || (req.user.agencyId && req.user.agencyId === targetAgencyId);
   if (!owns) return res.status(403).json({ error: "forbidden" });
