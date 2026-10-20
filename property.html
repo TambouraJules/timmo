@@ -69,23 +69,29 @@
 
 <!-- Review modal -->
 <div class="ti-modal-backdrop" id="modal-review">
-  <div class="ti-modal">
-    <button class="ti-modal-close" onclick="tiCloseModal('modal-review')">&times;</button>
-    <h3 data-i18n="write_review"></h3>
-    <form onsubmit="return tiSubmitReview(event)">
-      <div class="field">
-        <label data-i18n="your_rating"></label>
-        <div class="ti-star-input" id="review-star-input">
-          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+  <div class="ti-modal ti-modal-flex" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+    <div class="ti-modal-head">
+      <h3 id="review-modal-title" data-i18n="write_review"></h3>
+      <button type="button" class="ti-modal-close" onclick="tiCloseModal('modal-review')" aria-label="Fermer">&times;</button>
+    </div>
+    <form class="ti-modal-form" onsubmit="return tiSubmitReview(event)">
+      <div class="ti-modal-body">
+        <div class="field">
+          <label data-i18n="your_rating"></label>
+          <div class="ti-star-input" id="review-star-input">
+            <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+          </div>
         </div>
+        <div class="field">
+          <label data-i18n="review_tags_label"></label>
+          <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 10px;" data-i18n="review_tags_hint"></p>
+          <div class="ti-amenity-picker" id="review-tags-picker"></div>
+        </div>
+        <div class="field" style="margin-bottom:0;"><label data-i18n="your_comment_optional"></label><textarea id="review-comment"></textarea></div>
       </div>
-      <div class="field">
-        <label data-i18n="review_tags_label"></label>
-        <p style="font-size:.8rem;color:var(--ink-soft);margin:0 0 10px;" data-i18n="review_tags_hint"></p>
-        <div class="ti-amenity-picker" id="review-tags-picker"></div>
+      <div class="ti-modal-foot">
+        <button type="submit" class="btn btn-primary btn-block" data-i18n="submit_review"></button>
       </div>
-      <div class="field"><label data-i18n="your_comment_optional"></label><textarea id="review-comment"></textarea></div>
-      <button type="submit" class="btn btn-primary btn-block" data-i18n="submit_review"></button>
     </form>
   </div>
 </div>
