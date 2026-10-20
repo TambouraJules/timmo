@@ -46,6 +46,22 @@
       <button type="submit" class="btn btn-primary btn-block" data-i18n="login_btn"></button>
     </form>
 
+    <!-- 2e étape (comptes admin et agence) : code reçu par e-mail -->
+    <form id="form-otp" onsubmit="return tiHandleOtp(event)" style="display:none;">
+      <h3 style="margin:0 0 6px;" data-i18n="otp_title"></h3>
+      <p style="color:var(--ink-soft);margin:0 0 16px;"><span data-i18n="otp_sub"></span> <strong id="otp-email"></strong></p>
+      <div class="field">
+        <label for="otp-code" data-i18n="otp_code_label"></label>
+        <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" maxlength="7" required
+               style="font-size:1.6rem;letter-spacing:10px;text-align:center;font-weight:700;" placeholder="••••••">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="otp_verify_btn"></button>
+      <p style="display:flex;justify-content:space-between;gap:10px;margin:14px 0 0;font-size:.85rem;">
+        <a href="#" onclick="return tiOtpBack()" style="color:var(--ink-soft);" data-i18n="otp_back"></a>
+        <a href="#" id="otp-resend" onclick="return tiOtpResend()" style="color:var(--clay);font-weight:600;" data-i18n="otp_resend"></a>
+      </p>
+    </form>
+
 
     <p style="margin-top:18px;text-align:center;font-size:.9rem;">
       <span data-i18n="no_account"></span>
@@ -114,16 +130,81 @@
       const errMsg = res.error === 'wrong_role' ? 'Ce compte n\'a pas ce rôle. / This account does not have that role.'
         : res.error === 'suspended' ? 'Ce compte agence a été suspendu par l\'administrateur. / This agency account has been suspended by the administrator.'
         : res.error === 'account_frozen' ? 'Ce compte a été gelé. Contactez votre agence ou l\'administrateur. / This account has been frozen. Contact your agency or the administrator.'
+        : res.error === 'otp_send_failed' ? 'Impossible d\'envoyer le code de connexion par e-mail. Réessayez dans un instant. / Could not send the sign-in code. Please try again shortly.'
         : res.error === 'locked_out' ? `Trop de tentatives. Réessayez dans ${res.lockedFor}s. / Too many attempts. Try again in ${res.lockedFor}s.`
         : 'Identifiants invalides. / Invalid credentials.';
       errBox.innerHTML = `<div class="ti-error">${errMsg}</div>`;
       return false;
     }
-    if (res.user.mustChangePassword) {
-      window.location.href = `reset-password.html?next=dashboard-${res.user.role}.html`;
-      return false;
+    if (res.otp) { tiShowOtpStep(res.otp); tiSetBtnLoading(btn, false); return false; }
+    tiGoAfterLogin(res.user);
+    return false;
+  }
+
+  function tiGoAfterLogin(user) {
+    if (user.mustChangePassword) {
+      window.location.href = `reset-password.html?next=dashboard-${user.role}.html`;
+      return;
     }
-    window.location.href = `dashboard-${res.user.role}.html`;
+    window.location.href = `dashboard-${user.role}.html`;
+  }
+
+  // ---------- Étape 2 : code de connexion reçu par e-mail ----------
+  let TI_OTP = null;
+  function tiOtpMsg(html, ok) {
+    document.getElementById('login-error').innerHTML = html ? `<div class="${ok ? 'ti-success' : 'ti-error'}">${html}</div>` : '';
+  }
+  function tiShowOtpStep(otp) {
+    TI_OTP = otp;
+    document.getElementById('form-login').style.display = 'none';
+    document.getElementById('role-tabs').style.display = 'none';
+    document.getElementById('form-otp').style.display = '';
+    document.getElementById('otp-email').textContent = otp.email;
+    tiOtpMsg('');
+    const input = document.getElementById('otp-code');
+    input.value = ''; input.focus();
+  }
+  function tiOtpBack() {
+    TI_OTP = null;
+    document.getElementById('form-otp').style.display = 'none';
+    document.getElementById('form-login').style.display = '';
+    document.getElementById('role-tabs').style.display = '';
+    document.getElementById('login-password').value = '';
+    tiOtpMsg('');
+    return false;
+  }
+  async function tiHandleOtp(e) {
+    e.preventDefault();
+    if (!TI_OTP) return false;
+    const btn = e.target.querySelector('button[type=submit]');
+    tiSetBtnLoading(btn, true);
+    const res = await tiVerifyLoginOtp(TI_OTP.challenge, document.getElementById('otp-code').value);
+    if (res.ok) { tiGoAfterLogin(res.user); return false; }
+    tiSetBtnLoading(btn, false);
+    if (res.error === 'otp_invalid') {
+      tiOtpMsg(`Code incorrect — encore ${res.triesLeft} essai(s). / Wrong code — ${res.triesLeft} attempt(s) left.`);
+      document.getElementById('otp-code').select();
+    } else if (res.error === 'otp_too_many' || res.error === 'otp_expired') {
+      tiOtpBack();
+      tiOtpMsg(res.error === 'otp_too_many'
+        ? 'Trop d\'essais. Reconnectez-vous pour recevoir un nouveau code. / Too many attempts. Sign in again to get a new code.'
+        : 'Ce code a expiré. Reconnectez-vous pour en recevoir un nouveau. / This code has expired. Sign in again to get a new one.');
+    } else if (res.error === 'account_frozen') {
+      tiOtpBack();
+      tiOtpMsg('Ce compte a été gelé. Contactez votre agence ou l\'administrateur. / This account has been frozen.');
+    } else {
+      tiOtpMsg('Connexion impossible pour le moment. Réessayez. / Unable to sign in right now. Please try again.');
+    }
+    return false;
+  }
+  async function tiOtpResend() {
+    if (!TI_OTP) return false;
+    const res = await tiResendLoginOtp(TI_OTP.challenge);
+    if (res.ok) tiOtpMsg(`Nouveau code envoyé à ${TI_OTP.email}. / New code sent.`, true);
+    else if (res.error === 'otp_wait') tiOtpMsg(`Patientez ${res.retryIn}s avant de redemander un code. / Please wait ${res.retryIn}s.`);
+    else if (res.error === 'otp_resend_limit') tiOtpMsg('Nombre maximal de renvois atteint. Reconnectez-vous. / Resend limit reached. Please sign in again.');
+    else if (res.error === 'otp_expired') { tiOtpBack(); tiOtpMsg('Cette tentative a expiré. Reconnectez-vous. / This attempt has expired. Please sign in again.'); }
+    else tiOtpMsg('Envoi impossible pour le moment. / Unable to send right now.');
     return false;
   }
 </script>

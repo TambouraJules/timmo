@@ -107,6 +107,44 @@ function tiStopImpersonation() {
   window.location.href = "dashboard-admin.html";
 }
 
+function tiFinishApiLogin(data, expectedRole, email) {
+  const user = data.user;
+  if (expectedRole && user.role !== expectedRole) return { ok: false, error: "wrong_role" };
+  if (email) tiClearLoginAttempts(email);
+  localStorage.setItem("ti_api_token", data.token);
+  tiSetSession({ id: user.id, name: user.name, email: user.email, role: user.role, agencyId: user.agencyId || null, agentRole: user.agentRole || null });
+  return { ok: true, user };
+}
+
+/** 2e étape de connexion (admin / agence) : vérifie le code reçu par e-mail. */
+async function tiVerifyLoginOtp(challenge, code) {
+  try {
+    const res = await fetch(`${TI_API_BASE}/auth/login/verify`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challenge, code }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: data.error || "otp_invalid", triesLeft: data.triesLeft };
+    return tiFinishApiLogin(data, null, null);
+  } catch (err) {
+    return { ok: false, error: "network" };
+  }
+}
+
+/** Demande un nouveau code pour la même tentative de connexion. */
+async function tiResendLoginOtp(challenge) {
+  try {
+    const res = await fetch(`${TI_API_BASE}/auth/login/resend`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challenge }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true } : { ok: false, error: data.error, retryIn: data.retryIn };
+  } catch (err) {
+    return { ok: false, error: "network" };
+  }
+}
+
 async function tiLogin(email, password, expectedRole) {
   const lockedFor = tiLoginLockoutRemaining(email);
   if (lockedFor > 0) {
@@ -120,17 +158,18 @@ async function tiLogin(email, password, expectedRole) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        if (body.error === "account_frozen" || body.error === "suspended") return { ok: false, error: body.error };
+        if (body.error === "account_frozen" || body.error === "suspended" || body.error === "otp_send_failed") return { ok: false, error: body.error };
         tiRegisterFailedLogin(email);
         return { ok: false, error: "invalid" };
       }
       const data = await res.json();
-      const user = data.user;
-      if (expectedRole && user.role !== expectedRole) return { ok: false, error: "wrong_role" };
-      tiClearLoginAttempts(email);
-      localStorage.setItem("ti_api_token", data.token);
-      tiSetSession({ id: user.id, name: user.name, email: user.email, role: user.role, agencyId: user.agencyId || null, agentRole: user.agentRole || null });
-      return { ok: true, user };
+      if (data.otpRequired) {
+        // Mot de passe correct, mais un code envoyé par e-mail est encore demandé.
+        if (expectedRole && data.role !== expectedRole) return { ok: false, error: "wrong_role" };
+        tiClearLoginAttempts(email);
+        return { ok: true, otp: { challenge: data.challenge, email: data.email, expiresIn: data.expiresIn } };
+      }
+      return tiFinishApiLogin(data, expectedRole, email);
     } catch (err) {
       return { ok: false, error: "invalid" };
     }

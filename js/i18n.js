@@ -812,6 +812,12 @@ const TI_TRANSLATIONS = {
     db_banner_real: "Voir le vrai site",
     db_banner_reset: "Réinitialiser la démo",
     login_demo_title: "Comptes de démonstration (mot de passe : demo1234)",
+    otp_title: "Vérification en deux étapes",
+    otp_sub: "Nous venons d'envoyer un code à 6 chiffres à",
+    otp_code_label: "Code de connexion",
+    otp_verify_btn: "Valider et me connecter",
+    otp_resend: "Renvoyer le code",
+    otp_back: "← Changer de compte",
   },
   en: {
     brand: "Timmo",
@@ -1621,6 +1627,12 @@ const TI_TRANSLATIONS = {
     db_banner_real: "Go to the real site",
     db_banner_reset: "Reset the demo",
     login_demo_title: "Demo accounts (password: demo1234)",
+    otp_title: "Two-step verification",
+    otp_sub: "We just sent a 6-digit code to",
+    otp_code_label: "Sign-in code",
+    otp_verify_btn: "Verify and sign in",
+    otp_resend: "Resend code",
+    otp_back: "← Use another account",
   }
 };
 

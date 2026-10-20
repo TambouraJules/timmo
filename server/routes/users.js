@@ -5,7 +5,7 @@ const { authenticate } = require("../middleware/auth");
 
 function serialize(u) {
   const obj = u.toObject ? u.toObject() : u;
-  const { passwordHash, resetTokenHash, resetTokenExpires, ...rest } = obj;
+  const { passwordHash, resetTokenHash, resetTokenExpires, otpChallengeHash, otpCodeHash, otpExpires, otpTries, otpResends, otpSentAt, ...rest } = obj;
   return { ...rest, id: obj._id };
 }
 

@@ -92,8 +92,114 @@ router.post("/auth/login", async (req, res) => {
     const agency = await Agency.findOne({ id: user.agencyId });
     if (agency && agency.status === "suspended") return res.status(403).json({ error: "suspended" });
   }
+  // Comptes admin et agence : le mot de passe ne suffit pas, un code est envoyé par e-mail.
+  if (tiOtpRequiredFor(user)) return tiStartOtpChallenge(user, res);
+  tiSendLoginSuccess(user, res);
+});
+
+function tiSendLoginSuccess(user, res) {
   const token = jwt.sign({ id: user._id, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole }, process.env.JWT_SECRET, { expiresIn: "7d" });
-  res.json({ token, user: { id: user._id, name: user.name, email, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole, status: user.status, mustChangePassword: !!user.mustChangePassword } });
+  res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, agencyId: user.agencyId, agentRole: user.agentRole, status: user.status, mustChangePassword: !!user.mustChangePassword } });
+}
+
+// ---------- Connexion en deux étapes : code à usage unique par e-mail ----------
+// Après un mot de passe correct, les comptes admin et agence reçoivent un code à
+// 6 chiffres valable 10 minutes. Seules des empreintes SHA-256 sont stockées.
+//  - « challenge » : identifiant aléatoire de la tentative, renvoyé au navigateur ;
+//  - 5 essais de code au maximum, puis il faut recommencer avec le mot de passe ;
+//  - renvoi du code limité à 1 par minute et 3 par tentative.
+// Secours : la variable OTP_LOGIN=off sur Render désactive le code (si l'envoi
+// d'e-mails tombe en panne et que l'admin ne peut plus se connecter).
+const TI_OTP_TTL_MS = 10 * 60 * 1000, TI_OTP_MAX_TRIES = 5, TI_OTP_MAX_RESENDS = 3, TI_OTP_RESEND_GAP_MS = 60 * 1000;
+const tiOtpHash = (challenge, code) => require("crypto").createHash("sha256").update(`${challenge}:${code}`).digest("hex");
+const tiOtpChallengeHash = challenge => require("crypto").createHash("sha256").update(`otp:${challenge}`).digest("hex");
+
+function tiOtpRequiredFor(user) {
+  if (String(process.env.OTP_LOGIN || "").toLowerCase() === "off") return false;
+  return user.role === "admin" || user.role === "agency";
+}
+function tiMaskEmail(email) {
+  const [name, domain] = String(email).split("@");
+  if (!domain) return email;
+  return (name.length <= 2 ? name[0] + "*" : name.slice(0, 2) + "*".repeat(Math.min(name.length - 2, 6))) + "@" + domain;
+}
+async function tiSendOtpEmail(user, code) {
+  return tiSendEmail({
+    to: user.email,
+    subject: `${code} — votre code de connexion Timmo`,
+    html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+      <h2 style="color:#C47A4A;">Code de connexion</h2>
+      <p>Bonjour ${user.name || ""},</p>
+      <p>Voici votre code pour terminer la connexion à votre espace Timmo :</p>
+      <p style="font-size:2rem;font-weight:800;letter-spacing:8px;margin:20px 0;color:#0D1B2A;">${code}</p>
+      <p style="font-size:.85rem;">Ce code est valable <strong>10 minutes</strong> et ne peut servir qu'une seule fois. Ne le communiquez à personne : l'équipe Timmo ne vous le demandera jamais.</p>
+      <p style="color:#8a8a8a;font-size:.85rem;">Si vous n'essayez pas de vous connecter, quelqu'un connaît peut-être votre mot de passe : changez-le dès que possible.</p>
+      <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+      <p style="color:#8a8a8a;font-size:.8rem;"><em>Your Timmo sign-in code is ${code}. It expires in 10 minutes. Never share it.</em></p>
+    </div>`,
+  });
+}
+async function tiStartOtpChallenge(user, res) {
+  const crypto = require("crypto");
+  const challenge = crypto.randomBytes(32).toString("hex");
+  const code = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
+  await User.findByIdAndUpdate(user._id, {
+    otpChallengeHash: tiOtpChallengeHash(challenge), otpCodeHash: tiOtpHash(challenge, code),
+    otpExpires: new Date(Date.now() + TI_OTP_TTL_MS), otpTries: 0, otpResends: 0, otpSentAt: new Date(),
+  });
+  const sent = await tiSendOtpEmail(user, code);
+  if (!sent) return res.status(503).json({ error: "otp_send_failed" });
+  res.json({ otpRequired: true, challenge, email: tiMaskEmail(user.email), role: user.role, expiresIn: TI_OTP_TTL_MS / 1000 });
+}
+async function tiUserFromChallenge(challenge) {
+  if (typeof challenge !== "string" || !/^[a-f0-9]{64}$/.test(challenge)) return null;
+  return User.findOne({ otpChallengeHash: tiOtpChallengeHash(challenge), otpExpires: { $gt: new Date() } });
+}
+const TI_OTP_CLEAR = { $unset: { otpChallengeHash: 1, otpCodeHash: 1, otpExpires: 1, otpTries: 1, otpResends: 1, otpSentAt: 1 } };
+
+// POST /auth/login/verify — { challenge, code }
+router.post("/auth/login/verify", async (req, res) => {
+  const { challenge } = req.body;
+  const code = String(req.body.code || "").replace(/\D/g, "");
+  const user = await tiUserFromChallenge(challenge);
+  if (!user) return res.status(400).json({ error: "otp_expired" });
+  if ((user.otpTries || 0) >= TI_OTP_MAX_TRIES) {
+    await User.findByIdAndUpdate(user._id, TI_OTP_CLEAR);
+    return res.status(429).json({ error: "otp_too_many" });
+  }
+  const expected = Buffer.from(user.otpCodeHash || "", "hex");
+  const given = Buffer.from(tiOtpHash(challenge, code), "hex");
+  const ok = code.length === 6 && expected.length === given.length && require("crypto").timingSafeEqual(expected, given);
+  if (!ok) {
+    const tries = (user.otpTries || 0) + 1;
+    if (tries >= TI_OTP_MAX_TRIES) {
+      await User.findByIdAndUpdate(user._id, TI_OTP_CLEAR);
+      return res.status(429).json({ error: "otp_too_many" });
+    }
+    await User.findByIdAndUpdate(user._id, { otpTries: tries });
+    return res.status(400).json({ error: "otp_invalid", triesLeft: TI_OTP_MAX_TRIES - tries });
+  }
+  await User.findByIdAndUpdate(user._id, TI_OTP_CLEAR);
+  // Le compte a pu être suspendu entre-temps.
+  if (user.status === "suspended") return res.status(403).json({ error: "account_frozen" });
+  tiSendLoginSuccess(user, res);
+});
+
+// POST /auth/login/resend — { challenge } : nouveau code pour la même tentative.
+router.post("/auth/login/resend", async (req, res) => {
+  const user = await tiUserFromChallenge(req.body.challenge);
+  if (!user) return res.status(400).json({ error: "otp_expired" });
+  const wait = TI_OTP_RESEND_GAP_MS - (Date.now() - new Date(user.otpSentAt || 0).getTime());
+  if (wait > 0) return res.status(429).json({ error: "otp_wait", retryIn: Math.ceil(wait / 1000) });
+  if ((user.otpResends || 0) >= TI_OTP_MAX_RESENDS) return res.status(429).json({ error: "otp_resend_limit" });
+  const code = String(require("crypto").randomInt(0, 1000000)).padStart(6, "0");
+  await User.findByIdAndUpdate(user._id, {
+    otpCodeHash: tiOtpHash(req.body.challenge, code), otpExpires: new Date(Date.now() + TI_OTP_TTL_MS),
+    otpResends: (user.otpResends || 0) + 1, otpSentAt: new Date(),
+  });
+  const sent = await tiSendOtpEmail(user, code);
+  if (!sent) return res.status(503).json({ error: "otp_send_failed" });
+  res.json({ ok: true, expiresIn: TI_OTP_TTL_MS / 1000 });
 });
 
 // ---------- Réinitialisation du mot de passe par lien sécurisé ----------
