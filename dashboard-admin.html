@@ -25,17 +25,21 @@
     <div class="ti-dash-role" data-i18n="role_admin"></div>
     <nav class="ti-dash-nav">
       <a data-panel="overview" class="active" onclick="tiShowPanel('overview')" data-i18n="dash_admin_overview"></a>
+      <div class="ti-dash-nav-section" data-i18n="nav_sec_manage"></div>
       <a data-panel="users" onclick="tiShowPanel('users')" data-i18n="dash_admin_users"></a>
       <a data-panel="agencies" onclick="tiShowPanel('agencies')" data-i18n="dash_admin_agencies"></a>
-      <a data-panel="listings" onclick="tiShowPanel('listings')" data-i18n="dash_admin_listings"></a>
-      <a href="import-annonces.html" data-i18n="dash_admin_import"></a>
-      <a data-panel="amenities" onclick="tiShowPanel('amenities')" data-i18n="dash_admin_amenities"></a>
       <a data-panel="payments" onclick="tiShowPanel('payments')" data-i18n="dash_admin_payments"></a>
+      <div class="ti-dash-nav-section" data-i18n="nav_sec_content"></div>
+      <a data-panel="listings" onclick="tiShowPanel('listings')" data-i18n="dash_admin_listings"></a>
+      <a href="import-annonces.html" data-nav-icon="upload" data-i18n="dash_admin_import"></a>
+      <a data-panel="amenities" onclick="tiShowPanel('amenities')" data-i18n="dash_admin_amenities"></a>
       <a data-panel="moderation" onclick="tiShowPanel('moderation')" data-i18n="dash_admin_moderation"></a>
-      <a data-panel="deletions" onclick="tiShowPanel('deletions')" data-i18n="dash_admin_deletions"></a>
+      <a data-panel="deletions" onclick="tiShowPanel('deletions')" data-i18n="nav_deletions"></a>
+      <div class="ti-dash-nav-section" data-i18n="nav_sec_follow"></div>
       <a data-panel="audit" onclick="tiShowPanel('audit')" data-i18n="dash_admin_audit"></a>
       <a data-panel="broadcasts" onclick="tiShowPanel('broadcasts')" data-i18n="dash_admin_broadcasts"></a>
       <a data-panel="reports" onclick="tiShowPanel('reports')" data-i18n="dash_admin_reports"></a>
+      <div class="ti-dash-nav-section" data-i18n="nav_sec_account"></div>
       <a data-panel="favorites" onclick="tiShowPanel('favorites')" data-i18n="dash_favorites"></a>
     </nav>
   </aside>

@@ -652,21 +652,22 @@ const TI_PANEL_ICONS = {
   messages: "mail",
   reviews: "star", moderation: "shield",
   audit: "clock",
-  reports: "barChart",
+  reports: "document",
   favorites: "heart",
   documents: "document",
   payments: "wallet",
   profile: "user",
-  amenities: "grid",
+  amenities: "check",
+  subscription: "wallet",
   deletions: "trash",
 };
 function tiApplySidebarIcons() {
-  document.querySelectorAll(".ti-dash-nav a[data-panel]").forEach(a => {
+  document.querySelectorAll(".ti-dash-nav a[data-panel], .ti-dash-nav a[data-nav-icon]").forEach(a => {
     const panel = a.getAttribute("data-panel");
     const label = a.textContent.trim();
     a.setAttribute("data-label", label);
     a.setAttribute("title", label);
-    const iconKey = TI_PANEL_ICONS[panel];
+    const iconKey = a.getAttribute("data-nav-icon") || TI_PANEL_ICONS[panel];
     const iconHtml = iconKey && TI_ICONS[iconKey] ? `<span class="ti-dash-nav-icon">${TI_ICONS[iconKey]}</span>` : "";
     a.innerHTML = `${iconHtml}<span class="ti-dash-nav-label">${tiEscapeHtml(label)}</span>`;
   });
