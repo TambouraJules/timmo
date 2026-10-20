@@ -564,6 +564,7 @@ const TI_TRANSLATIONS = {
     dash_admin_users: "Utilisateurs",
     dash_admin_agencies: "Agences",
     dash_admin_listings: "Annonces",
+    dash_admin_import: "Import rapide d'annonces",
     dash_admin_amenities: "Caractéristiques",
     amenities_admin_sub: "Gérez la liste des caractéristiques que les agences peuvent sélectionner pour leurs annonces.",
     amenity_add_action: "Ajouter une caractéristique",
@@ -807,7 +808,10 @@ const TI_TRANSLATIONS = {
     pending_validation_notice: "En attente de validation par l'administrateur — non visible publiquement.",
     rejected_notice: "Cette annonce a été rejetée par l'administrateur.",
     views_label: "vues",
-    db_banner: "Mode démo — données stockées localement. Branchez Firebase ou l'API Node.js pour une base de données réelle (voir README).",
+    db_banner: "Site de démonstration — agences et annonces fictives",
+    db_banner_real: "Voir le vrai site",
+    db_banner_reset: "Réinitialiser la démo",
+    login_demo_title: "Comptes de démonstration (mot de passe : demo1234)",
   },
   en: {
     brand: "Timmo",
@@ -1369,6 +1373,7 @@ const TI_TRANSLATIONS = {
     dash_admin_users: "Users",
     dash_admin_agencies: "Agencies",
     dash_admin_listings: "Listings",
+    dash_admin_import: "Quick listing import",
     dash_admin_amenities: "Characteristics",
     amenities_admin_sub: "Manage the list of characteristics agencies can select for their listings.",
     amenity_add_action: "Add a characteristic",
@@ -1612,7 +1617,10 @@ const TI_TRANSLATIONS = {
     pending_validation_notice: "Awaiting admin validation — not publicly visible yet.",
     rejected_notice: "This listing was rejected by the administrator.",
     views_label: "views",
-    db_banner: "Demo mode — data stored locally. Connect Firebase or the Node.js API for a real database (see README).",
+    db_banner: "Demo site — fictitious agencies and listings",
+    db_banner_real: "Go to the real site",
+    db_banner_reset: "Reset the demo",
+    login_demo_title: "Demo accounts (password: demo1234)",
   }
 };
 

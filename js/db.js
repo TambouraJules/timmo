@@ -30,7 +30,34 @@
      http://localhost:4000/api).
    ============================================================ */
 
-const TI_BACKEND = "api"; // "local" | "firebase" | "api"
+/* Mode démo : sur demo.timmo.sn (ou en local avec ?demo=1), le site tourne
+   entièrement dans le navigateur avec des agences et annonces FICTIVES (données
+   de js/data.js, stockées en localStorage). Aucune donnée réelle n'est lue ni
+   modifiée : idéal pour faire une démonstration à une agence. */
+// Démo : sous-domaine demo.* ; en local, ?demo=1 active (mémorisé), ?demo=0 désactive.
+const TI_DEMO_MODE = (function () {
+  if (/^demo\./i.test(location.hostname)) return true;
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return false;
+  try {
+    if (/[?&]demo=1\b/.test(location.search)) sessionStorage.setItem("ti_demo", "1");
+    if (/[?&]demo=0\b/.test(location.search)) sessionStorage.removeItem("ti_demo");
+    return sessionStorage.getItem("ti_demo") === "1";
+  } catch (e) { return /[?&]demo=1\b/.test(location.search); }
+})();
+const TI_BACKEND = TI_DEMO_MODE ? "local" : "api"; // "local" | "firebase" | "api"
+if (TI_DEMO_MODE) {
+  // Le site de démo ne doit jamais apparaître dans Google.
+  const robots = document.createElement("meta");
+  robots.name = "robots"; robots.content = "noindex, nofollow";
+  document.head.appendChild(robots);
+}
+/** Remet la démo dans son état d'origine (efface les données fictives modifiées
+ *  pendant une présentation), en gardant la langue et la devise choisies. */
+function tiResetDemo() {
+  const keep = ["ti_lang", "ti_currency"];
+  Object.keys(localStorage).filter(k => k.startsWith("ti_") && !keep.includes(k)).forEach(k => localStorage.removeItem(k));
+  window.location.href = "index.html";
+}
 const TI_API_BASE = "https://timmo-api.onrender.com/api";
 
 /** Un seul point de passage pour tout appel à l'API : ajoute automatiquement

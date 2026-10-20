@@ -84,7 +84,7 @@ function tiRenderHeader(active, subsite) {
          <img src="assets/brand/timmo-logo-primary.svg" alt="Timmo" class="ti-brand-logo">
        </a>`;
   mount.innerHTML = `
-    ${TI_BACKEND === "local" ? `<div class="ti-demo-banner" data-i18n="db_banner">${t("db_banner")}</div>` : ""}
+    ${TI_BACKEND === "local" ? `<div class="ti-demo-banner"><span data-i18n="db_banner">${t("db_banner")}</span> · <a href="https://www.timmo.sn" style="color:inherit;text-decoration:underline;" data-i18n="db_banner_real">${t("db_banner_real")}</a> · <button type="button" onclick="tiResetDemo()" style="background:none;border:0;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;" data-i18n="db_banner_reset">${t("db_banner_reset")}</button></div>` : ""}
     ${subsite ? `<div class="ti-subsite-banner"><span>${t('subsite_banner_text')} <strong>${tiEscapeHtml(subsite.name)}</strong></span><a href="index.html">${t('subsite_return_link')} →</a></div>` : ""}
     <div class="ti-header-inner">
       ${brandHtml}

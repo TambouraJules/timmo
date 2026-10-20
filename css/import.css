@@ -1,0 +1,51 @@
+/* ============================================================
+   Timmo — import rapide d'annonces (administration)
+   ============================================================ */
+.ti-imp { padding: 32px 24px 64px; max-width: 1080px; }
+.ti-imp h1 { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2rem); margin: 10px 0 6px; }
+.ti-imp-back { color: var(--clay); font-size: .88rem; text-decoration: none; font-weight: 600; }
+.ti-imp-sub { color: var(--ink-soft); max-width: 75ch; margin: 0 0 22px; }
+.ti-imp-hint { color: var(--ink-soft); font-size: .82rem; }
+.ti-imp-panel { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px 20px; margin-bottom: 20px; }
+.ti-imp-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 18px; }
+.ti-imp-csv { margin-top: 6px; }
+.ti-imp-csv summary { cursor: pointer; font-weight: 600; font-size: .9rem; color: var(--clay-dark); }
+.ti-imp-csv textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: .8rem; }
+.ti-imp-actions-inline { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+.ti-imp-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px 20px; margin-bottom: 16px; box-shadow: var(--shadow-s); }
+.ti-imp-card.is-ready { border-color: #b9dcc9; }
+.ti-imp-card.is-done { opacity: .65; }
+.ti-imp-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.ti-imp-card-head h3 { margin: 0; font-size: 1rem; }
+.ti-imp-pill { font-size: .72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--gold-soft); color: var(--clay-dark); white-space: nowrap; }
+.ti-imp-pill.ok { background: #E3F1E8; color: var(--ok); }
+.ti-imp-pill.err { background: #FBE4E4; color: var(--danger); }
+.ti-imp-remove { background: none; border: 0; color: var(--ink-soft); cursor: pointer; font-size: .85rem; text-decoration: underline; }
+
+.ti-imp-paste { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
+.ti-imp-paste textarea { flex: 1; min-height: 64px; font-size: .85rem; }
+.ti-imp-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 14px; }
+.ti-imp-grid .span-2 { grid-column: span 2; }
+.ti-imp-grid .span-4 { grid-column: 1 / -1; }
+.ti-imp-grid .field { margin-bottom: 10px; }
+.ti-imp-check { display: flex; align-items: center; gap: 8px; font-size: .9rem; margin-top: 26px; }
+.ti-imp-check input { width: auto; }
+
+.ti-imp-drop { border: 2px dashed var(--line); border-radius: var(--radius-s); padding: 14px; text-align: center; color: var(--ink-soft); font-size: .85rem; cursor: pointer; }
+.ti-imp-drop.is-over { border-color: var(--clay); background: #fdf6f1; }
+.ti-imp-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ti-imp-thumb { position: relative; width: 86px; height: 64px; border-radius: 6px; overflow: hidden; background: var(--paper); }
+.ti-imp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ti-imp-thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; line-height: 20px; cursor: pointer; padding: 0; }
+.ti-imp-thumb .cover { position: absolute; left: 0; bottom: 0; right: 0; background: rgba(191,106,61,.9); color: #fff; font-size: .62rem; text-align: center; font-weight: 700; }
+
+.ti-imp-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; bottom: 0; background: var(--paper); padding: 14px 0; border-top: 1px solid var(--line); }
+.ti-imp-footer-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .ti-imp { padding: 24px 16px 48px; }
+  .ti-imp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ti-imp-paste { flex-direction: column; }
+  .ti-imp-paste textarea { width: 100%; }
+}

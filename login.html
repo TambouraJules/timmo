@@ -38,6 +38,7 @@
     </div>
 
     <div id="login-error"></div>
+    <div class="ti-demo-box" id="demo-box" style="display:none;margin:0 0 16px;"></div>
     <form id="form-login" onsubmit="return tiHandleLogin(event)">
       <div class="field"><label data-i18n="email"></label><input type="email" id="login-email" required></div>
       <div class="field"><label data-i18n="password"></label><input type="password" id="login-password" required></div>
@@ -76,6 +77,18 @@
   });
   tiSetLoginRoleUI();
   document.addEventListener('ti:langchange', tiSetLoginRoleUI);
+
+  // Site de démonstration uniquement : affiche les comptes fictifs et pré-remplit le formulaire.
+  function tiRenderDemoBox() {
+    if (TI_BACKEND !== 'local') return;
+    const demo = { client: 'client@demo.sn', agency: 'agence@demo.sn', admin: 'admin@demo.sn' };
+    const box = document.getElementById('demo-box');
+    box.style.display = '';
+    box.innerHTML = `<strong>${t('login_demo_title')}</strong><br>` + Object.entries(demo).map(([role, email]) =>
+      `<a href="#" onclick="document.getElementById('login-email').value='${email}';document.getElementById('login-password').value='demo1234';TI_LOGIN_ROLE='${role}';tiSetLoginRoleUI();return false;" style="color:inherit;">${t('role_' + role)} : <code>${email}</code></a>`).join('<br>');
+  }
+  tiRenderDemoBox();
+  document.addEventListener('ti:langchange', tiRenderDemoBox);
 
   // Retour depuis reset-password.html après réinitialisation par lien e-mail
   if (new URLSearchParams(window.location.search).get('reset') === '1') {
