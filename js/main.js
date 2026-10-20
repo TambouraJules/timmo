@@ -232,12 +232,12 @@ function tiRenderFooter(subsite) {
   mount.innerHTML = `
     ${tiHorizonSvg()}
     <footer class="ti-footer">
-      <div class="ti-footer-trust-band">
+      <div class="ti-footer-trust-band" id="ti-trust-band" style="display:none">
         <div class="container ti-footer-trust-grid">
-          <div class="ti-trust-stat"><span class="ti-trust-icon">${TI_ICONS.buildingCheck}</span><div><b>500+</b><span>${t('trust_listings')}</span></div></div>
-          <div class="ti-trust-stat"><span class="ti-trust-icon">${TI_ICONS.grid}</span><div><b>50+</b><span>${t('trust_agencies')}</span></div></div>
-          <div class="ti-trust-stat"><span class="ti-trust-icon">${TI_ICONS.star}</span><div><b>4.8/5</b><span>${t('trust_rating')}</span></div></div>
-          <div class="ti-trust-stat"><span class="ti-trust-icon">${TI_ICONS.headset}</span><div><b>24/7</b><span>${t('trust_support')}</span></div></div>
+          <div class="ti-trust-stat" id="ti-trust-listings" style="display:none"><span class="ti-trust-icon">${TI_ICONS.buildingCheck}</span><div><b></b><span data-i18n="trust_listings">${t('trust_listings')}</span></div></div>
+          <div class="ti-trust-stat" id="ti-trust-agencies" style="display:none"><span class="ti-trust-icon">${TI_ICONS.grid}</span><div><b></b><span data-i18n="trust_agencies">${t('trust_agencies')}</span></div></div>
+          <div class="ti-trust-stat" id="ti-trust-rating" style="display:none"><span class="ti-trust-icon">${TI_ICONS.star}</span><div><b></b><span data-i18n="trust_rating">${t('trust_rating')}</span></div></div>
+          <div class="ti-trust-stat"><span class="ti-trust-icon">${TI_ICONS.headset}</span><div><b>FCFA · EUR</b><span data-i18n="trust_currency">${t('trust_currency')}</span></div></div>
         </div>
       </div>
       <div class="container">
@@ -312,6 +312,38 @@ function tiRenderFooter(subsite) {
       </div>
     </footer>`;
   tiApplyLang();
+  tiFillTrustStats();
+}
+
+/* ---------- Chiffres réels du bandeau de confiance (pied de page) ----------
+   Compte les annonces publiées, les agences actives et la note moyenne réelle
+   (pondérée par le nombre d'avis). Un chiffre à zéro n'est pas affiché, et tout
+   le bandeau reste masqué tant qu'il n'y a ni annonce ni agence : jamais de
+   chiffres inventés. */
+async function tiFillTrustStats() {
+  const band = document.getElementById("ti-trust-band");
+  if (!band || typeof TiDB === "undefined") return;
+  try {
+    const [props, agencies] = await Promise.all([TiDB.getProperties(), TiDB.getAgencies()]);
+    const visible = (props || []).filter(p => typeof tiIsPubliclyVisible === "function" ? tiIsPubliclyVisible(p) : true);
+    const activeAgencies = (agencies || []).filter(a => a.status !== "suspended");
+    const rated = visible.filter(p => Number(p.reviews) > 0 && Number(p.rating) > 0);
+    const reviewCount = rated.reduce((n, p) => n + Number(p.reviews), 0);
+    const avg = reviewCount ? rated.reduce((s, p) => s + Number(p.rating) * Number(p.reviews), 0) / reviewCount : 0;
+    const fmt = n => n.toLocaleString(tiGetLang() === "en" ? "en-US" : "fr-FR");
+    const show = (id, value) => {
+      const el = document.getElementById(id);
+      if (!el || !value) return;
+      el.querySelector("b").textContent = value;
+      el.style.display = "";
+    };
+    show("ti-trust-listings", visible.length ? fmt(visible.length) : "");
+    show("ti-trust-agencies", activeAgencies.length ? fmt(activeAgencies.length) : "");
+    show("ti-trust-rating", avg ? `${avg.toFixed(1).replace(".", tiGetLang() === "en" ? "." : ",")}/5` : "");
+    band.style.display = (visible.length || activeAgencies.length) ? "" : "none";
+  } catch (e) {
+    band.style.display = "none"; // API indisponible : on n'affiche rien plutôt que des chiffres faux
+  }
 }
 
 async function tiSubmitNewsletter(e) {

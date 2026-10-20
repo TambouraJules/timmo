@@ -504,9 +504,11 @@ router.post("/payment-gateway/checkout", authenticate, async (req, res) => {
       total_amount: Math.round(inv.amount),
       description: `Abonnement Timmo ${agency ? agency.tier || "" : ""} — ${inv.period}`.replace(/\s+/g, " "),
     },
-    store: { name: "Timmo", tagline: "Plateforme immobilière — Sénégal", website_url: "https://timmo-six.vercel.app" },
+    store: { name: "Timmo", tagline: "Plateforme immobilière — Sénégal", website_url: process.env.FRONTEND_URL || "https://www.timmo.sn" },
     custom_data: { purpose: "subscription", invoiceId: inv.id, agencyId: inv.agencyId, userId: req.user.id },
-    actions: { cancel_url: cancelUrl || "", return_url: returnUrl || "" },
+    // callback_url : PayDunya prévient directement le serveur (IPN) quand le paiement est
+    // validé — la facture est marquée payée même si l'agence ferme la page avant le retour.
+    actions: { cancel_url: cancelUrl || "", return_url: returnUrl || "", callback_url: `${tiApiPublicUrl(req)}/api/payment-gateway/ipn` },
   };
   try {
     const pdRes = await fetch(`${tiPaydunyaBaseUrl()}/checkout-invoice/create`, {
@@ -525,32 +527,69 @@ router.post("/payment-gateway/checkout", authenticate, async (req, res) => {
   }
 });
 
-// GET /payment-gateway/confirm/:token — vérifie le statut réel auprès de PayDunya
-// puis, si le paiement est confirmé et que le montant correspond, marque la facture payée.
+/** Adresse publique de l'API (pour l'IPN). API_PUBLIC_URL si définie, sinon l'hôte de la requête en https. */
+function tiApiPublicUrl(req) {
+  if (process.env.API_PUBLIC_URL) return process.env.API_PUBLIC_URL.replace(/\/+$/, "");
+  return `https://${req.get("host")}`;
+}
+
+/** Interroge PayDunya pour connaître le statut RÉEL d'un paiement puis, s'il est
+ *  terminé et que le montant correspond à la facture, marque celle-ci payée.
+ *  Renvoie { status, custom } — utilisé par le retour de l'agence ET par l'IPN. */
+async function tiVerifyPaydunyaToken(token) {
+  const pdRes = await fetch(`${tiPaydunyaBaseUrl()}/checkout-invoice/confirm/${encodeURIComponent(token)}`, { headers: tiPaydunyaHeaders() });
+  const data = await pdRes.json();
+  const custom = data.custom_data || {};
+  if (data.status !== "completed") return { status: data.status || "pending", custom };
+  if (custom.purpose === "subscription" && custom.invoiceId) {
+    const inv = await Invoice.findOne({ id: custom.invoiceId });
+    if (!inv) return { status: "not_found", custom };
+    if (Number(data.invoice && data.invoice.total_amount) !== Number(inv.amount)) {
+      console.error("Montant PayDunya différent de la facture", inv.id, data.invoice && data.invoice.total_amount, inv.amount);
+      return { status: "amount_mismatch", custom };
+    }
+    await tiMarkInvoicePaid(inv, "paydunya", token);
+  }
+  return { status: "completed", custom };
+}
+
+// GET /payment-gateway/confirm/:token — appelé au retour de l'agence sur le site.
 router.get("/payment-gateway/confirm/:token", authenticate, async (req, res) => {
   if (!tiPaydunyaConfigured()) return res.status(503).json({ error: "gateway_not_configured" });
   try {
-    const pdRes = await fetch(`${tiPaydunyaBaseUrl()}/checkout-invoice/confirm/${req.params.token}`, { headers: tiPaydunyaHeaders() });
-    const data = await pdRes.json();
-    if (data.status !== "completed") return res.json({ status: data.status || "pending" });
-
-    const custom = data.custom_data || {};
-    if (custom.userId && custom.userId !== req.user.id && req.user.role !== "admin") {
+    const { status, custom } = await tiVerifyPaydunyaToken(req.params.token);
+    if (custom.userId && custom.userId !== req.user.id && req.user.role !== "admin" && !(req.user.agencyId && req.user.agencyId === custom.agencyId)) {
       return res.status(403).json({ error: "forbidden" });
     }
-    if (custom.purpose === "subscription" && custom.invoiceId) {
-      const inv = await Invoice.findOne({ id: custom.invoiceId });
-      if (!inv) return res.status(404).json({ error: "not_found" });
-      if (Number(data.invoice && data.invoice.total_amount) !== Number(inv.amount)) {
-        console.error("Montant PayDunya différent de la facture", inv.id, data.invoice && data.invoice.total_amount, inv.amount);
-        return res.json({ status: "amount_mismatch" });
-      }
-      await tiMarkInvoicePaid(inv, "paydunya", req.params.token);
-    }
-    res.json({ status: "completed" });
+    if (status === "not_found") return res.status(404).json({ error: "not_found" });
+    res.json({ status });
   } catch (err) {
     console.error("Erreur PayDunya (confirmation):", err.message);
     res.status(502).json({ error: "gateway_unreachable" });
+  }
+});
+
+// POST /payment-gateway/ipn — notification serveur à serveur envoyée par PayDunya
+// (format formulaire : data[hash], data[status], data[invoice][token]...).
+// On vérifie la signature (SHA-512 de la clé principale), puis on NE FAIT PAS confiance
+// au contenu : le statut est revérifié directement auprès de PayDunya avec le jeton.
+router.post("/payment-gateway/ipn", require("express").urlencoded({ extended: true }), async (req, res) => {
+  try {
+    if (!tiPaydunyaConfigured()) return res.status(503).end();
+    const data = req.body && req.body.data ? req.body.data : {};
+    const expected = crypto.createHash("sha512").update(process.env.PAYDUNYA_MASTER_KEY).digest("hex");
+    if (!data.hash || String(data.hash).toLowerCase() !== expected) {
+      console.warn("IPN PayDunya rejetée : signature invalide");
+      return res.status(401).end();
+    }
+    const token = data.invoice && data.invoice.token;
+    if (!token) return res.status(400).end();
+    const { status } = await tiVerifyPaydunyaToken(token);
+    console.log("IPN PayDunya", token, status);
+    res.status(200).end();
+  } catch (err) {
+    console.error("Erreur IPN PayDunya:", err.message);
+    res.status(500).end();
   }
 });
 
