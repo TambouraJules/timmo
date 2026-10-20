@@ -99,7 +99,7 @@ function tiSave(key, value) {
    auxquels il manque un champ désormais attendu par l'interface — tout en
    laissant intacts les réservations, messages, avis, paiements et favoris
    propres à l'utilisateur. */
-const TI_SCHEMA_VERSION = "8";
+const TI_SCHEMA_VERSION = "9"; // 9 : galeries de photos propres à chaque annonce de démo
 
 (function tiSeedLocalDb() {
   const seededVersion = localStorage.getItem("ti_seeded");

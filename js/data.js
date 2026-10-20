@@ -821,6 +821,25 @@ function tiGetArrondissements(deptId) {
   return [];
 }
 
+/* Galeries propres à chaque annonce de démonstration (photos libres Unsplash) :
+   chaque bien a sa propre couverture et ses pièces (salon, chambre, cuisine,
+   salle de bain, terrasse…). Ne sert qu'aux données fictives du site de démo. */
+const TI_DEMO_GALLERIES = {
+  p001: ["photo-1702830499141-a0634d87d6af", "photo-1631679706909-1844bbd07221", "photo-1600210491305-7396500b5b31", "photo-1484154218962-a197022b5858", "photo-1584622650111-993a426fbf0a", "photo-1714919286244-6f3f6cce6e65"],
+  p002: ["photo-1502672260266-1c1ef2d93688", "photo-1774311237295-a65a4c1ff38a", "photo-1531835551805-16d864c8d311", "photo-1620626011761-996317b8d101", "photo-1689717887631-088197cdc2ca"],
+  p003: ["photo-1613490493576-7fde63acd811", "photo-1602343168117-bb8ffe3e2e9f", "photo-1618220179428-22790b461013", "photo-1631048501786-4e97f20eac71", "photo-1617228069096-4638a7ffc906", "photo-1661107259637-4e1c55462428"],
+  p004: ["photo-1770148078946-155ef3fe57f1", "photo-1704458162479-42b5e0023c39", "photo-1774199496664-a9690967be5a", "photo-1595268396332-9af381e5935e", "photo-1565538810643-b5bdb714032a"],
+  p005: ["photo-1497366811353-6870744d04b2", "photo-1531973576160-7125cd663d86", "photo-1606836591695-4d58a73eba1e", "photo-1558959356-2f36c7322d3b"],
+  p006: ["photo-1574958269340-fa927503f3dd", "photo-1470075801209-17f9ec0cada6", "photo-1504384308090-c894fdcc538d", "photo-1764810815228-b7f9432eec5c", "photo-1564540574859-0dfb63985953"],
+  p007: ["photo-1598928506311-c55ded91a20c", "photo-1560448205-4d9b3e6bb6db", "photo-1600489000022-c2086d79f9d4", "photo-1631889993959-41b4e9c6e3c5", "photo-1632829882891-5047ccc421bc"],
+  p008: ["photo-1602872029708-84d970d3382b", "photo-1565182999561-18d7dc61c393", "photo-1705095605806-4b2936e90471", "photo-1612152605347-f93296cb657d", "photo-1786053538161-501fbdd89629", "photo-1602872029796-f4ab2010b10b"],
+  p009: ["photo-1596178067639-5c6e68aea6dc", "photo-1721989518229-3e84837fc398", "photo-1758565811176-ccd94357a844", "photo-1640109478916-f445f8f19b11", "photo-1692736933760-8a8a9b8c1b6f", "photo-1722480419960-39017e2087a6"],
+  p010: ["photo-1704655295066-681e61ecca6b", "photo-1581374820583-317d45555a82", "photo-1746021451691-4385f318ec13", "photo-1628062699790-7c45262b82b4"],
+  p011: ["photo-1780522828395-1f088a85166d", "photo-1706334182337-b0927e7c96b5", "photo-1697627903173-e22b6e04734d", "photo-1698879398790-8c3bed75094a"],
+  p012: ["photo-1681853108586-f29b4ef5c0fb", "photo-1663436296541-f1958f6d3b59", "photo-1762952731914-facad3dfbeb5", "photo-1624856472328-bfcf71c34741"],
+};
+const tiDemoPhotoUrl = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=70`;
+
 const TI_PHOTO_SETS = {
   apartment: [
     "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=70",
@@ -1116,8 +1135,9 @@ const TI_AGENCIES = [
   const TI_SEED_STATUS = ["active", "active", "active", "rented", "active", "pending", "active", "sold", "active", "pending", "active", "active"];
   const TI_SEED_VIEWS =  [145, 89, 210, 67, 34, 3, 52, 178, 95, 1, 40, 120];
   TI_PROPERTIES.forEach((p, i) => {
-    const set = TI_PHOTO_SETS[p.type];
-    p.photos = set;
+    const own = TI_DEMO_GALLERIES[p.id];
+    const set = own ? own.map(tiDemoPhotoUrl) : TI_PHOTO_SETS[p.type];
+    p.photos = set.slice(0, 10);
     p.cover = set[0];
     p.amenities = tiBuildAmenities(p.type, p.furnished);
     p.listingStatus = TI_SEED_STATUS[i] || "active";

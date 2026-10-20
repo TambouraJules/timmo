@@ -19,7 +19,7 @@ const TI_IMP_KINDS = [
   { id: "sale", label: "Vente" },
   { id: "short", label: "Courte durée" },
 ];
-const TI_IMP_MAX_PHOTOS = 12;
+const TI_IMP_MAX_PHOTOS = 10; // même limite que le formulaire agence et l'API
 
 let TI_IMP_CARDS = [];      // [{ uid, photos: [dataUrl|url], status: "draft"|"done"|"error", error }]
 let TI_IMP_AGENCIES = [];

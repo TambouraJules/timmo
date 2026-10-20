@@ -26,8 +26,14 @@ router.post("/:id/view", async (req, res) => {
 // POST /api/properties (create or update — upsert by business id) —
 // requires the owning agency (checked against the existing record when
 // updating, or the submitted agencyId when creating) or an admin.
+const TI_MAX_PHOTOS = 10;
 router.post("/", authenticate, async (req, res) => {
   const data = req.body;
+  // 10 photos maximum par bien (même limite que le formulaire agence et l'import).
+  if (Array.isArray(data.photos) && data.photos.length > TI_MAX_PHOTOS) {
+    data.photos = data.photos.slice(0, TI_MAX_PHOTOS);
+    if (!data.photos.includes(data.cover)) data.cover = data.photos[0];
+  }
   const existing = data.id ? await Property.findOne({ id: data.id }) : null;
   const targetAgencyId = existing ? existing.agencyId : data.agencyId;
   const owns = req.user.role === "admin" || (req.user.agencyId && req.user.agencyId === targetAgencyId);
