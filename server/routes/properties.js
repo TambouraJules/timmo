@@ -27,12 +27,20 @@ router.post("/:id/view", async (req, res) => {
 // requires the owning agency (checked against the existing record when
 // updating, or the submitted agencyId when creating) or an admin.
 const TI_MAX_PHOTOS = 10;
+// Visite 3D / vidéo : uniquement des services connus, en https (même liste que js/main.js tiTourEmbed).
+const TI_TOUR_HOSTS = /^(my\.matterport\.com|(www\.)?kuula\.co|app\.cloudpano\.com|(www\.|m\.)?youtube\.com|youtu\.be|(www\.)?vimeo\.com)$/i;
+function tiValidTourUrl(raw) {
+  try { const u = new URL(String(raw)); return u.protocol === "https:" && TI_TOUR_HOSTS.test(u.hostname); } catch (e) { return false; }
+}
 router.post("/", authenticate, async (req, res) => {
   const data = req.body;
   // 10 photos maximum par bien (même limite que le formulaire agence et l'import).
   if (Array.isArray(data.photos) && data.photos.length > TI_MAX_PHOTOS) {
     data.photos = data.photos.slice(0, TI_MAX_PHOTOS);
     if (!data.photos.includes(data.cover)) data.cover = data.photos[0];
+  }
+  if (data.tourUrl !== undefined && data.tourUrl !== null && data.tourUrl !== "") {
+    if (typeof data.tourUrl !== "string" || data.tourUrl.length > 500 || !tiValidTourUrl(data.tourUrl)) return res.status(400).json({ error: "invalid_tour_url" });
   }
   const existing = data.id ? await Property.findOne({ id: data.id }) : null;
   // Au moins une vraie photo : à la création, et à chaque modification qui envoie la liste.

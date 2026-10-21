@@ -9,13 +9,13 @@
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<meta name="description" content="Photos, visite 3D, prix et disponibilités de ce bien immobilier au Sénégal. Contactez l&#x27;agence ou réservez en ligne sur Timmo.">
+<meta name="description" content="Photos, prix, disponibilités et visite 3D ou vidéo quand l&#x27;agence la propose, pour ce bien immobilier au Sénégal. Contactez l&#x27;agence ou réservez en ligne sur Timmo.">
 <link rel="canonical" href="https://www.timmo.sn/property.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Timmo">
 <meta property="og:locale" content="fr_SN">
 <meta property="og:title" content="Détail du bien — Timmo">
-<meta property="og:description" content="Photos, visite 3D, prix et disponibilités de ce bien immobilier au Sénégal. Contactez l&#x27;agence ou réservez en ligne sur Timmo.">
+<meta property="og:description" content="Photos, prix, disponibilités et visite 3D ou vidéo quand l&#x27;agence la propose, pour ce bien immobilier au Sénégal. Contactez l&#x27;agence ou réservez en ligne sur Timmo.">
 <meta property="og:url" content="https://www.timmo.sn/property.html">
 <meta property="og:image" content="https://www.timmo.sn/assets/brand/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -93,6 +93,21 @@
         <button type="submit" class="btn btn-primary btn-block" data-i18n="submit_review"></button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Visite 3D / vidéo (iframe chargée seulement à l'ouverture) -->
+<div class="ti-modal-backdrop" id="modal-tour" onclick="if(event.target===this) tiCloseTour()">
+  <div class="ti-modal ti-modal-flex ti-modal-tour" role="dialog" aria-modal="true" aria-labelledby="tour-modal-title">
+    <div class="ti-modal-head">
+      <h3 id="tour-modal-title" data-i18n="tour_modal_title"></h3>
+      <button type="button" class="ti-modal-close" onclick="tiCloseTour()" aria-label="Fermer">&times;</button>
+    </div>
+    <div class="ti-tour-frame-wrap">
+      <iframe id="tour-frame" src="about:blank" title="Visite du bien" loading="lazy"
+        allow="autoplay; fullscreen; xr-spatial-tracking; gyroscope; accelerometer; picture-in-picture"
+        allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
   </div>
 </div>
 

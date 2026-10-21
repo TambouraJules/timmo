@@ -1300,6 +1300,7 @@ function tiEditListing(id) {
     document.getElementById("nl-baths").value = p.bathrooms;
     document.getElementById("nl-area").value = p.area;
     document.getElementById("nl-desc").value = p.desc;
+    document.getElementById("nl-tour-url").value = p.tourUrl || "";
     TI_NL_PHOTOS = [...(p.photos || [])];
     tiRenderPhotoPreview();
     tiRenderAmenityPicker((p.amenities || []).map(a => a.icon));
@@ -1375,6 +1376,14 @@ async function tiSubmitNewListing(e) {
     return false;
   }
   const finalPhotos = photos.slice(0, TI_NL_PHOTO_MAX);
+  const tourUrl = (document.getElementById("nl-tour-url").value || "").trim();
+  if (tourUrl && !tiTourEmbed(tourUrl)) {
+    tiToast(t("tour_invalid"));
+    tiSetBtnLoading(submitBtn, false);
+    const tourStep = document.getElementById("nl-tour-url").closest(".ti-wizard-step");
+    if (tourStep) tiWizardGoToStep(Number(tourStep.dataset.step));
+    return false;
+  }
 
   const prop = editId ? { ...TI_EDITING_PROPERTY } : {
     id: "p_" + Date.now(), agencyId: TI_SESSION.agencyId, rating: 0, reviews: 0, listingStatus: "pending", views: 0, createdAt: new Date().toISOString(),
@@ -1403,6 +1412,7 @@ async function tiSubmitNewListing(e) {
     descEn: document.getElementById("nl-desc").value,
     photos: finalPhotos,
     cover: finalPhotos[0],
+    tourUrl: tourUrl || "",
     amenities,
     availableFrom: kind === "rent" ? (document.getElementById("nl-available-from").value || null) : null,
     blockedDates: kind === "short" && TI_BLOCKED_CAL_STATE ? [...TI_BLOCKED_CAL_STATE.blockedSet] : (kind === "short" ? (prop.blockedDates || []) : []),

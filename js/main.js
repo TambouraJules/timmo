@@ -1004,6 +1004,39 @@ async function tiHandleFavClickRemovable(evt, propertyId, btn) {
   }, 250);
 }
 
+/* ---------- Visite 3D / vidéo fournie par l'agence ----------
+   Seuls des services connus sont acceptés (sécurité : on n'intègre jamais
+   une page arbitraire). Renvoie { kind: "3d" | "video", src } ou null. La
+   visite n'est chargée qu'au clic du visiteur : aucun coût sur le chargement
+   de la page. Même liste côté API (server/routes/properties.js). */
+function tiTourEmbed(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  let u;
+  try { u = new URL(raw.trim()); } catch (e) { return null; }
+  if (u.protocol !== "https:") return null;
+  const host = u.hostname.replace(/^www\./, "").toLowerCase();
+  if (host === "my.matterport.com" && /^\/show\/?$/.test(u.pathname) && /^[A-Za-z0-9]{6,20}$/.test(u.searchParams.get("m") || "")) {
+    return { kind: "3d", src: `https://my.matterport.com/show/?m=${u.searchParams.get("m")}&play=1` };
+  }
+  if (host === "kuula.co" && /^\/(share|post)\/[A-Za-z0-9\/_-]+$/.test(u.pathname)) {
+    return { kind: "3d", src: `https://kuula.co${u.pathname}?fs=1&vr=0&thumbs=1&info=0&logo=0` };
+  }
+  if (host === "app.cloudpano.com" && /^\/tours\/[A-Za-z0-9_-]+\/?$/.test(u.pathname)) {
+    return { kind: "3d", src: `https://app.cloudpano.com${u.pathname}` };
+  }
+  let yt = null;
+  if (host === "youtu.be") yt = u.pathname.slice(1);
+  else if (host === "youtube.com" || host === "m.youtube.com") {
+    yt = u.searchParams.get("v") || (u.pathname.match(/^\/(?:shorts|embed|live)\/([^/]+)/) || [])[1];
+  }
+  if (yt && /^[A-Za-z0-9_-]{6,20}$/.test(yt)) return { kind: "video", src: `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&rel=0` };
+  if (host === "vimeo.com") {
+    const id = (u.pathname.match(/^\/(\d{5,12})/) || [])[1];
+    if (id) return { kind: "video", src: `https://player.vimeo.com/video/${id}?autoplay=1` };
+  }
+  return null;
+}
+
 function tiPropertyCardHtml(p, favIds = [], removeOnUnfav = false) {
   const isFav = favIds.includes(p.id);
   const favClickFn = removeOnUnfav ? "tiHandleFavClickRemovable" : "tiHandleFavClick";
@@ -1013,6 +1046,7 @@ function tiPropertyCardHtml(p, favIds = [], removeOnUnfav = false) {
     <a href="property.html?id=${p.id}" class="ti-card-media">
       <img src="${p.cover}" alt="${tiPropertyTitle(p)}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
       <span class="ti-card-badge">${tiTypeLabel(p.type)}</span>
+      ${(() => { const tour = tiTourEmbed(p.tourUrl); return tour ? `<span class="ti-card-tour-badge">${tour.kind === "3d" ? "◉ " + t("tour_badge_3d") : "▶ " + t("tour_badge_video")}</span>` : ""; })()}
       ${tiPropertyStatusRibbonHtml(p)}
       <button class="ti-card-fav ${isFav ? 'active' : ''}" onclick="${favClickFn}(event,'${p.id}',this)">${isFav ? TI_ICONS.heartFilled : TI_ICONS.heart}</button>
     </a>

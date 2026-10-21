@@ -71,6 +71,14 @@ async function tiRenderPropertyContent() {
         </a>
       </div>
     </div>
+    ${(() => {
+      const tour = tiTourEmbed(p.tourUrl);
+      if (!tour) return "";
+      return `<button type="button" class="ti-tour-btn" onclick="tiOpenTour()">
+        <span class="ti-tour-btn-icon">${tour.kind === "3d" ? "◉" : "▶"}</span>
+        <span>${tour.kind === "3d" ? t("tour_btn_3d") : t("tour_btn_video")}</span>
+      </button>`;
+    })()}
     <h4 style="margin-top:16px;" data-i18n="gallery_title"></h4>
     <div class="ti-gallery-strip-wrap">
       <div class="ti-gallery-strip">
@@ -562,4 +570,19 @@ function tiUpdatePropertySeo(p) {
   setMeta('meta[property="og:description"]', "content", desc);
   setMeta('meta[property="og:url"]', "content", url);
   if (/^https:\/\//.test(image)) setMeta('meta[property="og:image"]', "content", image);
+}
+
+
+/* ---------- Visite 3D / vidéo : chargée uniquement au clic ---------- */
+function tiOpenTour() {
+  const tour = TI_PROPERTY && tiTourEmbed(TI_PROPERTY.tourUrl);
+  if (!tour) return;
+  const frame = document.getElementById("tour-frame");
+  frame.src = tour.src;
+  tiOpenModal("modal-tour");
+}
+function tiCloseTour() {
+  tiCloseModal("modal-tour");
+  // Vider la source coupe la vidéo / la visite et libère la mémoire.
+  setTimeout(() => { const f = document.getElementById("tour-frame"); if (f) f.src = "about:blank"; }, 250);
 }

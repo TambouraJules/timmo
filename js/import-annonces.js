@@ -93,6 +93,7 @@ function tiImpAddCard(values) {
       <div class="field"><label>Surface (m²)</label><input type="number" min="0" data-f="area"></div>
       <label class="ti-imp-check"><input type="checkbox" data-f="furnished"> Meublé</label>
       <div class="field span-4"><label>Description</label><textarea data-f="desc" rows="3"></textarea></div>
+      <div class="field span-4"><label>Lien de visite 3D ou vidéo (facultatif)</label><input type="url" data-f="tour" placeholder="Matterport, Kuula, CloudPano, YouTube ou Vimeo"></div>
       <div class="field span-4">
         <label>Photos (la première sert de couverture)</label>
         <div class="ti-imp-drop" data-role="drop">Glissez les photos ici ou <u>cliquez pour choisir</u> — ${TI_IMP_MAX_PHOTOS} max.</div>
@@ -139,7 +140,7 @@ function tiImpSetValues(uid, v) {
     if (!el || val === undefined || val === null || val === "") return;
     if (el.type === "checkbox") el.checked = !!val; else el.value = val;
   };
-  ["title", "type", "kind", "hood", "price", "beds", "baths", "area", "furnished", "desc"].forEach(k => set(k, v[k]));
+  ["title", "type", "kind", "hood", "price", "beds", "baths", "area", "furnished", "desc", "tour"].forEach(k => set(k, v[k]));
   if (Array.isArray(v.photos) && v.photos.length) {
     const card = TI_IMP_CARDS.find(c => c.uid === uid);
     card.photos.push(...v.photos.slice(0, TI_IMP_MAX_PHOTOS));
@@ -151,7 +152,7 @@ function tiImpGetValues(uid) {
   return {
     title: v("title"), type: v("type"), kind: v("kind"), hood: v("hood"),
     price: parseFloat(v("price")), beds: parseInt(v("beds"), 10), baths: parseInt(v("baths"), 10),
-    area: parseFloat(v("area")), furnished: v("furnished"), desc: v("desc"),
+    area: parseFloat(v("area")), furnished: v("furnished"), desc: v("desc"), tour: v("tour"),
   };
 }
 
@@ -165,6 +166,7 @@ function tiImpMissing(uid) {
   if (!v.hood) miss.push("quartier");
   if (!(v.price > 0)) miss.push("prix");
   if (!card || !card.photos.length) miss.push("photo");
+  if (v.tour && !tiTourEmbed(v.tour)) miss.push("lien de visite valide");
   return miss;
 }
 
@@ -285,10 +287,17 @@ function tiImpParse(raw) {
   }
   if (best) out.price = Math.round(best);
 
+  // Lien de visite (YouTube, Matterport…) souvent présent dans les messages WhatsApp
+  for (const m of text.matchAll(/https:\/\/[^\s<>"']+/g)) {
+    if (tiTourEmbed(m[0])) { out.tour = m[0]; break; }
+  }
+
   // Description : texte d'origine sans les numéros de téléphone (les contacts passent par la plateforme)
   out.desc = text
+    .replace(out.tour ? out.tour : /$^/, "")
     .replace(/(\+?221[\s.-]?)?\b(7[05678]|33)[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}\b/g, "")
-    .replace(/\b(contacts?|contactez|appel(ez|er)?|tel|tél|whatsapp)\s*:?\s*(?=[\n.,;]|$)/gim, "")
+    .replace(/\b(contacts?|contactez|appel(ez|er)?|tel|tél|whatsapp|vid[ée]o|visite( 3d| virtuelle)?|lien)\s*:?\s*(?=[\n.,;]|$)/gim, "")
+    .replace(/\b(contacts?|contactez|appel(ez|er)?|tel|tél|whatsapp|vid[ée]o|visite( 3d| virtuelle)?|lien)\s*:?\s*(?=[\n.,;]|$)/gim, "")
     .replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 
   // Titre : première ligne utile, sinon titre construit
@@ -306,7 +315,7 @@ function tiImpAutofill(uid) {
   if (!raw.trim()) { tiToast("Collez d'abord le texte de l'annonce"); return; }
   const parsed = tiImpParse(raw);
   // On ne remplace que les champs vides, pour ne pas écraser une correction manuelle
-  ["title", "type", "kind", "hood", "price", "beds", "baths", "area", "desc"].forEach(k => {
+  ["title", "type", "kind", "hood", "price", "beds", "baths", "area", "desc", "tour"].forEach(k => {
     const el = tiImpField(uid, k);
     if (parsed[k] === undefined || !el) return;
     const isDefaultSelect = el.tagName === "SELECT" && (k === "type" || k === "kind");
@@ -318,7 +327,7 @@ function tiImpAutofill(uid) {
 }
 
 /* ---------- Import depuis un tableau ---------- */
-const TI_IMP_COLS = ["titre", "type", "offre", "quartier", "prix", "chambres", "sdb", "surface", "meuble", "description", "photos"];
+const TI_IMP_COLS = ["titre", "type", "offre", "quartier", "prix", "chambres", "sdb", "surface", "meuble", "description", "photos", "visite"];
 
 function tiImpFromTable() {
   const raw = document.getElementById("imp-csv").value.trim();
@@ -345,6 +354,7 @@ function tiImpFromTable() {
       beds: get("chambres"), baths: get("sdb"), area: get("surface"),
       furnished: /^(oui|yes|1|x|vrai|true)$/i.test(get("meuble")), desc: get("description"),
       photos: get("photos").split(/\s+/).filter(u => /^https:\/\//.test(u)),
+      tour: get("visite").trim(),
     });
     created++;
   });
@@ -393,6 +403,7 @@ async function tiImpPublishAll() {
       area: isFinite(v.area) ? v.area : null, furnished: !!v.furnished,
       desc: v.desc, descEn: v.desc,
       photos: card.photos.slice(), cover: card.photos[0],
+      tourUrl: v.tour && tiTourEmbed(v.tour) ? v.tour : "",
       amenities: [], availableFrom: null, blockedDates: [],
       lat: nb.lat + (Math.random() - 0.5) * 0.01, lng: nb.lng + (Math.random() - 0.5) * 0.01,
       importedByAdmin: true,
