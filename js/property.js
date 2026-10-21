@@ -579,6 +579,12 @@ function tiOpenTour() {
   if (!tour) return;
   const frame = document.getElementById("tour-frame");
   frame.src = tour.src;
+  const note = document.getElementById("tour-sample-note");
+  if (note) {
+    // Démo uniquement : la visite est un exemple réel d'un AUTRE bien — on le dit clairement.
+    note.hidden = !TI_PROPERTY.tourSample;
+    note.textContent = TI_PROPERTY.tourSample ? `${t("tour_sample_note")} ${TI_PROPERTY.tourSample}` : "";
+  }
   tiOpenModal("modal-tour");
 }
 function tiCloseTour() {

@@ -838,6 +838,17 @@ const TI_DEMO_GALLERIES = {
   p011: ["photo-1780522828395-1f088a85166d", "photo-1706334182337-b0927e7c96b5", "photo-1697627903173-e22b6e04734d", "photo-1698879398790-8c3bed75094a"],
   p012: ["photo-1681853108586-f29b4ef5c0fb", "photo-1663436296541-f1958f6d3b59", "photo-1762952731914-facad3dfbeb5", "photo-1624856472328-bfcf71c34741"],
 };
+/* Exemples de visites pour le site de démo : de VRAIES visites publiques
+   (Matterport Discover, YouTube) d'AUTRES biens, affichées avec la mention
+   « exemple » et leur source — jamais présentées comme la visite du bien fictif. */
+const TI_DEMO_TOURS = {
+  p001: { url: "https://my.matterport.com/show/?m=oyaicKWaEQw", source: "Matterport · Penthouse, Dubaï (3DTour.ae)" },
+  p002: { url: "https://my.matterport.com/show/?m=BxeZPN7PQWL", source: "Matterport · location meublée scannée avec un iPhone" },
+  p003: { url: "https://my.matterport.com/show/?m=d7Kai9ZKt4D", source: "Matterport · 2024 Showcase of Homes" },
+  p006: { url: "https://my.matterport.com/show/?m=pgd5xXe7TWi", source: "Matterport · Clockwise River House, Belfast (shanweb.com)" },
+  p008: { url: "https://www.youtube.com/watch?v=u6bVGVVXkf0", source: "YouTube · Sweet Senegal — appartement aux Almadies" },
+  p009: { url: "https://www.youtube.com/watch?v=x76lauY1NNc", source: "YouTube · GDbatrix — maison avec piscine à Dakar" },
+};
 const tiDemoPhotoUrl = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=70`;
 
 const TI_PHOTO_SETS = {
@@ -1139,6 +1150,8 @@ const TI_AGENCIES = [
     const set = own ? own.map(tiDemoPhotoUrl) : TI_PHOTO_SETS[p.type];
     p.photos = set.slice(0, 10);
     p.cover = set[0];
+    const demoTour = TI_DEMO_TOURS[p.id];
+    if (demoTour) { p.tourUrl = demoTour.url; p.tourSample = demoTour.source; }
     p.amenities = tiBuildAmenities(p.type, p.furnished);
     p.listingStatus = TI_SEED_STATUS[i] || "active";
     p.views = TI_SEED_VIEWS[i] ?? 0;
