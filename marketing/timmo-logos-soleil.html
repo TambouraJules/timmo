@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Variantes Soleil Atlantique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --clay:#BF6A3D; --clay-d:#8C4E2D; --navy:#0D1B2A; --gold:#D4AF37; --sand:#F6F1EA; --ink:#1c2430; --soft:#5d6773; --line:#e7e1d8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #faf8f5; }
+  header { background: var(--navy); color:#fff; padding: 36px 24px 30px; }
+  header .wrap, main { max-width: 1120px; margin: 0 auto; }
+  header h1 { font-family: Lato, Inter, sans-serif; font-weight: 900; margin: 0 0 8px; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: -.5px; }
+  header p { margin: 0; color: #c7d0da; max-width: 70ch; line-height: 1.5; }
+  main { padding: 28px 16px 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius: 16px; overflow: hidden; display:flex; flex-direction:column; }
+  .card.reco { border: 2px solid var(--clay); }
+  .stage { background: var(--sand); padding: 26px 20px 20px; display:flex; align-items:center; justify-content:center; gap: 22px; }
+  .stage svg.mark { width: 104px; height: 104px; }
+  .lock { display:flex; align-items:center; gap: 10px; }
+  .lock svg { width: 40px; height: 40px; }
+  .lw { display:flex; flex-direction:column; line-height:1; }
+  .base { white-space: nowrap; font-size: 9.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--clay); margin-top: 3px; padding-left: 2px; }
+  .word { font-family: Lato, Inter, sans-serif; font-weight: 900; font-size: 30px; letter-spacing: -1px; color: var(--navy); }
+  .variants { display:flex; align-items:center; gap: 14px; padding: 14px 20px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .variants .dark { background: var(--navy); border-radius: 10px; padding: 8px 12px; display:flex; align-items:center; gap: 8px; }
+  .variants .dark .word { color:#fff; font-size: 20px; }
+  .variants .dark svg { width: 26px; height: 26px; }
+  .fav { display:flex; align-items:flex-end; gap: 8px; margin-left: auto; color: var(--soft); font-size: .7rem; }
+  .fav span { display:flex; flex-direction:column; align-items:center; gap: 3px; }
+  .body { padding: 14px 20px 18px; }
+  .body h3 { margin: 0 0 4px; font-family: Lato, Inter, sans-serif; font-size: 1.15rem; }
+  .tag { display:inline-block; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding: 3px 9px; border-radius: 99px; background: var(--clay); color:#fff; margin-left: 6px; vertical-align: 2px; }
+  .body p { margin: 4px 0 8px; color: var(--soft); font-size: .9rem; line-height: 1.5; }
+  .pc { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .82rem; }
+  .pc b { display:block; font-size:.72rem; text-transform: uppercase; letter-spacing:.05em; margin-bottom: 2px; }
+  .pc .p b { color:#2f6b47; } .pc .c b { color: var(--clay-d); }
+  .notes { margin-top: 30px; background:#fff; border:1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
+  .notes h2 { margin: 0 0 8px; font-family: Lato, Inter, sans-serif; font-size: 1.2rem; }
+  .notes li { margin-bottom: 6px; color: var(--soft); line-height: 1.5; }
+  @media (max-width: 480px) { .stage { flex-direction: column; } .fav { margin-left: 0; } .variants { flex-wrap: wrap; } }
+  .word-sun { display:inline-flex; align-items:baseline; }
+  .osun { display:inline-block; width:.62em; height:.62em; margin-left:.02em; vertical-align:baseline; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+    <symbol id="va" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0D1B2A"/>
+      <path d="M33 63 A17 17 0 0 1 67 63 Z" fill="#D4AF37"/>
+      <path d="M18 45 L50 19 L82 45" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 71 Q27.5 66 35 71 T50 71 T65 71 T80 71" fill="none" stroke="#BF6A3D" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M28 81 Q35.5 76 43 81 T58 81 T73 81" fill="none" stroke="#BF6A3D" stroke-width="5.5" stroke-linecap="round" opacity=".7"/>
+    </symbol>
+    <symbol id="vb" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0D1B2A"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#D4AF37"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#BF6A3D" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vc" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#BF6A3D"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#F3C64B"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#0D1B2A" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vd" viewBox="0 0 100 100">
+      <defs><linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9A04F"/><stop offset=".55" stop-color="#BF6A3D"/><stop offset="1" stop-color="#7A3E22"/></linearGradient></defs>
+      <rect width="100" height="100" rx="24" fill="url(#gd)"/>
+      <circle cx="50" cy="62" r="17" fill="#FCE3A4"/>
+      <path d="M0 64 H100 V76 C100 89 89 100 76 100 H24 C11 100 0 89 0 76 Z" fill="#0D1B2A"/>
+      <path d="M18 72 Q26 67 34 72 T50 72 T66 72 T82 72" fill="none" stroke="#FCE3A4" stroke-width="3.5" stroke-linecap="round" opacity=".8"/>
+      <path d="M17 45 L50 18 L83 45" fill="none" stroke="#0D1B2A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="ve" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#BF6A3D"/>
+      <path d="M50 16 L84 44 L84 84 L16 84 L16 44 Z" fill="#0D1B2A"/>
+      <clipPath id="ce"><path d="M34 84 L34 58 A16 16 0 0 1 66 58 L66 84 Z"/></clipPath>
+      <g clip-path="url(#ce)">
+        <rect x="30" y="40" width="40" height="46" fill="#E9A04F"/>
+        <circle cx="50" cy="70" r="11" fill="#FCE3A4"/>
+        <rect x="30" y="70" width="40" height="16" fill="#14304A"/>
+        <path d="M30 76 Q36 72 42 76 T54 76 T66 76 T78 76" fill="none" stroke="#FCE3A4" stroke-width="2.6" stroke-linecap="round"/>
+      </g>
+    </symbol>
+    <symbol id="vf" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0D1B2A"/>
+      <circle cx="50" cy="38" r="20" fill="#D4AF37"/>
+      <path d="M12 58 L50 27 L88 58 L88 64 L12 64 Z" fill="#0D1B2A"/>
+      <path d="M14 56 L50 27 L86 56" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 75 Q26 69 34 75 T50 75 T66 75 T82 75" fill="none" stroke="#BF6A3D" stroke-width="7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vg" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#F6F1EA"/>
+      <path d="M17 46 L50 19 L83 46" fill="none" stroke="#BF6A3D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M31 66 A19 19 0 0 1 69 66" fill="none" stroke="#BF6A3D" stroke-width="6" stroke-linecap="round"/>
+      <path d="M18 66 H82" fill="none" stroke="#BF6A3D" stroke-width="6" stroke-linecap="round"/>
+      <path d="M26 78 Q34 72 42 78 T58 78 T74 78" fill="none" stroke="#BF6A3D" stroke-width="6" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="vh" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0D1B2A"/>
+      <clipPath id="ch"><circle cx="50" cy="56" r="27"/></clipPath>
+      <g clip-path="url(#ch)">
+        <rect x="20" y="28" width="60" height="60" fill="#BF6A3D"/>
+        <circle cx="50" cy="62" r="13" fill="#D4AF37"/>
+        <rect x="20" y="62" width="60" height="30" fill="#14304A"/>
+        <path d="M20 70 Q27 66 34 70 T48 70 T62 70 T76 70 T90 70" fill="none" stroke="#D4AF37" stroke-width="3" stroke-linecap="round"/>
+        <path d="M24 78 Q31 74 38 78 T52 78 T66 78 T80 78" fill="none" stroke="#D4AF37" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+      </g>
+      <path d="M20 37 L50 13 L80 37" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+</defs></svg>
+<header><div class="wrap">
+  <h1>« Soleil sur l'Atlantique » — 8 variantes</h1>
+  <p>Timmo, Teranga Immobilier : un chez-soi entre Dakar et l'Atlantique. Même idée, huit traitements différents. Regarde surtout la colonne 16 px : c'est la taille de l'onglet du navigateur.</p>
+</div></header>
+<main>
+  <div class="grid">
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#va"/></svg>
+        <div class="lock"><svg><use href="#va"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#va"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#va"/></svg>32</span><span><svg width="16" height="16"><use href="#va"/></svg>16</span></div></div>
+      <div class="body"><h3>3 · Version d'origine</h3>
+        <p>Pour comparaison : toit, soleil couchant et deux vagues.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Évocateur, élégant.</div><div class="c"><b>Limites</b>Les deux vagues et le soleil se mélangent en 16 px.</div></div></div>
+    </section>
+    <section class="card reco">
+      <div class="stage"><svg class="mark"><use href="#vb"/></svg>
+        <div class="lock"><svg><use href="#vb"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#vb"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#vb"/></svg>32</span><span><svg width="16" height="16"><use href="#vb"/></svg>16</span></div></div>
+      <div class="body"><h3>3B · Épurée <span class="tag">Recommandé</span></h3>
+        <p>Mêmes idées, mais une seule vague et des traits plus épais.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Lisible jusqu'en 16 px, garde tout le sens. La plus solide pour une icône d'appli.</div><div class="c"><b>Limites</b>Un peu moins riche que l'original.</div></div></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#vc"/></svg>
+        <div class="lock"><svg><use href="#vc"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#vc"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#vc"/></svg>32</span><span><svg width="16" height="16"><use href="#vc"/></svg>16</span></div></div>
+      <div class="body"><h3>3C · Version terre cuite</h3>
+        <p>La 3B sur fond terre cuite : soleil doré, vague bleu nuit.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Plus chaleureuse, et cohérente avec les boutons orangés du site.</div><div class="c"><b>Limites</b>Le soleil doré ressort moins sur l'orangé qu'en version nuit.</div></div></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#vd"/></svg>
+        <div class="lock"><svg><use href="#vd"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#vd"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#vd"/></svg>32</span><span><svg width="16" height="16"><use href="#vd"/></svg>16</span></div></div>
+      <div class="body"><h3>3D · Ciel de coucher de soleil</h3>
+        <p>Un vrai ciel en dégradé ; le toit et l'océan en silhouette bleu nuit.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>La plus émotionnelle et « carte postale ». Superbe en grand (réseaux sociaux, panneaux).</div><div class="c"><b>Limites</b>Le dégradé coûte plus cher à imprimer et se brouille un peu en petit.</div></div></div>
+    </section>
+    <section class="card reco">
+      <div class="stage"><svg class="mark"><use href="#ve"/></svg>
+        <div class="lock"><svg><use href="#ve"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#ve"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#ve"/></svg>32</span><span><svg width="16" height="16"><use href="#ve"/></svg>16</span></div></div>
+      <div class="body"><h3>3E · Vue depuis la maison <span class="tag">Recommandé</span></h3>
+        <p>Le coucher de soleil sur l'océan, vu par l'ouverture d'une maison bleu nuit.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Raconte toute l'histoire : chez soi, face à l'Atlantique. Très distinctif.</div><div class="c"><b>Limites</b>Le détail intérieur disparaît en 16 px (la maison reste lisible).</div></div></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#vf"/></svg>
+        <div class="lock"><svg><use href="#vf"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#vf"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#vf"/></svg>32</span><span><svg width="16" height="16"><use href="#vf"/></svg>16</span></div></div>
+      <div class="body"><h3>3F · Lever de soleil derrière le toit</h3>
+        <p>Le soleil se lève derrière le toit : un nouveau départ, un nouveau chez-soi.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Forme très simple et forte, lisible en tout petit.</div><div class="c"><b>Limites</b>On perd un peu l'idée d'horizon marin.</div></div></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#vg"/></svg>
+        <div class="lock"><svg><use href="#vg"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#vg"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#vg"/></svg>32</span><span><svg width="16" height="16"><use href="#vg"/></svg>16</span></div></div>
+      <div class="body"><h3>3G · Monoligne</h3>
+        <p>Un seul trait d'une seule couleur : toit, soleil, horizon, vague.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Raffinée, facile à broder, graver ou imprimer en une couleur (tampon, enseigne, T-shirt).</div><div class="c"><b>Limites</b>Traits fins : moins d'impact en icône d'appli.</div></div></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#vh"/></svg>
+        <div class="lock"><svg><use href="#vh"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#vh"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#vh"/></svg>32</span><span><svg width="16" height="16"><use href="#vh"/></svg>16</span></div></div>
+      <div class="body"><h3>3H · Hublot sur l'océan</h3>
+        <p>Le soleil sur l'océan dans un cercle, coiffé d'un toit.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Original, très « hôtellerie / location saisonnière ».</div><div class="c"><b>Limites</b>Le cercle sous un toit peut faire penser à une cloche ; plus de détails.</div></div></div>
+    </section>
+  </div>
+  <div class="notes">
+    <h2>Ma recommandation</h2>
+    <ul>
+      <li><b>3B (épurée)</b> comme logo principal : c'est la seule version qui reste nette de l'enseigne jusqu'au favicon.</li>
+      <li><b>3E (vue depuis la maison)</b> si tu veux plus de caractère : c'est la plus originale. On peut garder la 3B pour le favicon et l'icône d'appli.</li>
+      <li>La <b>3D (ciel en dégradé)</b> fait une très belle image de couverture pour Facebook, Instagram ou WhatsApp, même si le logo principal est une autre version.</li>
+      <li>La <b>3G (monoligne)</b> sert de version une couleur : tampon, broderie, enseigne gravée.</li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>

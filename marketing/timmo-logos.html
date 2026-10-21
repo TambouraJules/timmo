@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pistes de logo Timmo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --clay:#BF6A3D; --clay-d:#8C4E2D; --navy:#0D1B2A; --gold:#D4AF37; --sand:#F6F1EA; --ink:#1c2430; --soft:#5d6773; --line:#e7e1d8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #faf8f5; }
+  header { background: var(--navy); color:#fff; padding: 36px 24px 30px; }
+  header .wrap, main { max-width: 1120px; margin: 0 auto; }
+  header h1 { font-family: Lato, Inter, sans-serif; font-weight: 900; margin: 0 0 8px; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: -.5px; }
+  header p { margin: 0; color: #c7d0da; max-width: 70ch; line-height: 1.5; }
+  main { padding: 28px 16px 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius: 16px; overflow: hidden; display:flex; flex-direction:column; }
+  .card.reco { border: 2px solid var(--clay); }
+  .stage { background: var(--sand); padding: 26px 20px 20px; display:flex; align-items:center; justify-content:center; gap: 22px; }
+  .stage svg.mark { width: 104px; height: 104px; }
+  .lock { display:flex; align-items:center; gap: 10px; }
+  .lock svg { width: 40px; height: 40px; }
+  .lw { display:flex; flex-direction:column; line-height:1; }
+  .base { white-space: nowrap; font-size: 9.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--clay); margin-top: 3px; padding-left: 2px; }
+  .word { font-family: Lato, Inter, sans-serif; font-weight: 900; font-size: 30px; letter-spacing: -1px; color: var(--navy); }
+  .variants { display:flex; align-items:center; gap: 14px; padding: 14px 20px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .variants .dark { background: var(--navy); border-radius: 10px; padding: 8px 12px; display:flex; align-items:center; gap: 8px; }
+  .variants .dark .word { color:#fff; font-size: 20px; }
+  .variants .dark svg { width: 26px; height: 26px; }
+  .fav { display:flex; align-items:flex-end; gap: 8px; margin-left: auto; color: var(--soft); font-size: .7rem; }
+  .fav span { display:flex; flex-direction:column; align-items:center; gap: 3px; }
+  .body { padding: 14px 20px 18px; }
+  .body h3 { margin: 0 0 4px; font-family: Lato, Inter, sans-serif; font-size: 1.15rem; }
+  .tag { display:inline-block; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding: 3px 9px; border-radius: 99px; background: var(--clay); color:#fff; margin-left: 6px; vertical-align: 2px; }
+  .body p { margin: 4px 0 8px; color: var(--soft); font-size: .9rem; line-height: 1.5; }
+  .pc { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .82rem; }
+  .pc b { display:block; font-size:.72rem; text-transform: uppercase; letter-spacing:.05em; margin-bottom: 2px; }
+  .pc .p b { color:#2f6b47; } .pc .c b { color: var(--clay-d); }
+  .notes { margin-top: 30px; background:#fff; border:1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
+  .notes h2 { margin: 0 0 8px; font-family: Lato, Inter, sans-serif; font-size: 1.2rem; }
+  .notes li { margin-bottom: 6px; color: var(--soft); line-height: 1.5; }
+  @media (max-width: 480px) { .stage { flex-direction: column; } .fav { margin-left: 0; } .variants { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+
+<!-- Symboles réutilisables -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- 0 · logo actuel -->
+    <symbol id="s0" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#BF6A3D"/>
+      <path d="M50 21 L79 46 L79 79 L58 79 L58 57 L42 57 L42 79 L21 79 L21 46 Z" fill="#fff"/>
+    </symbol>
+    <!-- 1 · Baobab -->
+    <symbol id="s1" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#BF6A3D"/>
+      <path d="M20 47 L50 21 L80 47" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M44.5 80 L55.5 80 L53.2 63 C57 56 63 52.5 71 51.5 L70 46.5 C62.5 47.2 57 50.5 53 55 L51.6 41 L48.4 41 L47 55 C43 50.5 37.5 47.2 30 46.5 L29 51.5 C37 52.5 43 56 46.8 63 Z" fill="#fff"/>
+      <ellipse cx="50" cy="83" rx="17" ry="2.6" fill="#fff" opacity=".55"/>
+    </symbol>
+    <!-- 2 · t-toit -->
+    <symbol id="s2" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0D1B2A"/>
+      <path d="M50 19 L50 66 Q50 80 64 80 L68 80" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M24 56 L50 35 L76 56" fill="none" stroke="#BF6A3D" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- 3 · Soleil sur l'Atlantique -->
+    <symbol id="s3" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0D1B2A"/>
+      <path d="M33 63 A17 17 0 0 1 67 63 Z" fill="#D4AF37"/>
+      <path d="M18 45 L50 19 L82 45" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 71 Q27.5 66 35 71 T50 71 T65 71 T80 71" fill="none" stroke="#BF6A3D" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M28 81 Q35.5 76 43 81 T58 81 T73 81" fill="none" stroke="#BF6A3D" stroke-width="5.5" stroke-linecap="round" opacity=".7"/>
+    </symbol>
+    <!-- 4 · Porte ouverte (évolution du logo actuel) -->
+    <symbol id="s4" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#BF6A3D"/>
+      <path d="M50 20 L80 45 L80 80 L20 80 L20 45 Z" fill="#fff"/>
+      <path d="M41 80 L41 58 Q41 53 46 53 L54 53 Q59 53 59 58 L59 80 Z" fill="#BF6A3D"/>
+      <path d="M59 80 L59 53 L66 57 L66 77 Z" fill="#D4AF37"/>
+      <circle cx="50" cy="40" r="4.2" fill="#BF6A3D"/>
+    </symbol>
+    <!-- 5 · Repère maison (carte) -->
+    <symbol id="s5" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#F6F1EA"/>
+      <path d="M50 88 C50 88 22 60 22 41 A28 28 0 0 1 78 41 C78 60 50 88 50 88 Z" fill="#BF6A3D"/>
+      <path d="M36 50 L36 40 L50 28 L64 40 L64 50 Z" fill="#fff"/>
+      <rect x="46" y="42" width="8" height="8" rx="1.5" fill="#BF6A3D"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header>
+  <div class="wrap">
+    <h1>Pistes de logo — Timmo, Teranga Immobilier</h1>
+    <p>« Timmo », contraction de <b>T</b>eranga <b>Immo</b>bilier : la teranga (l'hospitalité sénégalaise) au cœur de l'immobilier. Cinq propositions originales à côté du logo actuel, avec les mêmes couleurs (terre cuite, bleu nuit, or). Chacune est montrée en grand, en icône d'application sur fond sombre et en favicon 32 px et 16 px, la taille où un logo se joue vraiment.</p>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <!-- Actuel -->
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#s0"/></svg>
+        <div class="lock"><svg><use href="#s0"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#s0"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#s0"/></svg>32</span><span><svg width="16" height="16"><use href="#s0"/></svg>16</span></div></div>
+      <div class="body"><h3>0 · Logo actuel</h3>
+        <p>Maison blanche pleine dans un carré terre cuite.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Lisible, chaleureux, déjà en place partout.</div>
+        <div class="c"><b>Limites</b>Très générique : des centaines d'applis immobilières ont la même maison. Rien ne dit « Sénégal ».</div></div></div>
+    </section>
+
+    <!-- 1 Baobab -->
+    <section class="card reco">
+      <div class="stage"><svg class="mark"><use href="#s1"/></svg>
+        <div class="lock"><svg><use href="#s1"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#s1"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#s1"/></svg>32</span><span><svg width="16" height="16"><use href="#s1"/></svg>16</span></div></div>
+      <div class="body"><h3>1 · Baobab sous le toit <span class="tag">Recommandé</span></h3>
+        <p>Un toit protège un baobab : on s'installe, on s'enracine. Le baobab est l'arbre emblème du Sénégal.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Identité sénégalaise immédiate, très mémorable, parle à la diaspora. Reste lisible en petit.</div>
+        <div class="c"><b>Limites</b>Le baobab est aussi utilisé par d'autres marques locales : à vérifier auprès de l'OAPI avant dépôt.</div></div></div>
+    </section>
+
+    <!-- 2 t-toit -->
+    <section class="card reco">
+      <div class="stage"><svg class="mark"><use href="#s2"/></svg>
+        <div class="lock"><svg><use href="#s2"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#s2"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#s2"/></svg>32</span><span><svg width="16" height="16"><use href="#s2"/></svg>16</span></div></div>
+      <div class="body"><h3>2 · Le « t » sous un toit <span class="tag">Recommandé</span></h3>
+        <p>Le « T » de Teranga, sous un toit (l'Immobilier) : tout le nom tient dans un signe. Un monogramme simple, à la manière des grandes marques tech.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Le plus net en favicon et en icône d'appli, propre à Timmo, se dessine en deux traits.</div>
+        <div class="c"><b>Limites</b>Plus sobre et moins « local » : la chaleur sénégalaise passe surtout par les couleurs.</div></div></div>
+    </section>
+
+    <!-- 3 Soleil -->
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#s3"/></svg>
+        <div class="lock"><svg><use href="#s3"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#s3"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#s3"/></svg>32</span><span><svg width="16" height="16"><use href="#s3"/></svg>16</span></div></div>
+      <div class="body"><h3>3 · Soleil sur l'Atlantique</h3>
+        <p>Un toit au-dessus d'un soleil couchant et des vagues, « entre Dakar et l'Atlantique » comme le dit la page d'accueil.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Évocateur, haut de gamme, idéal pour la location saisonnière et la diaspora.</div>
+        <div class="c"><b>Limites</b>Trois éléments : les vagues se perdent en 16 px. Une icône simplifiée serait nécessaire.</div></div></div>
+    </section>
+
+    <!-- 4 Porte ouverte -->
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#s4"/></svg>
+        <div class="lock"><svg><use href="#s4"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#s4"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#s4"/></svg>32</span><span><svg width="16" height="16"><use href="#s4"/></svg>16</span></div></div>
+      <div class="body"><h3>4 · Porte ouverte (évolution)</h3>
+        <p>Le logo actuel, retravaillé : la porte s'entrouvre, c'est littéralement la teranga, l'accueil, et un œil-de-bœuf rond donne du caractère.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Raconte directement la teranga. Changement en douceur : on garde la reconnaissance acquise.</div>
+        <div class="c"><b>Limites</b>Reste dans la famille « maison », donc moins unique que les pistes 1 et 2.</div></div></div>
+    </section>
+
+    <!-- 5 Repère -->
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#s5"/></svg>
+        <div class="lock"><svg><use href="#s5"/></svg><span class="lw"><span class="word">timmo</span><span class="base">Teranga Immobilier</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#s5"/></svg><span class="word">timmo</span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#s5"/></svg>32</span><span><svg width="16" height="16"><use href="#s5"/></svg>16</span></div></div>
+      <div class="body"><h3>5 · Repère sur la carte</h3>
+        <p>Un repère de carte avec une maison : trouver le bon bien, au bon endroit.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Compris instantanément, rappelle la recherche sur carte de Timmo.</div>
+        <div class="c"><b>Limites</b>Le plus banal de la liste (très utilisé par les applis de livraison et d'immobilier). Déconseillé.</div></div></div>
+    </section>
+  </div>
+
+  <div class="notes">
+    <h2>Ma recommandation</h2>
+    <ul>
+      <li><b>Piste 1 (Baobab)</b> si tu veux une marque clairement sénégalaise, qui parle aussi à la diaspora.</li>
+      <li><b>Piste 2 (« t » sous un toit)</b> si tu préfères une marque moderne et nette qui vieillira bien, de type start-up.</li>
+      <li>Dans tous les cas, garder « timmo » comme nom court et « Teranga Immobilier » en signature sous le logo (comme ci-dessus) : on comprend le nom et on retient la promesse.</li>
+      <li>Les deux peuvent se combiner : le monogramme « t » pour l'icône d'application et le favicon, le baobab sur les supports imprimés.</li>
+      <li>Ce sont des pistes de travail : avant un dépôt de marque à l'OAPI, fais affiner la piste choisie par un graphiste et vérifie qu'aucun logo proche n'est déjà déposé.</li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>

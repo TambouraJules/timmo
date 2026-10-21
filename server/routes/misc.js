@@ -128,7 +128,8 @@ async function tiSendOtpEmail(user, code) {
     to: user.email,
     subject: `${code} — votre code de connexion Timmo`,
     html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
-      <h2 style="color:#C47A4A;">Code de connexion</h2>
+        <p style="margin:0 0 18px;"><img src="https://www.timmo.sn/assets/brand/timmo-logo-email.png" alt="Timmo — Teranga Immobilière" width="200" height="63" style="display:block;border:0;"></p>
+      <h2 style="color:#BF6A3D;">Code de connexion</h2>
       <p>Bonjour ${user.name || ""},</p>
       <p>Voici votre code pour terminer la connexion à votre espace Timmo :</p>
       <p style="font-size:2rem;font-weight:800;letter-spacing:8px;margin:20px 0;color:#0D1B2A;">${code}</p>
@@ -253,10 +254,11 @@ router.post("/auth/forgot-password", async (req, res) => {
       to: user.email,
       subject: "Réinitialisez votre mot de passe Timmo",
       html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
-        <h2 style="color:#C47A4A;">Réinitialisation de mot de passe</h2>
+        <p style="margin:0 0 18px;"><img src="https://www.timmo.sn/assets/brand/timmo-logo-email.png" alt="Timmo — Teranga Immobilière" width="200" height="63" style="display:block;border:0;"></p>
+        <h2 style="color:#BF6A3D;">Réinitialisation de mot de passe</h2>
         <p>Bonjour ${user.name || ""},</p>
         <p>Nous avons reçu une demande de réinitialisation du mot de passe de votre compte Timmo. Cliquez sur le bouton ci-dessous pour en choisir un nouveau :</p>
-        <p style="margin:24px 0;"><a href="${link}" style="background:#C47A4A;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;display:inline-block;">Réinitialiser mon mot de passe</a></p>
+        <p style="margin:24px 0;"><a href="${link}" style="background:#BF6A3D;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;display:inline-block;">Réinitialiser mon mot de passe</a></p>
         <p style="font-size:.85rem;">Ce lien est valable <strong>30 minutes</strong> et ne peut servir qu'une seule fois.</p>
         <p style="font-size:.8rem;color:#8a8a8a;word-break:break-all;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>${link}</p>
         <p style="color:#8a8a8a;font-size:.85rem;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe actuel reste inchangé.</p>

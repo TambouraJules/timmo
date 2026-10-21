@@ -414,7 +414,7 @@ body { padding-top: var(--header-h, 68px); }
 }
 .ti-footer h4 { display: flex; align-items: center; gap: 8px; color: #fff; font-family: var(--font-body); font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; }
 .ti-footer-h4-icon { width: 18px; height: 18px; display: inline-block; vertical-align: -4px; margin-right: 6px; flex-shrink: 0; }
-.ti-footer-brand-logo { height: 34px; width: auto; display: block; }
+.ti-footer-brand-logo { height: 46px; width: auto; display: block; }
 .ti-footer a { display: block; padding: 4px 0; color: rgba(255,255,255,.72); font-size: .9rem; transition: color .2s var(--ease), transform .2s var(--ease); }
 .ti-footer a:hover { color: var(--gold); transform: translateX(2px); }
 

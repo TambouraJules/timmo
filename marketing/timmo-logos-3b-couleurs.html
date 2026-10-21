@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palettes logo 3B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --clay:#BF6A3D; --clay-d:#8C4E2D; --navy:#0D1B2A; --gold:#D4AF37; --sand:#F6F1EA; --ink:#1c2430; --soft:#5d6773; --line:#e7e1d8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #faf8f5; }
+  header { background: var(--navy); color:#fff; padding: 36px 24px 30px; }
+  header .wrap, main { max-width: 1120px; margin: 0 auto; }
+  header h1 { font-family: Lato, Inter, sans-serif; font-weight: 900; margin: 0 0 8px; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: -.5px; }
+  header p { margin: 0; color: #c7d0da; max-width: 70ch; line-height: 1.5; }
+  main { padding: 28px 16px 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius: 16px; overflow: hidden; display:flex; flex-direction:column; }
+  .card.reco { border: 2px solid var(--clay); }
+  .stage { background: var(--sand); padding: 26px 20px 20px; display:flex; align-items:center; justify-content:center; gap: 22px; }
+  .stage svg.mark { width: 104px; height: 104px; }
+  .lock { display:flex; align-items:center; gap: 10px; }
+  .lock svg { width: 40px; height: 40px; }
+  .lw { display:flex; flex-direction:column; line-height:1; }
+  .base { white-space: nowrap; font-size: 9.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--clay); margin-top: 3px; padding-left: 2px; }
+  .word { font-family: Lato, Inter, sans-serif; font-weight: 900; font-size: 30px; letter-spacing: -1px; color: var(--navy); }
+  .variants { display:flex; align-items:center; gap: 14px; padding: 14px 20px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .variants .dark { background: var(--navy); border-radius: 10px; padding: 8px 12px; display:flex; align-items:center; gap: 8px; }
+  .variants .dark .word { color:#fff; font-size: 20px; }
+  .variants .dark svg { width: 26px; height: 26px; }
+  .fav { display:flex; align-items:flex-end; gap: 8px; margin-left: auto; color: var(--soft); font-size: .7rem; }
+  .fav span { display:flex; flex-direction:column; align-items:center; gap: 3px; }
+  .body { padding: 14px 20px 18px; }
+  .body h3 { margin: 0 0 4px; font-family: Lato, Inter, sans-serif; font-size: 1.15rem; }
+  .tag { display:inline-block; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding: 3px 9px; border-radius: 99px; background: var(--clay); color:#fff; margin-left: 6px; vertical-align: 2px; }
+  .body p { margin: 4px 0 8px; color: var(--soft); font-size: .9rem; line-height: 1.5; }
+  .pc { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .82rem; }
+  .pc b { display:block; font-size:.72rem; text-transform: uppercase; letter-spacing:.05em; margin-bottom: 2px; }
+  .pc .p b { color:#2f6b47; } .pc .c b { color: var(--clay-d); }
+  .notes { margin-top: 30px; background:#fff; border:1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
+  .notes h2 { margin: 0 0 8px; font-family: Lato, Inter, sans-serif; font-size: 1.2rem; }
+  .notes li { margin-bottom: 6px; color: var(--soft); line-height: 1.5; }
+  @media (max-width: 480px) { .stage { flex-direction: column; } .fav { margin-left: 0; } .variants { flex-wrap: wrap; } }
+  .sw { display:flex; gap:6px; padding: 0 20px 4px; flex-wrap: wrap; }
+  .sw span { display:flex; align-items:center; gap:5px; font: 600 .7rem ui-monospace, Menlo, monospace; color: var(--soft); }
+  .sw i { width:16px; height:16px; border-radius:4px; border:1px solid rgba(0,0,0,.12); display:inline-block; }
+  .stage.on-dark { background: #0D1B2A; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+    <symbol id="pn" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0D1B2A"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#D4AF37"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#BF6A3D" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="pt" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#BF6A3D"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#F3C64B"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#0D1B2A" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="po" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#0E4D64"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#F2B544"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#F3E2C7" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="ps" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#F6F1EA" stroke="#E2D6C6" stroke-width="2"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#E0912F"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#0D1B2A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#0E7C86" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="pc" viewBox="0 0 100 100"><defs><linearGradient id="gc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9A04F"/><stop offset="1" stop-color="#BF6A3D"/></linearGradient></defs>
+      <rect width="100" height="100" rx="24" fill="url(#gc)"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#FCE3A4"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#0D1B2A" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="pi" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#1E2350"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#D4AF37"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#D4AF37" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="pv" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#00853F"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#FDEF42"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="pm" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="24" fill="#111111"/>
+      <path d="M29 66 A21 21 0 0 1 71 66 Z" fill="#FFFFFF"/>
+      <path d="M17 47 L50 20 L83 47" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 77 Q26 70 34 77 T50 77 T66 77 T82 77" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+</defs></svg>
+<header><div class="wrap">
+  <h1>Logo 3B — 8 palettes de couleurs</h1>
+  <p>Même dessin (toit, soleil sur l'Atlantique, une vague), avec la signature « Teranga Immobilière ». Chaque palette est montrée en grand, sur fond sombre et en favicon, avec ses codes couleur.</p>
+</div></header>
+<main>
+  <div class="grid">
+    <section class="card reco">
+      <div class="stage"><svg class="mark"><use href="#pn"/></svg>
+        <div class="lock"><svg><use href="#pn"/></svg><span class="lw"><span class="word" style="color:#0D1B2A">timmo</span><span class="base" style="color:#BF6A3D">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#pn"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#pn"/></svg>32</span><span><svg width="16" height="16"><use href="#pn"/></svg>16</span></div></div>
+      <div class="body"><h3>Nuit atlantique <span class="tag">Recommandé</span></h3>
+        <p>La version de départ : bleu nuit, toit blanc, soleil doré, vague terre cuite.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Élégante, premium, contraste maximal en petit. Colle aux couleurs actuelles du site.</div><div class="c"><b>Limites</b>Un peu sérieuse ; le bleu nuit domine.</div></div></div>
+      <div class="sw"><span><i style="background:#0D1B2A"></i>#0D1B2A</span><span><i style="background:#D4AF37"></i>#D4AF37</span><span><i style="background:#BF6A3D"></i>#BF6A3D</span></div>
+    </section>
+    <section class="card reco">
+      <div class="stage"><svg class="mark"><use href="#pt"/></svg>
+        <div class="lock"><svg><use href="#pt"/></svg><span class="lw"><span class="word" style="color:#0D1B2A">timmo</span><span class="base" style="color:#BF6A3D">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#pt"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#pt"/></svg>32</span><span><svg width="16" height="16"><use href="#pt"/></svg>16</span></div></div>
+      <div class="body"><h3>Terre cuite <span class="tag">Recommandé</span></h3>
+        <p>Fond terre cuite, soleil jaune, vague bleu nuit.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>La plus chaleureuse, et la plus « Teranga ». Même couleur que les boutons du site.</div><div class="c"><b>Limites</b>Soleil et fond proches en teinte : le soleil ressort moins.</div></div></div>
+      <div class="sw"><span><i style="background:#BF6A3D"></i>#BF6A3D</span><span><i style="background:#F3C64B"></i>#F3C64B</span><span><i style="background:#0D1B2A"></i>#0D1B2A</span></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#po"/></svg>
+        <div class="lock"><svg><use href="#po"/></svg><span class="lw"><span class="word" style="color:#0E4D64">timmo</span><span class="base" style="color:#C9822F">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#po"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#po"/></svg>32</span><span><svg width="16" height="16"><use href="#po"/></svg>16</span></div></div>
+      <div class="body"><h3>Océan</h3>
+        <p>Bleu canard de l'Atlantique, soleil ambré, vague couleur sable.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Fraîche, évoque la mer et les Almadies, se distingue des concurrents orangés.</div><div class="c"><b>Limites</b>Il faudrait ajuster la couleur des boutons du site pour rester cohérent.</div></div></div>
+      <div class="sw"><span><i style="background:#0E4D64"></i>#0E4D64</span><span><i style="background:#F2B544"></i>#F2B544</span><span><i style="background:#F3E2C7"></i>#F3E2C7</span></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#ps"/></svg>
+        <div class="lock"><svg><use href="#ps"/></svg><span class="lw"><span class="word" style="color:#0D1B2A">timmo</span><span class="base" style="color:#E0912F">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#ps"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#ps"/></svg>32</span><span><svg width="16" height="16"><use href="#ps"/></svg>16</span></div></div>
+      <div class="body"><h3>Sable</h3>
+        <p>Fond sable clair, toit bleu nuit, soleil orangé, vague turquoise.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Lumineuse et douce, idéale sur fond blanc (papier à en-tête, fiche PDF).</div><div class="c"><b>Limites</b>Une icône claire se voit moins sur un écran d'accueil de téléphone clair.</div></div></div>
+      <div class="sw"><span><i style="background:#F6F1EA"></i>#F6F1EA</span><span><i style="background:#E0912F"></i>#E0912F</span><span><i style="background:#0E7C86"></i>#0E7C86</span></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#pc"/></svg>
+        <div class="lock"><svg><use href="#pc"/></svg><span class="lw"><span class="word" style="color:#8C4E2D">timmo</span><span class="base" style="color:#BF6A3D">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#pc"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#pc"/></svg>32</span><span><svg width="16" height="16"><use href="#pc"/></svg>16</span></div></div>
+      <div class="body"><h3>Coucher de soleil</h3>
+        <p>Fond en dégradé orangé, soleil crème, vague bleu nuit.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Très vivante, effet « carte postale » ; superbe en icône d'application.</div><div class="c"><b>Limites</b>Le dégradé est plus délicat à imprimer (prévoir une version unie).</div></div></div>
+      <div class="sw"><span><i style="background:#E9A04F"></i>#E9A04F</span><span><i style="background:#BF6A3D"></i>#BF6A3D</span><span><i style="background:#FCE3A4"></i>#FCE3A4</span><span><i style="background:#0D1B2A"></i>#0D1B2A</span></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#pi"/></svg>
+        <div class="lock"><svg><use href="#pi"/></svg><span class="lw"><span class="word" style="color:#1E2350">timmo</span><span class="base" style="color:#B8952B">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#pi"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#pi"/></svg>32</span><span><svg width="16" height="16"><use href="#pi"/></svg>16</span></div></div>
+      <div class="body"><h3>Indigo et or</h3>
+        <p>Indigo profond, soleil et vague dorés.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Haut de gamme, rassurant : parfait pour la vente et les biens de luxe.</div><div class="c"><b>Limites</b>Moins chaleureuse ; peut faire « banque ».</div></div></div>
+      <div class="sw"><span><i style="background:#1E2350"></i>#1E2350</span><span><i style="background:#D4AF37"></i>#D4AF37</span><span><i style="background:#D4AF37"></i>#D4AF37</span></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#pv"/></svg>
+        <div class="lock"><svg><use href="#pv"/></svg><span class="lw"><span class="word" style="color:#00853F">timmo</span><span class="base" style="color:#00853F">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#pv"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#pv"/></svg>32</span><span><svg width="16" height="16"><use href="#pv"/></svg>16</span></div></div>
+      <div class="body"><h3>Vert Sénégal</h3>
+        <p>Vert, jaune et blanc, en clin d'œil au drapeau.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Fierté nationale immédiatement reconnaissable, parle beaucoup à la diaspora.</div><div class="c"><b>Limites</b>Peut faire « officiel » ou institutionnel ; à éviter si tu veux un ton neutre.</div></div></div>
+      <div class="sw"><span><i style="background:#00853F"></i>#00853F</span><span><i style="background:#FDEF42"></i>#FDEF42</span></div>
+    </section>
+    <section class="card">
+      <div class="stage"><svg class="mark"><use href="#pm"/></svg>
+        <div class="lock"><svg><use href="#pm"/></svg><span class="lw"><span class="word" style="color:#111111">timmo</span><span class="base" style="color:#111111">Teranga Immobilière</span></span></div></div>
+      <div class="variants"><div class="dark"><svg><use href="#pm"/></svg><span class="lw"><span class="word">timmo</span><span class="base" style="color:#cfd6de;font-size:7px">Teranga Immobilière</span></span></div>
+        <div class="fav"><span><svg width="32" height="32"><use href="#pm"/></svg>32</span><span><svg width="16" height="16"><use href="#pm"/></svg>16</span></div></div>
+      <div class="body"><h3>Monochrome</h3>
+        <p>Noir et blanc pur.</p>
+        <div class="pc"><div class="p"><b>Atouts</b>Indispensable pour les tampons, fax, gravure, impression une couleur.</div><div class="c"><b>Limites</b>À garder comme version secondaire, pas comme logo principal.</div></div></div>
+      <div class="sw"><span><i style="background:#111111"></i>#111111</span></div>
+    </section>
+  </div>
+  <div class="notes">
+    <h2>Ma recommandation</h2>
+    <ul>
+      <li><b>Nuit atlantique</b> ou <b>Terre cuite</b> : ce sont les deux qui collent déjà aux couleurs du site (bleu nuit et terre cuite). Aucun autre changement de design n'est nécessaire.</li>
+      <li>Un duo efficace : <b>Terre cuite</b> pour l'icône d'application et le favicon (chaleureux, se repère vite), <b>Nuit atlantique</b> sur les fonds clairs et les documents.</li>
+      <li><b>Océan</b> si tu veux te démarquer franchement des autres plateformes immobilières, qui utilisent surtout l'orange et le rouge. Il faudrait alors passer les boutons du site en bleu canard.</li>
+      <li>Garde le <b>Monochrome</b> comme version d'appoint pour l'impression une couleur.</li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>
