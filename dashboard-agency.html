@@ -42,6 +42,7 @@
       <a data-panel="reviews" onclick="tiShowPanel('reviews')" data-i18n="dash_agency_reviews"></a>
       <a data-panel="welcomekit" onclick="tiShowPanel('welcomekit')" data-i18n="dash_welcomekit"></a>
       <div class="ti-dash-nav-section" data-i18n="nav_sec_agency"></div>
+      <a data-panel="branding" id="nav-branding" onclick="tiShowPanel('branding')" data-i18n="dash_agency_branding" style="display:none;"></a>
       <a data-panel="agents" id="nav-agents" onclick="tiShowPanel('agents')" data-i18n="dash_agency_agents" style="display:none;"></a>
       <a data-panel="audit" id="nav-audit" onclick="tiShowPanel('audit')" data-i18n="dash_agency_audit" style="display:none;"></a>
       <a data-panel="reports" onclick="tiShowPanel('reports')" data-i18n="dash_agency_reports"></a>
@@ -306,6 +307,14 @@
       </div>
       <div id="welcomekit-mount"></div>
       <button type="button" class="btn btn-outline" style="margin-top:16px;" onclick="tiOpenWelcomeKitModal()" data-i18n="welcomekit_add"></button>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-branding">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="dash_agency_branding"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="branding_sub"></p>
+      </div>
+      <div id="branding-mount"></div>
     </section>
 
     <section class="ti-dash-panel" id="panel-messages">

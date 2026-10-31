@@ -343,7 +343,7 @@ async function tiHandleSubsiteLogoUpload(input, agencyId) {
   input.value = "";
   if (!file || !file.type.startsWith("image/")) return;
   try {
-    const dataUrl = await tiCompressImageFile(file, 400, 0.85);
+    const dataUrl = await tiCompressLogoFile(file);
     const agency = await TiDB.updateAgencyLogo(agencyId, dataUrl);
     tiToast(t("save_changes") + " ✓");
     tiLogAdminAction("agency_logo_updated", "agency", agencyId, agency.name);

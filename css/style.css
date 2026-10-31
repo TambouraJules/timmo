@@ -1844,6 +1844,26 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
 .ti-alert-results .btn { white-space: nowrap; }
 @media (max-width: 560px) { .ti-alert-results { flex-wrap: wrap; align-items: flex-start; } .ti-alert-results .btn { width: 100%; justify-content: center; } }
 #f-verified-only { width: auto; flex-shrink: 0; margin: 0; }
+/* Espace Pro — Mon logo */
+.ti-branding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 860px) { .ti-branding-grid { grid-template-columns: 1fr; } }
+.ti-branding-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 20px; }
+.ti-branding-card h4 { margin: 0 0 14px; font-size: 1rem; }
+.ti-branding-logo-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ti-branding-logo-box { width: 96px; height: 96px; border-radius: 16px; border: 1px dashed var(--line); background: repeating-conic-gradient(#f1ede6 0% 25%, #fff 0% 50%) 50% / 16px 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ti-branding-logo-box .ti-brand-logo-custom, .ti-branding-logo-box .ti-brand-logo-square { width: 72px; height: 72px; max-width: 72px; object-fit: contain; border-radius: 12px; }
+.ti-branding-logo-box .ti-brand-monogram { width: 72px; height: 72px; font-size: 1.6rem; border-radius: 16px; }
+.ti-branding-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ti-branding-actions .btn svg { width: 16px; height: 16px; }
+.ti-branding-tips { margin: 16px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: .82rem; line-height: 1.55; }
+.ti-branding-preview { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.ti-branding-preview-bar { background: var(--deep); color: #fff; font-size: .72rem; text-align: center; padding: 6px 10px; }
+.ti-branding-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; background: #F7F2E7; }
+.ti-branding-preview-head .ti-brand { font-size: 1.05rem; min-width: 0; }
+.ti-branding-preview-nav { display: flex; gap: 6px; }
+.ti-branding-preview-nav i { width: 34px; height: 7px; border-radius: 4px; background: #ddd5c6; }
+.ti-branding-where { font-size: .84rem; color: var(--ink-soft); margin: 12px 0 0; }
+.ti-branding-where a { color: var(--clay); font-weight: 700; }
 .ti-alert-modal { max-width: 460px; text-align: left; }
 .ti-alert-bell { width: 54px; height: 54px; border-radius: 50%; background: var(--gold-soft); display: grid; place-items: center; font-size: 1.6rem; margin-bottom: 10px; }
 .ti-alert-modal h3 { margin: 0 0 6px; }

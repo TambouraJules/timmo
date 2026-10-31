@@ -99,7 +99,8 @@ function tiAgencyInitials(a) {
 function tiAgencyLogoHtml(a) {
   const alt = tiEscapeHtml(a.name || "");
   if (a.logoDataUrl) return `<img src="${a.logoDataUrl}" alt="${alt}" class="ti-brand-logo-custom">`;
-  if (typeof TI_BACKEND !== "undefined" && TI_BACKEND === "local" && TI_DEMO_AGENCY_LOGOS[a.id]) return `<img src="${TI_DEMO_AGENCY_LOGOS[a.id]}" alt="${alt}" class="ti-brand-logo-custom ti-brand-logo-square">`;
+  // Démo : logo fictif tant que l'agence n'a ni envoyé ni retiré de logo ("" = retiré).
+  if (a.logoDataUrl == null && typeof TI_BACKEND !== "undefined" && TI_BACKEND === "local" && TI_DEMO_AGENCY_LOGOS[a.id]) return `<img src="${TI_DEMO_AGENCY_LOGOS[a.id]}" alt="${alt}" class="ti-brand-logo-custom ti-brand-logo-square">`;
   return `<span class="ti-brand-monogram" aria-hidden="true">${tiEscapeHtml(tiAgencyInitials(a))}</span>`;
 }
 
@@ -684,6 +685,7 @@ const TI_PANEL_ICONS = {
   clients: "users", agents: "users", users: "users", agencies: "buildingCheck",
   announcements: "bell", broadcasts: "bell",
   welcomekit: "sparkle",
+  branding: "buildingCheck",
   messages: "mail",
   reviews: "star", moderation: "shield",
   audit: "clock",
@@ -1258,6 +1260,38 @@ function tiCompressImageFile(file, maxDim = 1280, quality = 0.75) {
         canvas.width = width; canvas.height = height;
         canvas.getContext("2d").drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => reject(new Error("invalid_image"));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Prépare un logo d'agence : redimensionné à 256 px max, en PNG pour garder
+ *  la transparence ; si le fichier reste trop lourd, JPEG sur fond blanc. */
+function tiCompressLogoFile(file, maxDim = 256) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\//.test(file.type)) return reject(new Error("invalid_type"));
+    if (file.size > 5 * 1024 * 1024) return reject(new Error("too_large"));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth || img.width || maxDim, h = img.naturalHeight || img.height || maxDim;
+        const k = Math.min(1, maxDim / Math.max(w, h));
+        w = Math.max(1, Math.round(w * k)); h = Math.max(1, Math.round(h * k));
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        let url = canvas.toDataURL("image/png");
+        if (url.length > 180000) {
+          ctx.globalCompositeOperation = "destination-over"; ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
+          url = canvas.toDataURL("image/jpeg", 0.88);
+        }
+        resolve(url);
       };
       img.onerror = () => reject(new Error("invalid_image"));
       img.src = reader.result;

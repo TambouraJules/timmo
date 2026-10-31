@@ -45,6 +45,8 @@ async function tiRefreshPanel(panelName) {
     await tiRenderAgencyMessages();
   } else if (panelName === "favorites") {
     await tiRenderFavorites();
+  } else if (panelName === "branding") {
+    if (isSupervisor) await tiRenderBranding();
   } else if (panelName === "subscription") {
     if (isSupervisor) await tiRenderSubscription();
   }
@@ -2226,6 +2228,8 @@ async function tiInitAgencyDashboard() {
   const isSupervisor = TI_SESSION.agentRole === "supervisor";
   const navAgents = document.getElementById("nav-agents");
   if (navAgents) navAgents.style.display = isSupervisor ? "" : "none";
+  const navBranding = document.getElementById("nav-branding");
+  if (navBranding) navBranding.style.display = isSupervisor ? "" : "none";
   const navAudit = document.getElementById("nav-audit");
   if (navAudit) navAudit.style.display = isSupervisor ? "" : "none";
   const navSubscription = document.getElementById("nav-subscription");
@@ -2236,11 +2240,11 @@ async function tiInitAgencyDashboard() {
   tiPopulateAssignAgentSelect();
   await new Promise(r => setTimeout(r, 350));
   const tasks = [tiRenderStats(), tiRenderAgencyListings(), tiRenderAgencyBookings(), tiRenderAgencyMessages(), tiRenderAgencyReviews(), tiRenderAnnouncementsPage(), tiRenderWelcomeKit()];
-  if (isSupervisor) { tasks.push(tiRenderAgents()); tasks.push(tiRenderAudit()); tasks.push(tiRenderSubscription()); }
+  if (isSupervisor) { tasks.push(tiRenderBranding()); tasks.push(tiRenderAgents()); tasks.push(tiRenderAudit()); tasks.push(tiRenderSubscription()); }
   await Promise.all(tasks);
   await tiRenderClientsPipeline();
   await tiRenderFavorites();
-  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "announcements", "welcomekit", "messages", "reviews", "agents", "audit", "reports", "subscription", "favorites"]);
+  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "announcements", "welcomekit", "branding", "messages", "reviews", "agents", "audit", "reports", "subscription", "favorites"]);
   await tiHandleSubscriptionReturn();
 }
 if (TI_SESSION) tiInitAgencyDashboard();
@@ -2262,4 +2266,80 @@ async function tiSocialKitById(id) {
 async function tiQrPosterById(id) {
   const p = await TiDB.getProperty(id);
   if (p) tiOpenQrPoster(p);
+}
+
+
+/* ============================================================
+   Mon logo — le responsable de l'agence envoie lui-même son logo.
+   Il s'affiche dans l'en-tête du site dédié de l'agence
+   (listings.html?agency=...). Réservé au responsable (superviseur).
+   ============================================================ */
+async function tiRenderBranding() {
+  const mount = document.getElementById("branding-mount");
+  if (!mount || TI_SESSION.agentRole !== "supervisor") return;
+  const agency = await TiDB.getAgency(TI_SESSION.agencyId);
+  if (!agency) { mount.innerHTML = ""; return; }
+  const hasLogo = !!agency.logoDataUrl;
+  const siteUrl = agency.subsiteEnabled && agency.subsiteSlug ? `listings.html?agency=${encodeURIComponent(agency.subsiteSlug)}` : "";
+  mount.innerHTML = `
+    <div class="ti-branding-grid">
+      <div class="ti-branding-card">
+        <h4>${t("branding_logo_title")}</h4>
+        <div class="ti-branding-logo-row">
+          <div class="ti-branding-logo-box">${tiAgencyLogoHtml(agency)}</div>
+          <div class="ti-branding-actions">
+            <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('branding-logo-input').click()">${TI_ICONS.upload} ${t(hasLogo ? "branding_change" : "branding_upload")}</button>
+            ${hasLogo ? `<button type="button" class="btn btn-outline btn-sm" onclick="tiRemoveAgencyLogo()">${t("branding_remove")}</button>` : ""}
+            <input type="file" id="branding-logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onchange="tiUploadAgencyLogo(this)">
+          </div>
+        </div>
+        <ul class="ti-branding-tips">
+          <li>${t("branding_tip_format")}</li>
+          <li>${t("branding_tip_square")}</li>
+          <li>${t("branding_tip_rights")}</li>
+        </ul>
+        <div id="branding-msg"></div>
+      </div>
+      <div class="ti-branding-card">
+        <h4>${t("branding_preview_title")}</h4>
+        <div class="ti-branding-preview">
+          <div class="ti-branding-preview-bar">${t("subsite_banner_text")} <strong>${tiEscapeHtml(agency.name || "")}</strong></div>
+          <div class="ti-branding-preview-head">
+            <span class="ti-brand">${tiAgencyLogoHtml(agency)}<span class="ti-brand-name">${tiEscapeHtml(agency.name || "")}</span></span>
+            <span class="ti-branding-preview-nav"><i></i><i></i><i></i></span>
+          </div>
+        </div>
+        <p class="ti-branding-where">${siteUrl
+          ? `${t("branding_where_on")} <a href="${siteUrl}" target="_blank" rel="noopener">${t("branding_open_site")} →</a>`
+          : t("branding_where_off")}</p>
+      </div>
+    </div>`;
+}
+
+async function tiUploadAgencyLogo(input) {
+  const file = input.files && input.files[0];
+  input.value = "";
+  if (!file) return;
+  const msg = document.getElementById("branding-msg");
+  try {
+    const dataUrl = await tiCompressLogoFile(file);
+    await TiDB.updateAgencyLogo(TI_SESSION.agencyId, dataUrl);
+    tiToast(t("branding_saved"));
+    await tiRenderBranding();
+  } catch (err) {
+    const key = err && err.message === "too_large" ? "branding_err_size" : (err && (err.message === "invalid_type" || err.message === "invalid_image") ? "branding_err_type" : "branding_err_generic");
+    if (msg) msg.innerHTML = `<div class="ti-error">${t(key)}</div>`;
+  }
+}
+
+async function tiRemoveAgencyLogo() {
+  if (!confirm(t("branding_remove_confirm"))) return;
+  try {
+    await TiDB.updateAgencyLogo(TI_SESSION.agencyId, "");
+    tiToast(t("branding_removed"));
+    await tiRenderBranding();
+  } catch (err) {
+    const msg = document.getElementById("branding-msg");
+    if (msg) msg.innerHTML = `<div class="ti-error">${t("branding_err_generic")}</div>`;
+  }
 }
