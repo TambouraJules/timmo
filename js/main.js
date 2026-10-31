@@ -13,17 +13,33 @@ window.addEventListener("error", (e) => tiShowCrashBanner(e.error || e.message))
 window.addEventListener("unhandledrejection", (e) => tiShowCrashBanner(e.reason));
 
 let tiCrashBannerShown = false;
+let tiNetworkNoticeShown = false;
+/** Erreur réseau (API momentanément injoignable : redéploiement Render, serveur
+ *  en veille, connexion mobile coupée…) : ce n'est pas un bug de la page. */
+function tiIsNetworkError(err) {
+  const msg = String((err && (err.message || err)) || "");
+  return /Failed to fetch|NetworkError|Load failed|network|ERR_|timeout|aborted/i.test(msg);
+}
 function tiShowCrashBanner(err) {
+  if (tiIsNetworkError(err)) {
+    console.warn("Timmo — serveur momentanément injoignable:", err);
+    if (!tiNetworkNoticeShown && typeof tiToast === "function") {
+      tiNetworkNoticeShown = true;
+      tiToast("Connexion au serveur lente ou interrompue — réessayez dans un instant.");
+    }
+    return;
+  }
   if (tiCrashBannerShown) return;
   tiCrashBannerShown = true;
   console.error("Timmo — erreur inattendue:", err);
+  const isDemo = typeof TI_BACKEND !== "undefined" && TI_BACKEND === "local";
   const bar = document.createElement("div");
   bar.className = "ti-crash-banner";
   bar.innerHTML = `
-    <span>Un problème d'affichage est survenu. Rechargez la page — si cela persiste, réinitialisez les données locales de démonstration.</span>
+    <span>${isDemo ? "Un problème d'affichage est survenu. Rechargez la page — si cela persiste, réinitialisez les données de démonstration." : "Un problème d'affichage est survenu. Rechargez la page."}</span>
     <span class="ti-crash-actions">
       <button onclick="location.reload()">Recharger</button>
-      <button onclick="localStorage.clear(); location.reload()">Réinitialiser les données</button>
+      ${isDemo ? `<button onclick="localStorage.clear(); location.reload()">Réinitialiser les données</button>` : ""}
       <button onclick="this.closest('.ti-crash-banner').remove()" aria-label="Fermer">&times;</button>
     </span>`;
   document.body.prepend(bar);
