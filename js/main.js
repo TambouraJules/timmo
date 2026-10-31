@@ -998,7 +998,7 @@ function tiApplyFavoritesFilter() {
 async function tiHandleFavClickRemovable(evt, propertyId, btn) {
   evt.preventDefault();
   const s = tiGetSession();
-  if (!s) { window.location.href = "login.html"; return; }
+  if (!s) { tiGoToLogin(); return; }
   const nowFav = await TiDB.toggleFavorite(s.id, propertyId);
   if (nowFav) {
     btn.classList.add("active");
@@ -1088,7 +1088,7 @@ function tiPropertyCardHtml(p, favIds = [], removeOnUnfav = false) {
 async function tiHandleFavClick(evt, propertyId, btn) {
   evt.preventDefault();
   const s = tiGetSession();
-  if (!s) { window.location.href = "login.html"; return; }
+  if (!s) { tiGoToLogin(); return; }
   const nowFav = await TiDB.toggleFavorite(s.id, propertyId);
   btn.classList.toggle("active", nowFav);
   btn.innerHTML = nowFav ? TI_ICONS.heartFilled : TI_ICONS.heart;

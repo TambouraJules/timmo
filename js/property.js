@@ -242,7 +242,7 @@ document.addEventListener("keydown", (e) => {
 /* ---------- Favori ---------- */
 async function tiTogglePropertyFav() {
   const s = tiGetSession();
-  if (!s) { window.location.href = "login.html"; return; }
+  if (!s) { tiGoToLogin(); return; }
   const nowFav = await TiDB.toggleFavorite(s.id, TI_PROPERTY.id);
   const btn = document.getElementById("ti-fav-btn");
   btn.classList.toggle("active", nowFav);
@@ -471,7 +471,7 @@ async function tiSubmitBooking(e) {
 /* ---------- Message ---------- */
 function tiOpenMessageModal() {
   const s = tiGetSession();
-  if (!s) { window.location.href = "login.html"; return; }
+  if (!s) { tiGoToLogin(); return; }
   tiOpenModal("modal-message");
 }
 async function tiSubmitMessage(e) {
@@ -496,7 +496,7 @@ async function tiSubmitMessage(e) {
 let TI_SELECTED_RATING = 5;
 function tiOpenReviewModal() {
   const s = tiGetSession();
-  if (!s) { window.location.href = "login.html"; return; }
+  if (!s) { tiGoToLogin(); return; }
   tiRenderReviewTagsPicker();
   tiOpenModal("modal-review");
 }

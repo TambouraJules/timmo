@@ -104,12 +104,14 @@ async function tiHandleLogin(e) {
 
 function tiGoAfterLogin(user) {
   const next = new URLSearchParams(location.search).get("next");
-  const safeNext = next && /^[a-z0-9-]+\.html(\?[\w=&%-]*)?$/i.test(next) ? next : null; // jamais de redirection vers un autre site
+  const safeNext = next && /^[a-z0-9-]+\.html(\?[\w=&%.+-]*)?$/i.test(next) ? next : null; // jamais de redirection vers un autre site
   if (user.mustChangePassword) {
     location.href = `reset-password.html?next=dashboard-${user.role}.html`;
     return;
   }
-  location.href = safeNext || `dashboard-${user.role}.html`;
+  // Particulier : retour à l'accueil (ou à la page d'où il venait) — son espace reste
+  // accessible depuis le menu du compte. Agences et admin : directement leur espace.
+  location.href = safeNext || (user.role === "client" ? "index.html" : `dashboard-${user.role}.html`);
 }
 
 /* ---------- Étape 2 : code de connexion reçu par e-mail ---------- */
@@ -175,5 +177,5 @@ document.addEventListener("ti:langchange", () => { tiRenderDemoBox(); });
 // Déjà connecté avec le bon rôle : directement vers son espace.
 (function () {
   const s = typeof tiGetSession === "function" ? tiGetSession() : null;
-  if (s && s.role === TI_PORTAL_ROLE && !new URLSearchParams(location.search).get("expired")) location.replace(`dashboard-${s.role}.html`);
+  if (s && s.role === TI_PORTAL_ROLE && !new URLSearchParams(location.search).get("expired")) location.replace(s.role === "client" ? "index.html" : `dashboard-${s.role}.html`);
 })();

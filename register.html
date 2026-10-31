@@ -111,7 +111,7 @@
       errBox.innerHTML = `<div class="ti-error">Un compte existe déjà avec cet email. / An account already exists with this email.</div>`;
       return false;
     }
-    window.location.href = `dashboard-${TI_REG_ROLE}.html`;
+    window.location.href = TI_REG_ROLE === 'client' ? 'index.html' : `dashboard-${TI_REG_ROLE}.html`;
     return false;
   }
 </script>

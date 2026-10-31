@@ -361,3 +361,10 @@ function tiRequireRole(role) {
   }
   return s;
 }
+
+/** Envoie vers la connexion des particuliers, puis ramène sur la page en cours
+ *  (ex. après avoir cliqué « Favoris » ou « Réserver » sans être connecté). */
+function tiGoToLogin() {
+  const here = (location.pathname.split("/").pop() || "index.html") + location.search;
+  location.href = "login.html?next=" + encodeURIComponent(here);
+}
