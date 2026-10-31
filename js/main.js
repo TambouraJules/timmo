@@ -21,6 +21,7 @@ function tiIsNetworkError(err) {
   return /Failed to fetch|NetworkError|Load failed|network|ERR_|timeout|aborted/i.test(msg);
 }
 function tiShowCrashBanner(err) {
+  if (err && err.sessionExpired) return; // session expirée : déconnexion propre en cours (voir tiApiFetch)
   if (tiIsNetworkError(err)) {
     console.warn("Timmo — serveur momentanément injoignable:", err);
     if (!tiNetworkNoticeShown && typeof tiToast === "function") {

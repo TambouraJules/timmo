@@ -106,6 +106,10 @@
   tiRenderDemoBox();
   document.addEventListener('ti:langchange', tiRenderDemoBox);
 
+  // Session expirée (jeton de plus de 7 jours) : on explique pourquoi il faut se reconnecter
+  if (new URLSearchParams(window.location.search).get('expired') === '1') {
+    document.getElementById('login-error').innerHTML = '<div class="ti-success">Votre session a expiré, reconnectez-vous. / Your session has expired, please sign in again.</div>';
+  }
   // Retour depuis reset-password.html après réinitialisation par lien e-mail
   if (new URLSearchParams(window.location.search).get('reset') === '1') {
     document.getElementById('login-error').innerHTML = `<div class="ti-success">${t('login_after_reset')}</div>`;

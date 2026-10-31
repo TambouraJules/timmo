@@ -64,6 +64,14 @@ const TI_API_BASE = "https://timmo-api.onrender.com/api";
  *  le jeton d'authentification stocké (s'il existe) à l'en-tête
  *  Authorization — pour que chacun des appels fetch() ci-dessous n'ait pas
  *  à le répéter individuellement. */
+function tiHandleExpiredSession() {
+  if (window.__tiSessionExpiring) return;
+  window.__tiSessionExpiring = true;
+  localStorage.removeItem("ti_api_token");
+  localStorage.removeItem("ti_session");
+  const privatePage = /dashboard-|import-annonces/.test(location.pathname);
+  location.replace(privatePage ? "login.html?expired=1" : location.href);
+}
 async function tiApiFetch(url, options = {}) {
   const token = localStorage.getItem("ti_api_token");
   const headers = { ...(options.headers || {}) };
@@ -75,6 +83,13 @@ async function tiApiFetch(url, options = {}) {
     const err = new Error(`API ${res.status}${detail ? " (" + detail + ")" : ""} — ${(options.method || "GET")} ${url}`);
     err.status = res.status;
     err.code = detail; // code d'erreur renvoyé par le serveur (ex. wrong_current_password)
+    // Jeton expiré (validité 7 jours) ou invalide : on déconnecte proprement au lieu
+    // d'afficher une erreur. Pages privées → connexion ; pages publiques → rechargées
+    // en mode « visiteur ».
+    if (res.status === 401 && token && /^(invalid_token|unauthenticated)$/.test(detail)) {
+      err.sessionExpired = true;
+      tiHandleExpiredSession();
+    }
     throw err;
   }
   return res;
