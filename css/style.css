@@ -1861,3 +1861,21 @@ body.ti-has-tabbar .ti-burger { display: none; }
 .ti-install-close { background: none; border: 0; font-size: 1.3rem; color: var(--ink-soft); cursor: pointer; padding: 0 2px; }
 @keyframes ti-install-in { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (min-width: 900px) { .ti-install { left: auto; width: 420px; } }
+@media (max-width: 480px) {
+  .ti-install { display: grid; grid-template-columns: 40px 1fr auto; column-gap: 12px; row-gap: 10px; padding: 12px; }
+  .ti-install img { width: 40px; height: 40px; }
+  .ti-install-text b { font-size: .88rem; }
+  .ti-install-text span { font-size: .76rem; line-height: 1.35; }
+  .ti-install .btn { grid-column: 1 / -1; grid-row: 2; width: 100%; justify-content: center; }
+  .ti-install-close { grid-column: 3; grid-row: 1; align-self: start; }
+}
+
+/* En-tête sur téléphone : logo + Connexion + menu ; Inscription et Espace Pro passent dans le menu */
+.ti-nav-mobile-only { display: none; }
+@media (max-width: 980px) { .ti-nav .ti-nav-mobile-only { display: block; } }
+@media (max-width: 600px) {
+  .ti-header-actions .ti-hide-sm { display: none; }
+  .ti-header-inner { padding-left: 16px; padding-right: 16px; gap: 10px; }
+  .ti-brand-logo { height: 34px; }
+  .ti-brand { min-width: 0; flex-shrink: 1; }
+}

@@ -109,7 +109,9 @@ function tiRenderHeader(active, subsite) {
         <a href="listings.html?tab=rent${subsite ? '&agency=' + subsite.slug : ''}" class="${active === 'rent' ? 'active' : ''}" data-i18n="nav_rent">${t("nav_rent")}</a>
         <a href="listings.html?tab=buy${subsite ? '&agency=' + subsite.slug : ''}" class="${active === 'buy' ? 'active' : ''}" data-i18n="nav_buy">${t("nav_buy")}</a>
         <a href="listings.html?type=office${subsite ? '&agency=' + subsite.slug : ''}" class="${active === 'office' ? 'active' : ''}" data-i18n="nav_office">${t("nav_office")}</a>
-        ${s ? `<a href="dashboard-${s.role}.html" data-i18n="nav_dashboard">${t("nav_dashboard")}</a>` : ""}
+        ${s ? `<a href="dashboard-${s.role}.html" data-i18n="nav_dashboard">${t("nav_dashboard")}</a>` : `
+        <a href="register.html" class="ti-nav-mobile-only" data-i18n="nav_register">${t("nav_register")}</a>
+        <a href="pro.html" class="ti-nav-mobile-only" data-i18n="nav_pro">${t("nav_pro")}</a>`}
       </nav>
       <div class="ti-header-actions">
         <div class="ti-toggle-group ti-lang-toggle">
@@ -149,9 +151,9 @@ function tiRenderHeader(active, subsite) {
                  <button onclick="tiLogout()" class="ti-account-logout">${TI_ICONS.logout} <span data-i18n="nav_logout">${t("nav_logout")}</span></button>
                </div>
              </div>`
-          : `<a href="pro.html" class="ti-nav-pro-link" data-i18n="nav_pro">${t("nav_pro")}</a>
+          : `<a href="pro.html" class="ti-nav-pro-link ti-hide-sm" data-i18n="nav_pro">${t("nav_pro")}</a>
              <a href="login.html" class="btn btn-ghost btn-sm" data-i18n="nav_login">${t("nav_login")}</a>
-             <a href="register.html" class="btn btn-dark btn-sm" data-i18n="nav_register">${t("nav_register")}</a>`
+             <a href="register.html" class="btn btn-dark btn-sm ti-hide-sm" data-i18n="nav_register">${t("nav_register")}</a>`
         }
         <button class="ti-burger" id="ti-burger" onclick="tiToggleMobileNav()" aria-label="Menu" aria-expanded="false">
           <span class="ti-burger-line"></span><span class="ti-burger-line"></span><span class="ti-burger-line"></span>

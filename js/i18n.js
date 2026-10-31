@@ -817,7 +817,7 @@ const TI_TRANSLATIONS = {
     tab_search: "Rechercher",
     tab_favorites: "Favoris",
     tab_account: "Compte",
-    install_title: "Installer l'application Timmo",
+    install_title: "Installer l'appli Timmo",
     install_sub: "Plus rapide, en plein écran, depuis votre écran d'accueil.",
     install_btn: "Installer",
     install_ios: "Touchez Partager, puis « Sur l'écran d'accueil ».",
