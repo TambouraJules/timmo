@@ -317,6 +317,7 @@ function tiApplyAgencyListingsFilter() {
       </div>
       <div class="ti-list-row-actions">
         <a class="btn btn-outline btn-sm" href="property.html?id=${p.id}" data-i18n="action_view">${t('action_view')}</a>
+        ${p.listingStatus === 'active' && p.deletionStatus !== 'pending' ? `<button class="btn btn-primary btn-sm" onclick="tiShareListingById('${p.id}')">${t('share_btn')}</button>` : ''}
         <button class="btn btn-outline btn-sm" onclick="tiEditListing('${p.id}')" data-i18n="action_edit">${t('action_edit')}</button>
         ${tiRowMenuHtml(`
           <button type="button" onclick="tiGeneratePropertySheet('${p.id}')">${TI_ICONS.document} ${t('action_spec_sheet')}</button>
@@ -2242,3 +2243,10 @@ async function tiInitAgencyDashboard() {
   await tiHandleSubscriptionReturn();
 }
 if (TI_SESSION) tiInitAgencyDashboard();
+
+
+/** Partager une annonce en ligne depuis « Mes annonces ». */
+async function tiShareListingById(id) {
+  const p = await TiDB.getProperty(id);
+  if (p) tiOpenShare(p);
+}

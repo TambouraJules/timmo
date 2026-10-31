@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/p/:ref/image", "destination": "https://timmo-api.onrender.com/api/share/:ref/image" },
+    { "source": "/p/:ref", "destination": "https://timmo-api.onrender.com/api/share/:ref" }
+  ]
+}

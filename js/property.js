@@ -50,10 +50,16 @@ async function tiRenderPropertyContent() {
     ${p.titleVerification && p.titleVerification.status === 'verified' ? `<div style="margin-bottom:10px;"><span class="ti-verified-badge ti-verified-badge-lg" title="${t('title_verified_tooltip')}">${TI_ICONS.shield}${t('title_verified_badge')}</span></div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
       <h1 id="ti-prop-title" style="margin-bottom:8px;max-width:38ch;"></h1>
+      <div class="ti-prop-actions">
+      <button type="button" class="ti-fav-pill ti-share-pill" onclick="tiOpenShare(TI_PROPERTY)">
+        <span class="ti-fav-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></span>
+        <span>${t('share_btn')}</span>
+      </button>
       <button class="ti-fav-pill ${isFav ? 'active' : ''}" id="ti-fav-btn" onclick="tiTogglePropertyFav()">
         <span class="ti-fav-pill-icon">${isFav ? TI_ICONS.heartFilled : TI_ICONS.heart}</span>
         <span id="ti-fav-btn-label">${isFav ? t('saved_fav') : t('save_fav')}</span>
       </button>
+      </div>
     </div>
     <div class="ti-rating" style="margin-bottom:20px;">${tiStarsHtml(p.rating)} ${p.rating} · ${p.reviews} avis</div>
 

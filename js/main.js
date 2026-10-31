@@ -1751,3 +1751,65 @@ function tiBarChartHtml(title, items) {
     </div>`;
 }
 
+
+
+/* ---------- Partage d'une annonce (WhatsApp, Facebook, LinkedIn, lien) ----------
+   En production, le lien court www.timmo.sn/p/<référence> affiche un vrai aperçu
+   (photo, prix, quartier) dans WhatsApp et Facebook (voir server/routes/share.js).
+   Sur le site de démo, les annonces n'existent que dans le navigateur : on partage
+   directement l'adresse de la fiche. */
+function tiShareUrl(p, via) {
+  if (TI_BACKEND === "api" && (p.reference || p.id)) {
+    return `https://www.timmo.sn/p/${encodeURIComponent(p.reference || p.id)}${via ? `?via=${via}` : ""}`;
+  }
+  return `${location.origin}${location.pathname.replace(/[^/]*$/, "")}property.html?id=${encodeURIComponent(p.id)}`;
+}
+function tiShareText(p) {
+  const price = (Number(p.price) || 0).toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ") + " FCFA";
+  const suffix = p.forSale ? "" : (p.shortStay ? " / nuit" : " / mois");
+  const title = typeof tiPropertyTitle === "function" ? tiPropertyTitle(p) : p.title;
+  return `🏠 ${title}\n💰 ${price}${suffix}\n📍 ${typeof tiNeighborhoodName === "function" ? tiNeighborhoodName(p.neighborhood) : ""}\n\n${t("share_cta")}`;
+}
+async function tiOpenShare(p) {
+  if (!p) return;
+  // Téléphone : la feuille de partage native (WhatsApp, Messenger, SMS…) est la plus simple.
+  if (navigator.share && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)) {
+    try { await navigator.share({ title: p.title, text: tiShareText(p), url: tiShareUrl(p, "mobile") }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  let modal = document.getElementById("modal-share");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "ti-modal-backdrop"; modal.id = "modal-share";
+    modal.addEventListener("click", ev => { if (ev.target === modal) tiCloseModal("modal-share"); });
+    document.body.appendChild(modal);
+  }
+  const text = tiShareText(p);
+  const wa = `https://wa.me/?text=${encodeURIComponent(text + "\n" + tiShareUrl(p, "whatsapp"))}`;
+  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(tiShareUrl(p, "facebook"))}`;
+  const li = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(tiShareUrl(p, "linkedin"))}`;
+  const link = tiShareUrl(p, "lien");
+  modal.innerHTML = `
+    <div class="ti-modal ti-share-modal" role="dialog" aria-modal="true" aria-labelledby="share-title">
+      <button type="button" class="ti-modal-close" onclick="tiCloseModal('modal-share')" aria-label="Fermer">&times;</button>
+      <h3 id="share-title">${t("share_title")}</h3>
+      <p class="ti-share-sub">${tiEscapeHtml(p.title)}</p>
+      <div class="ti-share-grid">
+        <a class="ti-share-btn ti-share-wa" href="${wa}" target="_blank" rel="noopener">${TI_ICONS.whatsapp || ""}<span>WhatsApp</span></a>
+        <a class="ti-share-btn ti-share-fb" href="${fb}" target="_blank" rel="noopener">${TI_ICONS.facebook || ""}<span>Facebook</span></a>
+        <a class="ti-share-btn ti-share-li" href="${li}" target="_blank" rel="noopener"><b>in</b><span>LinkedIn</span></a>
+      </div>
+      <div class="ti-share-copy">
+        <input type="text" readonly value="${tiEscapeHtml(link)}" id="share-link-input" onclick="this.select()">
+        <button type="button" class="btn btn-primary btn-sm" onclick="tiCopyShareLink()">${t("share_copy")}</button>
+      </div>
+      ${TI_BACKEND === "api" ? `<p class="ti-share-hint">${t("share_hint")}</p>` : ""}
+    </div>`;
+  tiOpenModal("modal-share");
+}
+async function tiCopyShareLink() {
+  const input = document.getElementById("share-link-input");
+  if (!input) return;
+  try { await navigator.clipboard.writeText(input.value); } catch (e) { input.select(); document.execCommand && document.execCommand("copy"); }
+  tiToast(t("share_copied"));
+}

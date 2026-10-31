@@ -12,6 +12,7 @@ const propertiesRoutes = require("./routes/properties");
 const agenciesRoutes = require("./routes/agencies");
 const usersRoutes = require("./routes/users");
 const miscRoutes = require("./routes/misc");
+const shareRoutes = require("./routes/share");
 
 const app = express();
 app.set("etag", false); // les données changent en continu (annonces, statuts...) ; jamais de 304 basé sur un cache potentiellement périmé
@@ -39,6 +40,7 @@ app.use(express.json({ limit: "12mb" }));
 app.use("/api/properties", propertiesRoutes);
 app.use("/api/agencies", agenciesRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/share", shareRoutes); // aperçus WhatsApp / Facebook des annonces (www.timmo.sn/p/<réf>)
 app.use("/api", miscRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true, service: "timmo-api" }));

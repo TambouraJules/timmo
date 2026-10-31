@@ -1728,3 +1728,20 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
 .ti-tour-frame-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
 @media (max-width: 560px) { .ti-modal.ti-modal-tour { height: 70vh; } }
 .ti-tour-sample-note { margin: 0; padding: 9px 26px; background: var(--gold-soft); color: var(--clay-dark); font-size: .82rem; font-weight: 600; flex-shrink: 0; }
+
+/* ---------- Partage d'annonce ---------- */
+.ti-prop-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.ti-share-pill .ti-fav-pill-icon svg { width: 18px; height: 18px; }
+.ti-share-modal h3 { margin: 0 0 4px; }
+.ti-share-sub { color: var(--ink-soft); font-size: .88rem; margin: 0 0 18px; }
+.ti-share-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.ti-share-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 8px; border-radius: 14px; color: #fff; font-weight: 700; font-size: .85rem; text-decoration: none; transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
+.ti-share-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15,37,47,.18); }
+.ti-share-btn svg { width: 26px; height: 26px; }
+.ti-share-btn b { font-size: 1.25rem; line-height: 26px; height: 26px; font-family: Georgia, serif; }
+.ti-share-wa { background: #25D366; }
+.ti-share-fb { background: #1877F2; }
+.ti-share-li { background: #0A66C2; }
+.ti-share-copy { display: flex; gap: 8px; }
+.ti-share-copy input { flex: 1; min-width: 0; font-size: .85rem; }
+.ti-share-hint { font-size: .78rem; color: var(--ink-soft); margin: 12px 0 0; }
