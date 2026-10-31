@@ -32,7 +32,7 @@ let TI_IMP_UID = 0;
   tiRenderFooter();
   const session = tiGetSession();
   if (!session || session.role !== "admin") {
-    window.location.href = "login.html?role=admin";
+    window.location.href = "admin-login.html?next=import-annonces.html";
     return;
   }
   try {

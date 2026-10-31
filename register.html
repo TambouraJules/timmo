@@ -85,6 +85,11 @@
     });
   });
 
+  if (new URLSearchParams(location.search).get('role') === 'agency') {
+    const agencyTab = document.querySelector('#reg-role-tabs [data-role=agency]');
+    if (agencyTab) agencyTab.click();
+  }
+
   async function tiHandleRegister(e) {
     e.preventDefault();
     const btn = e.target.querySelector('button[type=submit]');

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration — Timmo</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#0D1B2A">
+</head>
+<body data-portal="admin" class="ti-admin-body">
+<main class="ti-admin-wrap">
+  <img src="assets/brand/timmo-logo-white.svg" alt="Timmo" class="ti-admin-logo">
+  <div class="ti-auth-card ti-admin-card">
+    <span class="ti-admin-kicker" data-i18n="admin_kicker"></span>
+    <h2 data-i18n="admin_login_title"></h2>
+    <p style="color:var(--ink-soft);" data-i18n="admin_login_sub"></p>
+    <div id="ti-login-slot"></div>
+  </div>
+  <p class="ti-admin-foot" data-i18n="admin_foot"></p>
+</main>
+
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="https://unpkg.com/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script>tiApplyLang();</script>
+<script src="js/login.js"></script>
+</body>
+</html>

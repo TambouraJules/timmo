@@ -84,8 +84,11 @@ function tiSetSession(user) {
   tiSave("ti_session", user);
 }
 function tiLogout() {
+  const s = tiGetSession();
   localStorage.removeItem("ti_session");
-  window.location.href = "index.html";
+  localStorage.removeItem("ti_api_token");
+  // Chacun revient à sa porte d'entrée : agences → Espace Pro, admin → sa page, clients → accueil.
+  window.location.href = s && s.role === "agency" ? "pro.html" : (s && s.role === "admin" ? "admin-login.html" : "index.html");
 }
 
 async function tiImpersonateUser(userId) {
@@ -351,7 +354,9 @@ async function tiRegisterAgency({ name, agencyName, email, password, acceptTerms
 function tiRequireRole(role) {
   const s = tiGetSession();
   if (!s || s.role !== role) {
-    window.location.href = "login.html?role=" + role;
+    const portal = { admin: "admin-login.html", agency: "pro.html" }[role] || "login.html";
+    const next = encodeURIComponent(location.pathname.split("/").pop() + location.search);
+    window.location.href = `${portal}?next=${next}`;
     return null;
   }
   return s;

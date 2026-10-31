@@ -149,7 +149,8 @@ function tiRenderHeader(active, subsite) {
                  <button onclick="tiLogout()" class="ti-account-logout">${TI_ICONS.logout} <span data-i18n="nav_logout">${t("nav_logout")}</span></button>
                </div>
              </div>`
-          : `<a href="login.html" class="btn btn-ghost btn-sm" data-i18n="nav_login">${t("nav_login")}</a>
+          : `<a href="pro.html" class="ti-nav-pro-link" data-i18n="nav_pro">${t("nav_pro")}</a>
+             <a href="login.html" class="btn btn-ghost btn-sm" data-i18n="nav_login">${t("nav_login")}</a>
              <a href="register.html" class="btn btn-dark btn-sm" data-i18n="nav_register">${t("nav_register")}</a>`
         }
         <button class="ti-burger" id="ti-burger" onclick="tiToggleMobileNav()" aria-label="Menu" aria-expanded="false">
@@ -311,7 +312,7 @@ function tiRenderFooter(subsite) {
               <li><span>${TI_ICONS.check}</span>${t('footer_agency_benefit2')}</li>
               <li><span>${TI_ICONS.check}</span>${t('footer_agency_benefit3')}</li>
             </ul>
-            <a href="register.html" class="btn btn-primary btn-block" style="margin-top:16px;" data-i18n="nav_register">${t("nav_register")}</a>
+            <a href="pro.html" class="btn btn-primary btn-block" style="margin-top:16px;" data-i18n="nav_pro">${t("nav_pro")}</a>
           </div>
         </div>
 
@@ -1789,6 +1790,7 @@ function tiShareText(p) {
 }
 async function tiOpenShare(p) {
   if (!p) return;
+  window.__tiShareProp = p;
   // Téléphone : la feuille de partage native (WhatsApp, Messenger, SMS…) est la plus simple.
   if (navigator.share && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)) {
     try { await navigator.share({ title: p.title, text: tiShareText(p), url: tiShareUrl(p, "mobile") }); return; }
@@ -1820,6 +1822,7 @@ async function tiOpenShare(p) {
         <input type="text" readonly value="${tiEscapeHtml(link)}" id="share-link-input" onclick="this.select()">
         <button type="button" class="btn btn-primary btn-sm" onclick="tiCopyShareLink()">${t("share_copy")}</button>
       </div>
+      ${typeof tiOpenSocialKit === "function" ? `<button type="button" class="ti-share-kit-btn" onclick="tiOpenSocialKit(window.__tiShareProp)">🎨 ${t("kit_open")}<small>${t("kit_open_sub")}</small></button>` : ""}
       ${TI_BACKEND === "api" ? `<p class="ti-share-hint">${t("share_hint")}</p>` : ""}
     </div>`;
   tiOpenModal("modal-share");

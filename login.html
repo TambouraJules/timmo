@@ -8,13 +8,13 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <link rel="stylesheet" href="css/style.css">
-<meta name="description" content="Connectez-vous à votre espace Timmo : client, agence immobilière ou administration.">
+<meta name="description" content="Connectez-vous à votre espace Timmo : réservations, favoris et messages avec les agences.">
 <link rel="canonical" href="https://www.timmo.sn/login.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Timmo">
 <meta property="og:locale" content="fr_SN">
 <meta property="og:title" content="Connexion — Timmo">
-<meta property="og:description" content="Connectez-vous à votre espace Timmo : client, agence immobilière ou administration.">
+<meta property="og:description" content="Connectez-vous à votre espace Timmo : réservations, favoris et messages avec les agences.">
 <meta property="og:url" content="https://www.timmo.sn/login.html">
 <meta property="og:image" content="https://www.timmo.sn/assets/brand/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -23,50 +23,23 @@
 <meta name="theme-color" content="#0D1B2A">
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body data-portal="client">
 <header id="ti-header"></header>
 
 <div class="ti-auth-wrap">
   <div class="ti-auth-card">
     <h2 data-i18n="login_title"></h2>
-    <p style="color:var(--ink-soft);" data-i18n="login_sub"></p>
-
-    <div class="ti-role-tabs" id="role-tabs">
-      <button data-role="client" class="active" data-i18n="role_client"></button>
-      <button data-role="agency" data-i18n="role_agency"></button>
-      <button data-role="admin" data-i18n="role_admin"></button>
-    </div>
-
-    <div id="login-error"></div>
-    <div class="ti-demo-box" id="demo-box" style="display:none;margin:0 0 16px;"></div>
-    <form id="form-login" onsubmit="return tiHandleLogin(event)">
-      <div class="field"><label data-i18n="email"></label><input type="email" id="login-email" required></div>
-      <div class="field"><label data-i18n="password"></label><input type="password" id="login-password" required></div>
-      <p style="text-align:right;margin:-10px 0 16px;"><a href="forgot-password.html" style="color:var(--clay);font-size:.85rem;font-weight:600;" data-i18n="forgot_password_link"></a></p>
-      <button type="submit" class="btn btn-primary btn-block" data-i18n="login_btn"></button>
-    </form>
-
-    <!-- 2e étape (comptes admin et agence) : code reçu par e-mail -->
-    <form id="form-otp" onsubmit="return tiHandleOtp(event)" style="display:none;">
-      <h3 style="margin:0 0 6px;" data-i18n="otp_title"></h3>
-      <p style="color:var(--ink-soft);margin:0 0 16px;"><span data-i18n="otp_sub"></span> <strong id="otp-email"></strong></p>
-      <div class="field">
-        <label for="otp-code" data-i18n="otp_code_label"></label>
-        <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" maxlength="7" required
-               style="font-size:1.6rem;letter-spacing:10px;text-align:center;font-weight:700;" placeholder="••••••">
-      </div>
-      <button type="submit" class="btn btn-primary btn-block" data-i18n="otp_verify_btn"></button>
-      <p style="display:flex;justify-content:space-between;gap:10px;margin:14px 0 0;font-size:.85rem;">
-        <a href="#" onclick="return tiOtpBack()" style="color:var(--ink-soft);" data-i18n="otp_back"></a>
-        <a href="#" id="otp-resend" onclick="return tiOtpResend()" style="color:var(--clay);font-weight:600;" data-i18n="otp_resend"></a>
-      </p>
-    </form>
-
-
+    <p style="color:var(--ink-soft);" data-i18n="login_sub_client"></p>
+    <div id="ti-login-slot"></div>
     <p style="margin-top:18px;text-align:center;font-size:.9rem;">
       <span data-i18n="no_account"></span>
-      <a href="register.html" style="color:var(--clay);font-weight:700;" data-i18n="nav_register"></a>
+      <a href="register.html" class="ti-auth-link" data-i18n="nav_register"></a>
     </p>
+    <a href="pro.html" class="ti-auth-pro-link">
+      <span class="ti-auth-pro-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1M9 13h1m4 0h1M10 21v-4h4v4"/></svg></span>
+      <span><b data-i18n="login_pro_cta_title"></b><small data-i18n="login_pro_cta_sub"></small></span>
+      <span aria-hidden="true">→</span>
+    </a>
   </div>
 </div>
 
@@ -80,137 +53,7 @@
 <script src="https://unpkg.com/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/main.js"></script>
-<script>
-  tiRenderHeader();
-  tiRenderFooter();
-
-  let TI_LOGIN_ROLE = new URLSearchParams(window.location.search).get('role') || 'client';
-  function tiSetLoginRoleUI() {
-    document.querySelectorAll('#role-tabs button').forEach(b => b.classList.toggle('active', b.dataset.role === TI_LOGIN_ROLE));
-  }
-  document.querySelectorAll('#role-tabs button').forEach(b => {
-    b.addEventListener('click', () => { TI_LOGIN_ROLE = b.dataset.role; tiSetLoginRoleUI(); });
-  });
-  tiSetLoginRoleUI();
-  document.addEventListener('ti:langchange', tiSetLoginRoleUI);
-
-  // Site de démonstration uniquement : affiche les comptes fictifs et pré-remplit le formulaire.
-  function tiRenderDemoBox() {
-    if (TI_BACKEND !== 'local') return;
-    const demo = { client: 'client@demo.sn', agency: 'agence@demo.sn', admin: 'admin@demo.sn' };
-    const box = document.getElementById('demo-box');
-    box.style.display = '';
-    box.innerHTML = `<strong>${t('login_demo_title')}</strong><br>` + Object.entries(demo).map(([role, email]) =>
-      `<a href="#" onclick="document.getElementById('login-email').value='${email}';document.getElementById('login-password').value='demo1234';TI_LOGIN_ROLE='${role}';tiSetLoginRoleUI();return false;" style="color:inherit;">${t('role_' + role)} : <code>${email}</code></a>`).join('<br>');
-  }
-  tiRenderDemoBox();
-  document.addEventListener('ti:langchange', tiRenderDemoBox);
-
-  // Session expirée (jeton de plus de 7 jours) : on explique pourquoi il faut se reconnecter
-  if (new URLSearchParams(window.location.search).get('expired') === '1') {
-    document.getElementById('login-error').innerHTML = '<div class="ti-success">Votre session a expiré, reconnectez-vous. / Your session has expired, please sign in again.</div>';
-  }
-  // Retour depuis reset-password.html après réinitialisation par lien e-mail
-  if (new URLSearchParams(window.location.search).get('reset') === '1') {
-    document.getElementById('login-error').innerHTML = `<div class="ti-success">${t('login_after_reset')}</div>`;
-    try {
-      const resetEmail = sessionStorage.getItem('ti_reset_email');
-      if (resetEmail) { document.getElementById('login-email').value = resetEmail; sessionStorage.removeItem('ti_reset_email'); }
-    } catch (e) { /* stockage indisponible : l'utilisateur saisit son e-mail */ }
-    setTimeout(() => document.getElementById('login-password').focus(), 50);
-  }
-
-  async function tiHandleLogin(e) {
-    e.preventDefault();
-    const btn = e.target.querySelector('button[type=submit]');
-    tiSetBtnLoading(btn, true);
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    await new Promise(r => setTimeout(r, 350));
-    const res = await tiLogin(email, password, TI_LOGIN_ROLE);
-    const errBox = document.getElementById('login-error');
-    if (!res.ok) {
-      tiSetBtnLoading(btn, false);
-      const errMsg = res.error === 'wrong_role' ? 'Ce compte n\'a pas ce rôle. / This account does not have that role.'
-        : res.error === 'suspended' ? 'Ce compte agence a été suspendu par l\'administrateur. / This agency account has been suspended by the administrator.'
-        : res.error === 'account_frozen' ? 'Ce compte a été gelé. Contactez votre agence ou l\'administrateur. / This account has been frozen. Contact your agency or the administrator.'
-        : res.error === 'otp_send_failed' ? 'Impossible d\'envoyer le code de connexion par e-mail. Réessayez dans un instant. / Could not send the sign-in code. Please try again shortly.'
-        : res.error === 'locked_out' ? `Trop de tentatives. Réessayez dans ${res.lockedFor}s. / Too many attempts. Try again in ${res.lockedFor}s.`
-        : 'Identifiants invalides. / Invalid credentials.';
-      errBox.innerHTML = `<div class="ti-error">${errMsg}</div>`;
-      return false;
-    }
-    if (res.otp) { tiShowOtpStep(res.otp); tiSetBtnLoading(btn, false); return false; }
-    tiGoAfterLogin(res.user);
-    return false;
-  }
-
-  function tiGoAfterLogin(user) {
-    if (user.mustChangePassword) {
-      window.location.href = `reset-password.html?next=dashboard-${user.role}.html`;
-      return;
-    }
-    window.location.href = `dashboard-${user.role}.html`;
-  }
-
-  // ---------- Étape 2 : code de connexion reçu par e-mail ----------
-  let TI_OTP = null;
-  function tiOtpMsg(html, ok) {
-    document.getElementById('login-error').innerHTML = html ? `<div class="${ok ? 'ti-success' : 'ti-error'}">${html}</div>` : '';
-  }
-  function tiShowOtpStep(otp) {
-    TI_OTP = otp;
-    document.getElementById('form-login').style.display = 'none';
-    document.getElementById('role-tabs').style.display = 'none';
-    document.getElementById('form-otp').style.display = '';
-    document.getElementById('otp-email').textContent = otp.email;
-    tiOtpMsg('');
-    const input = document.getElementById('otp-code');
-    input.value = ''; input.focus();
-  }
-  function tiOtpBack() {
-    TI_OTP = null;
-    document.getElementById('form-otp').style.display = 'none';
-    document.getElementById('form-login').style.display = '';
-    document.getElementById('role-tabs').style.display = '';
-    document.getElementById('login-password').value = '';
-    tiOtpMsg('');
-    return false;
-  }
-  async function tiHandleOtp(e) {
-    e.preventDefault();
-    if (!TI_OTP) return false;
-    const btn = e.target.querySelector('button[type=submit]');
-    tiSetBtnLoading(btn, true);
-    const res = await tiVerifyLoginOtp(TI_OTP.challenge, document.getElementById('otp-code').value);
-    if (res.ok) { tiGoAfterLogin(res.user); return false; }
-    tiSetBtnLoading(btn, false);
-    if (res.error === 'otp_invalid') {
-      tiOtpMsg(`Code incorrect — encore ${res.triesLeft} essai(s). / Wrong code — ${res.triesLeft} attempt(s) left.`);
-      document.getElementById('otp-code').select();
-    } else if (res.error === 'otp_too_many' || res.error === 'otp_expired') {
-      tiOtpBack();
-      tiOtpMsg(res.error === 'otp_too_many'
-        ? 'Trop d\'essais. Reconnectez-vous pour recevoir un nouveau code. / Too many attempts. Sign in again to get a new code.'
-        : 'Ce code a expiré. Reconnectez-vous pour en recevoir un nouveau. / This code has expired. Sign in again to get a new one.');
-    } else if (res.error === 'account_frozen') {
-      tiOtpBack();
-      tiOtpMsg('Ce compte a été gelé. Contactez votre agence ou l\'administrateur. / This account has been frozen.');
-    } else {
-      tiOtpMsg('Connexion impossible pour le moment. Réessayez. / Unable to sign in right now. Please try again.');
-    }
-    return false;
-  }
-  async function tiOtpResend() {
-    if (!TI_OTP) return false;
-    const res = await tiResendLoginOtp(TI_OTP.challenge);
-    if (res.ok) tiOtpMsg(`Nouveau code envoyé à ${TI_OTP.email}. / New code sent.`, true);
-    else if (res.error === 'otp_wait') tiOtpMsg(`Patientez ${res.retryIn}s avant de redemander un code. / Please wait ${res.retryIn}s.`);
-    else if (res.error === 'otp_resend_limit') tiOtpMsg('Nombre maximal de renvois atteint. Reconnectez-vous. / Resend limit reached. Please sign in again.');
-    else if (res.error === 'otp_expired') { tiOtpBack(); tiOtpMsg('Cette tentative a expiré. Reconnectez-vous. / This attempt has expired. Please sign in again.'); }
-    else tiOtpMsg('Envoi impossible pour le moment. / Unable to send right now.');
-    return false;
-  }
-</script>
+<script>tiRenderHeader(); tiRenderFooter();</script>
+<script src="js/login.js"></script>
 </body>
 </html>

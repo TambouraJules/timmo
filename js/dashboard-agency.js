@@ -321,6 +321,7 @@ function tiApplyAgencyListingsFilter() {
         <button class="btn btn-outline btn-sm" onclick="tiEditListing('${p.id}')" data-i18n="action_edit">${t('action_edit')}</button>
         ${tiRowMenuHtml(`
           <button type="button" onclick="tiGeneratePropertySheet('${p.id}')">${TI_ICONS.document} ${t('action_spec_sheet')}</button>
+          ${p.listingStatus === 'active' && p.deletionStatus !== 'pending' ? `<button type="button" onclick="tiSocialKitById('${p.id}')">${TI_ICONS.sparkle || ''} ${t('kit_open')}</button>` : ''}
           ${p.listingStatus === 'active' ? `<button type="button" onclick="tiSetListingStatus('${p.id}','under_contract')">${TI_ICONS.editPencil} ${t('action_mark_under_contract')}</button>` : ''}
           ${p.listingStatus === 'active' ? `<button type="button" onclick="tiConfirmSetListingStatus('${p.id}','${p.forSale ? 'sold' : 'rented'}')">${TI_ICONS.check} ${p.forSale ? t('action_mark_sold') : t('action_mark_rented')}</button>` : ''}
           ${p.listingStatus === 'under_contract' ? `<button type="button" onclick="tiConfirmSetListingStatus('${p.id}','${p.forSale ? 'sold' : 'rented'}')">${TI_ICONS.check} ${p.forSale ? t('action_mark_sold') : t('action_mark_rented')}</button>` : ''}
@@ -2249,4 +2250,10 @@ if (TI_SESSION) tiInitAgencyDashboard();
 async function tiShareListingById(id) {
   const p = await TiDB.getProperty(id);
   if (p) tiOpenShare(p);
+}
+
+/** Kit réseaux sociaux depuis « Mes annonces ». */
+async function tiSocialKitById(id) {
+  const p = await TiDB.getProperty(id);
+  if (p) tiOpenSocialKit(p);
 }
