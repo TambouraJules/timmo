@@ -1841,3 +1841,23 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
 .ti-alert-done { text-align: center; }
 .ti-alert-done-icon { width: 54px; height: 54px; border-radius: 50%; background: #E3F1E8; color: var(--ok); display: grid; place-items: center; font-size: 1.6rem; font-weight: 900; margin: 6px auto 12px; }
 .ti-alert-done p { color: var(--ink); font-size: .92rem; }
+
+/* ---------- Application installable : barre d'onglets et invitation ---------- */
+.ti-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: rgba(255,255,255,.97); backdrop-filter: blur(10px); border-top: 1px solid var(--line);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+.ti-tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: .68rem; font-weight: 700; color: var(--ink-soft); text-decoration: none; padding: 4px 0; }
+.ti-tabbar-icon { width: 24px; height: 24px; display: grid; place-items: center; }
+.ti-tabbar-icon svg { width: 22px; height: 22px; }
+.ti-tabbar a.active { color: var(--clay); }
+body.ti-has-tabbar { padding-bottom: calc(66px + env(safe-area-inset-bottom)); }
+body.ti-has-tabbar .ti-burger { display: none; }
+.ti-install { position: fixed; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 95; display: flex; align-items: center; gap: 12px;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; box-shadow: 0 14px 40px rgba(15,37,47,.22); animation: ti-install-in .35s var(--ease); }
+.ti-install img { border-radius: 10px; flex-shrink: 0; }
+.ti-install-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ti-install-text b { font-size: .9rem; }
+.ti-install-text span { font-size: .78rem; color: var(--ink-soft); }
+.ti-install-close { background: none; border: 0; font-size: 1.3rem; color: var(--ink-soft); cursor: pointer; padding: 0 2px; }
+@keyframes ti-install-in { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (min-width: 900px) { .ti-install { left: auto; width: 420px; } }

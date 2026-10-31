@@ -1839,3 +1839,89 @@ function tiCanUseSocialKit() {
   const s = typeof tiGetSession === "function" ? tiGetSession() : null;
   return !!(s && (s.role === "agency" || s.role === "admin"));
 }
+
+
+/* ============================================================
+   Application installable (PWA) : service worker, mode « appli »,
+   barre d'onglets en bas d'écran et invitation à installer.
+   ============================================================ */
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("/sw.js").catch(() => { /* navigateur sans support : le site fonctionne normalement */ }); });
+}
+
+/** Vrai quand Timmo est ouvert comme une application (icône d'écran d'accueil, Play Store). */
+function tiIsAppMode() {
+  try {
+    if (new URLSearchParams(location.search).get("source") === "pwa") sessionStorage.setItem("ti_app", "1");
+    if (sessionStorage.getItem("ti_app") === "1") return true;
+  } catch (e) { /* stockage indisponible */ }
+  return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true
+    || document.referrer.startsWith("android-app://");
+}
+
+/** Barre d'onglets en bas d'écran (mode appli, côté clients uniquement). */
+function tiRenderAppTabBar() {
+  if (!tiIsAppMode() || document.getElementById("ti-tabbar")) return;
+  const s = typeof tiGetSession === "function" ? tiGetSession() : null;
+  if (s && (s.role === "agency" || s.role === "admin")) return;            // l'Espace Pro garde sa propre navigation
+  const page = location.pathname.split("/").pop() || "index.html";
+  const panel = new URLSearchParams(location.search).get("panel");
+  const accountHref = s ? "dashboard-client.html" : "login.html";
+  const favHref = s ? "dashboard-client.html?panel=favorites" : "login.html?next=" + encodeURIComponent("dashboard-client.html?panel=favorites");
+  const tabs = [
+    { key: "home", href: "index.html", icon: TI_ICONS.home, label: t("tab_home"), active: page === "index.html" || page === "" },
+    { key: "search", href: "listings.html", icon: TI_ICONS.search, label: t("tab_search"), active: page === "listings.html" || page === "property.html" },
+    { key: "fav", href: favHref, icon: TI_ICONS.heart, label: t("tab_favorites"), active: page === "dashboard-client.html" && panel === "favorites" },
+    { key: "account", href: accountHref, icon: TI_ICONS.user, label: s ? t("tab_account") : t("nav_login"), active: (page === "dashboard-client.html" && panel !== "favorites") || page === "login.html" || page === "register.html" },
+  ];
+  const bar = document.createElement("nav");
+  bar.id = "ti-tabbar"; bar.className = "ti-tabbar"; bar.setAttribute("aria-label", "Navigation");
+  bar.innerHTML = tabs.map(tab => `<a href="${tab.href}" class="${tab.active ? "active" : ""}" ${tab.active ? 'aria-current="page"' : ""}><span class="ti-tabbar-icon">${tab.icon}</span><span>${tab.label}</span></a>`).join("");
+  document.body.appendChild(bar);
+  document.body.classList.add("ti-has-tabbar");
+}
+
+/* Invitation à installer l'application (téléphones, hors mode appli) :
+   Android → bouton « Installer » natif ; iPhone → explication « Sur l'écran d'accueil ».
+   Affichée à partir de la 2e page vue, et plus pendant 30 jours si on la ferme. */
+let tiDeferredInstall = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); tiDeferredInstall = e; tiMaybeShowInstallBanner(); });
+window.addEventListener("appinstalled", () => { tiDeferredInstall = null; const b = document.getElementById("ti-install"); if (b) b.remove(); });
+
+function tiMaybeShowInstallBanner() {
+  if (tiIsAppMode() || document.getElementById("ti-install")) return;
+  if (!/Android|iPhone|iPad/i.test(navigator.userAgent)) return;
+  if (typeof TI_BACKEND !== "undefined" && TI_BACKEND === "local") return;        // pas sur le site de démo
+  const page = location.pathname.split("/").pop() || "index.html";
+  if (/^(dashboard-|pro|admin|import)/.test(page)) return;
+  let views = 0, until = 0;
+  try { views = +(localStorage.getItem("ti_pv") || 0); until = +(localStorage.getItem("ti_install_dismissed") || 0); } catch (e) { return; }
+  if (views < 2 || Date.now() < until) return;
+  const ios = /iPhone|iPad/i.test(navigator.userAgent) && !tiDeferredInstall;
+  if (!ios && !tiDeferredInstall) return;
+  const box = document.createElement("div");
+  box.id = "ti-install"; box.className = "ti-install";
+  box.innerHTML = `
+    <img src="assets/brand/icon-192.png" alt="" width="44" height="44">
+    <div class="ti-install-text"><b>${t("install_title")}</b><span>${ios ? t("install_ios") : t("install_sub")}</span></div>
+    ${ios ? "" : `<button type="button" class="btn btn-primary btn-sm" onclick="tiInstallApp()">${t("install_btn")}</button>`}
+    <button type="button" class="ti-install-close" onclick="tiDismissInstall()" aria-label="Fermer">&times;</button>`;
+  document.body.appendChild(box);
+}
+async function tiInstallApp() {
+  if (!tiDeferredInstall) return;
+  tiDeferredInstall.prompt();
+  await tiDeferredInstall.userChoice.catch(() => null);
+  tiDeferredInstall = null;
+  const b = document.getElementById("ti-install"); if (b) b.remove();
+}
+function tiDismissInstall() {
+  try { localStorage.setItem("ti_install_dismissed", String(Date.now() + 30 * 24 * 3600 * 1000)); } catch (e) { /* ignoré */ }
+  const b = document.getElementById("ti-install"); if (b) b.remove();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  try { localStorage.setItem("ti_pv", String(+(localStorage.getItem("ti_pv") || 0) + 1)); } catch (e) { /* ignoré */ }
+  tiRenderAppTabBar();
+  setTimeout(tiMaybeShowInstallBanner, 1500);
+});
