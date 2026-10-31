@@ -1832,6 +1832,18 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
 
 /* ---------- Alertes « nouveaux biens » ---------- */
 .ti-alert-btn { white-space: nowrap; }
+/* Alerte : encart en bas des filtres + encart en fin de résultats */
+.ti-alert-cta { margin-top: 14px; padding: 16px; border-radius: var(--radius-m); background: linear-gradient(160deg, #FBF1E6, #F6E6D3); border: 1px solid #EBD3B8; }
+.ti-alert-cta-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: .92rem; }
+.ti-alert-cta-icon { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; box-shadow: 0 2px 8px rgba(191,106,61,.18); }
+.ti-alert-cta p { font-size: .8rem; color: var(--ink-soft); line-height: 1.45; margin: 0 0 12px; }
+.ti-alert-results { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 18px 20px; margin-top: 6px; border-radius: var(--radius-m); background: #FBF1E6; border: 1px dashed #DDB48F; }
+.ti-alert-results-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ti-alert-results-text b { font-size: .95rem; }
+.ti-alert-results-text span { font-size: .82rem; color: var(--ink-soft); }
+.ti-alert-results .btn { white-space: nowrap; }
+@media (max-width: 560px) { .ti-alert-results { flex-wrap: wrap; align-items: flex-start; } .ti-alert-results .btn { width: 100%; justify-content: center; } }
+#f-verified-only { width: auto; flex-shrink: 0; margin: 0; }
 .ti-alert-modal { max-width: 460px; text-align: left; }
 .ti-alert-bell { width: 54px; height: 54px; border-radius: 50%; background: var(--gold-soft); display: grid; place-items: center; font-size: 1.6rem; margin-bottom: 10px; }
 .ti-alert-modal h3 { margin: 0 0 6px; }

@@ -91,6 +91,12 @@
           </label>
         </div>
 
+        <div class="ti-alert-cta">
+          <div class="ti-alert-cta-head"><span class="ti-alert-cta-icon" aria-hidden="true">🔔</span><b data-i18n="alert_cta_title"></b></div>
+          <p data-i18n="alert_cta_text"></p>
+          <button type="button" class="btn btn-primary btn-sm btn-block" onclick="tiOpenAlertFromFilters()" data-i18n="alert_btn"></button>
+        </div>
+
         <button class="btn btn-dark btn-block ti-filters-mobile-cta" onclick="tiToggleMobileFilters(false)">
           <span data-i18n="see_all">Voir les résultats</span> <span id="ti-filters-mobile-count"></span>
         </button>
@@ -102,7 +108,6 @@
             <h2 style="margin-bottom:4px;" data-i18n="listings_title"></h2>
             <span id="ti-results-count" style="color:var(--ink-soft);font-size:.9rem;"></span>
           </div>
-          <button type="button" class="btn btn-outline btn-sm ti-alert-btn" onclick="tiOpenAlertFromFilters()">🔔 <span data-i18n="alert_btn"></span></button>
           <select id="f-sort" onchange="tiRenderListings()" style="max-width:220px;">
             <option value="recent" data-i18n="sort_recent"></option>
             <option value="price_asc" data-i18n="sort_price_asc"></option>
@@ -380,9 +385,9 @@
     document.getElementById('ti-results-count').textContent = `${list.length} ${t('listings_results')}`;
     document.getElementById('ti-listings-sticky-count').textContent = `${list.length} ${t('listings_results')}`;
     TI_MAP_LAST_FILTERED_LIST = list;
-    document.getElementById('ti-listings-mount').innerHTML = list.length
+    document.getElementById('ti-listings-mount').innerHTML = (list.length
       ? list.map(p => tiPropertyCardHtml(p, TI_FAVS)).join('')
-      : `<p style="color:var(--ink-soft)">${t('empty_listings')}</p>`;
+      : `<p style="color:var(--ink-soft)">${t('empty_listings')}</p>`) + tiAlertResultsCardHtml(list.length);
     if (TI_MAP_VIEW_ACTIVE && TI_SEARCH_MAP) {
       tiRenderMapMarkers(list, true);
     }
@@ -441,6 +446,14 @@
   tiListingsInit();
 </script>
 <script>
+  /** Encart en fin de résultats : « Pas encore le bon bien ? Créez une alerte ». */
+  function tiAlertResultsCardHtml(count) {
+    return `<div class="ti-alert-results">
+      <span class="ti-alert-cta-icon" aria-hidden="true">🔔</span>
+      <div class="ti-alert-results-text"><b>${t(count ? 'alert_results_title' : 'alert_empty_title')}</b><span>${t('alert_cta_text')}</span></div>
+      <button type="button" class="btn btn-dark btn-sm" onclick="tiOpenAlertFromFilters()">${t('alert_btn')}</button>
+    </div>`;
+  }
   /** Crée une alerte avec les filtres actuellement appliqués. */
   function tiOpenAlertFromFilters() {
     const params = new URLSearchParams(location.search);
