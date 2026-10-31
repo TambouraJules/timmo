@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alerte Timmo</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#0D1B2A">
+</head>
+<body>
+<header id="ti-header"></header>
+
+<div class="ti-auth-wrap">
+  <div class="ti-auth-card" style="text-align:center;">
+    <div class="ti-alert-bell" aria-hidden="true" style="margin:0 auto 10px;">🔔</div>
+    <h2 id="alert-page-title" data-i18n="alert_page_title"></h2>
+    <p id="alert-page-msg" style="color:var(--ink-soft);"></p>
+    <a href="listings.html" class="btn btn-primary btn-block" style="margin-top:14px;" data-i18n="alert_page_cta"></a>
+  </div>
+</div>
+
+<div id="ti-footer"></div>
+
+<script src="js/i18n.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/data.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+<script>
+  tiRenderHeader(); tiRenderFooter();
+  (async function () {
+    const q = new URLSearchParams(location.search);
+    const msg = document.getElementById("alert-page-msg");
+    const token = q.get("confirm") || q.get("stop");
+    const action = q.get("confirm") ? "confirm" : (q.get("stop") ? "unsubscribe" : null);
+    if (!action) { msg.textContent = t("alert_page_none"); return; }
+    msg.textContent = "…";
+    try {
+      const res = await fetch(`${TI_API_BASE}/alerts/${action}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { msg.textContent = t("alert_page_invalid"); return; }
+      if (action === "confirm") {
+        document.getElementById("alert-page-title").textContent = t("alert_page_confirmed_title");
+        msg.innerHTML = `${t("alert_page_confirmed")}<br><strong>${tiEscapeHtml(data.criteria || "")}</strong>`;
+      } else {
+        document.getElementById("alert-page-title").textContent = t("alert_page_stopped_title");
+        msg.textContent = t("alert_page_stopped");
+      }
+      // On retire le jeton de la barre d'adresse (historique, partage d'écran…)
+      history.replaceState(null, "", "alerte.html");
+    } catch (e) {
+      msg.textContent = t("alert_err_generic");
+    }
+  })();
+</script>
+</body>
+</html>

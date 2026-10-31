@@ -131,7 +131,31 @@ const FavoriteSchema = new Schema({
   propertyId: String,
 });
 
+// Alertes « nouveaux biens » : un visiteur enregistre ses critères et reçoit
+// les nouvelles annonces correspondantes (e-mail ; WhatsApp si configuré).
+const AlertSchema = new Schema({
+  id: { type: String, unique: true },
+  email: { type: String, index: true },
+  phone: String,                 // format international, ex. +221771234567 (facultatif)
+  criteria: {
+    kind: String,                // rent | sale | short | (vide = tous)
+    type: String,                // apartment | house | office | land
+    hood: String,
+    hoodLabel: String,
+    minBeds: Number,
+    maxPrice: Number,
+  },
+  lang: { type: String, default: "fr" },
+  confirmed: { type: Boolean, default: false },   // double opt-in par e-mail
+  active: { type: Boolean, default: true },
+  tokenHash: { type: String, index: true },       // lien de confirmation / désinscription
+  sentToday: { type: Number, default: 0 },
+  sentDay: String,
+  lastSentAt: Date,
+}, { timestamps: true });
+
 module.exports = {
+  Alert: mongoose.model("Alert", AlertSchema),
   Property: mongoose.model("Property", PropertySchema),
   User: mongoose.model("User", UserSchema),
   Agency: mongoose.model("Agency", AgencySchema),

@@ -1,6 +1,16 @@
 const router = require("express").Router();
 const { Property } = require("../models/models");
 const { authenticate, requireRole } = require("../middleware/auth");
+const { tiNotifyAlertsForProperty } = require("./alerts");
+
+// Statuts qu'une agence peut gérer elle-même, une fois l'annonce validée par l'admin.
+// Une agence ne peut JAMAIS publier elle-même une annonce en attente ou refusée.
+const TI_AGENCY_STATUSES = ["active", "under_contract", "rented", "sold"];
+function tiAgencyStatusAllowed(prevStatus, nextStatus) {
+  if (nextStatus === undefined || nextStatus === prevStatus) return true;
+  if (prevStatus === "rejected" && nextStatus === "pending") return true; // annonce corrigée et renvoyée en validation
+  return TI_AGENCY_STATUSES.includes(prevStatus) && TI_AGENCY_STATUSES.includes(nextStatus);
+}
 
 // GET /api/properties — public (listings pages, search, browsing)
 router.get("/", async (req, res) => {
@@ -49,7 +59,13 @@ router.post("/", authenticate, async (req, res) => {
   const targetAgencyId = existing ? existing.agencyId : data.agencyId;
   const owns = req.user.role === "admin" || (req.user.agencyId && req.user.agencyId === targetAgencyId);
   if (!owns) return res.status(403).json({ error: "forbidden" });
+  if (req.user.role !== "admin") {
+    if (!existing) data.listingStatus = "pending";                 // nouvelle annonce d'agence : toujours en attente de validation
+    else if (!tiAgencyStatusAllowed(existing.listingStatus || "active", data.listingStatus)) return res.status(403).json({ error: "status_forbidden" });
+  }
+  const wasVisible = existing && (existing.listingStatus || "active") === "active";
   const saved = await Property.findOneAndUpdate({ id: data.id }, data, { upsert: true, new: true, setDefaultsOnInsert: true });
+  if (saved.listingStatus === "active" && !wasVisible) tiNotifyAlertsForProperty(saved.toObject()); // en arrière-plan
   res.json(saved);
 });
 
@@ -61,7 +77,10 @@ router.patch("/:id/status", authenticate, async (req, res) => {
   if (!existing) return res.status(404).json({ error: "not_found" });
   const owns = req.user.role === "admin" || (req.user.agencyId && req.user.agencyId === existing.agencyId);
   if (!owns) return res.status(403).json({ error: "forbidden" });
+  if (req.user.role !== "admin" && !tiAgencyStatusAllowed(existing.listingStatus || "active", req.body.status)) return res.status(403).json({ error: "status_forbidden" });
+  const wasVisible = (existing.listingStatus || "active") === "active";
   const saved = await Property.findOneAndUpdate({ id: req.params.id }, { listingStatus: req.body.status }, { new: true });
+  if (saved.listingStatus === "active" && !wasVisible) tiNotifyAlertsForProperty(saved.toObject());
   res.json(saved);
 });
 

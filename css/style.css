@@ -1826,3 +1826,18 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
 .ti-admin-logo { height: 44px; }
 .ti-admin-card { max-width: 400px; border-color: rgba(255,255,255,.08); }
 .ti-admin-foot { color: #7d8894; font-size: .78rem; margin: 0; }
+
+/* ---------- Alertes « nouveaux biens » ---------- */
+.ti-alert-btn { white-space: nowrap; }
+.ti-alert-modal { max-width: 460px; text-align: left; }
+.ti-alert-bell { width: 54px; height: 54px; border-radius: 50%; background: var(--gold-soft); display: grid; place-items: center; font-size: 1.6rem; margin-bottom: 10px; }
+.ti-alert-modal h3 { margin: 0 0 6px; }
+.ti-alert-sub { color: var(--ink-soft); font-size: .9rem; margin: 0 0 12px; }
+.ti-alert-criteria { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: .88rem; margin-bottom: 16px; }
+.ti-alert-hint { display: block; color: var(--ink-soft); font-size: .78rem; margin-top: 5px; }
+.ti-alert-consent { display: flex; gap: 10px; align-items: flex-start; font-size: .82rem; color: var(--ink-soft); margin: 4px 0 16px; cursor: pointer; }
+.ti-alert-consent input { width: auto; margin-top: 3px; }
+.ti-alert-consent span { font-weight: 500; }
+.ti-alert-done { text-align: center; }
+.ti-alert-done-icon { width: 54px; height: 54px; border-radius: 50%; background: #E3F1E8; color: var(--ok); display: grid; place-items: center; font-size: 1.6rem; font-weight: 900; margin: 6px auto 12px; }
+.ti-alert-done p { color: var(--ink); font-size: .92rem; }

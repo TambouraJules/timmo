@@ -702,3 +702,4 @@ router.post("/payment-gateway/ipn", require("express").urlencoded({ extended: tr
 });
 
 module.exports = router;
+module.exports.tiSendEmail = tiSendEmail; // réutilisé par les alertes (routes/alerts.js)
