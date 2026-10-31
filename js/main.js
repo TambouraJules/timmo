@@ -88,6 +88,21 @@ const TI_ICONS = {
   barChart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7" stroke-linecap="round"/><path d="M2 20h20" stroke-linecap="round"/></svg>`,
 };
 
+/* Logo d'une agence (site personnalisé) : le logo envoyé par l'agence ;
+   sur le site de démo, le logo fictif de l'agence ; sinon ses initiales. */
+const TI_DEMO_AGENCY_LOGOS = { ag001: "assets/demo/agencies/ag001.svg", ag002: "assets/demo/agencies/ag002.svg", ag003: "assets/demo/agencies/ag003.svg" };
+function tiAgencyInitials(a) {
+  if (a.code) return String(a.code).slice(0, 2).toUpperCase();
+  const words = String(a.name || "").replace(/\b(agence|immobili[eè]re?|immo|sarl|suarl|sas)\b/gi, "").trim().split(/\s+/).filter(Boolean);
+  return ((words[0] || "?")[0] + (words[1] ? words[1][0] : "")).toUpperCase();
+}
+function tiAgencyLogoHtml(a) {
+  const alt = tiEscapeHtml(a.name || "");
+  if (a.logoDataUrl) return `<img src="${a.logoDataUrl}" alt="${alt}" class="ti-brand-logo-custom">`;
+  if (typeof TI_BACKEND !== "undefined" && TI_BACKEND === "local" && TI_DEMO_AGENCY_LOGOS[a.id]) return `<img src="${TI_DEMO_AGENCY_LOGOS[a.id]}" alt="${alt}" class="ti-brand-logo-custom ti-brand-logo-square">`;
+  return `<span class="ti-brand-monogram" aria-hidden="true">${tiEscapeHtml(tiAgencyInitials(a))}</span>`;
+}
+
 /* ---------- En-tête / Pied de page ---------- */
 function tiRenderHeader(active, subsite) {
   const mount = document.getElementById("ti-header");
@@ -95,7 +110,7 @@ function tiRenderHeader(active, subsite) {
   const s = tiGetSession ? tiGetSession() : null;
   const brandHtml = subsite
     ? `<a href="listings.html?agency=${subsite.slug}" class="ti-brand">
-         ${subsite.logoDataUrl ? `<img src="${subsite.logoDataUrl}" alt="${tiEscapeHtml(subsite.name)}" class="ti-brand-logo-custom">` : `<span class="ti-brand-mark">${TI_ICONS.home}</span>`} ${tiEscapeHtml(subsite.name)}
+         ${tiAgencyLogoHtml(subsite)}<span class="ti-brand-name">${tiEscapeHtml(subsite.name)}</span>
        </a>`
     : `<a href="index.html" class="ti-brand">
          <img src="assets/brand/timmo-logo-primary.svg" alt="Timmo" class="ti-brand-logo">
