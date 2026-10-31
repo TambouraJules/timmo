@@ -1822,7 +1822,7 @@ async function tiOpenShare(p) {
         <input type="text" readonly value="${tiEscapeHtml(link)}" id="share-link-input" onclick="this.select()">
         <button type="button" class="btn btn-primary btn-sm" onclick="tiCopyShareLink()">${t("share_copy")}</button>
       </div>
-      ${typeof tiOpenSocialKit === "function" ? `<button type="button" class="ti-share-kit-btn" onclick="tiOpenSocialKit(window.__tiShareProp)">🎨 ${t("kit_open")}<small>${t("kit_open_sub")}</small></button>` : ""}
+      ${typeof tiOpenSocialKit === "function" && tiCanUseSocialKit() ? `<button type="button" class="ti-share-kit-btn" onclick="tiOpenSocialKit(window.__tiShareProp)">🎨 ${t("kit_open")}<small>${t("kit_open_sub")}</small></button>` : ""}
       ${TI_BACKEND === "api" ? `<p class="ti-share-hint">${t("share_hint")}</p>` : ""}
     </div>`;
   tiOpenModal("modal-share");
@@ -1832,4 +1832,10 @@ async function tiCopyShareLink() {
   if (!input) return;
   try { await navigator.clipboard.writeText(input.value); } catch (e) { input.select(); document.execCommand && document.execCommand("copy"); }
   tiToast(t("share_copied"));
+}
+
+/** Le kit réseaux sociaux est un outil de l'Espace Pro : agences (et agents) et administration. */
+function tiCanUseSocialKit() {
+  const s = typeof tiGetSession === "function" ? tiGetSession() : null;
+  return !!(s && (s.role === "agency" || s.role === "admin"));
 }
