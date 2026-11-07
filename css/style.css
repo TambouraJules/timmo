@@ -1432,6 +1432,19 @@ tbody tr:hover { background: rgba(191,106,61,.05); }
 .ti-report-letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; border-bottom: 3px solid var(--deep); padding-bottom: 18px; margin-bottom: 24px; flex-wrap: wrap; }
 .ti-report-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .ti-report-brand-logo { height: 28px; width: auto; display: block; }
+/* Fiche PDF : identité de l'agence en tête, Timmo en signature discrète */
+.ti-sheet-agency-head { display: flex; align-items: center; gap: 14px; }
+.ti-sheet-agency-logo .ti-brand-logo-custom, .ti-sheet-agency-logo .ti-brand-logo-square { width: 56px; height: 56px; max-width: 56px; object-fit: contain; border-radius: 12px; }
+.ti-sheet-agency-logo .ti-brand-monogram { width: 56px; height: 56px; border-radius: 12px; font-size: 1.25rem; }
+.ti-sheet-agency-name { font-weight: 800; font-size: 1.05rem; color: var(--deep); }
+.ti-sheet-agency-head h2 { margin: 2px 0 0; }
+.ti-sheet-agency-head p { margin: 2px 0 0; }
+.ti-sheet-published-on { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 6px; font-size: .72rem; color: var(--ink-soft); }
+.ti-sheet-published-on img { height: 20px; width: auto; }
+.ti-sheet-contact-logo { margin-bottom: 8px; }
+.ti-sheet-contact-logo .ti-brand-logo-custom, .ti-sheet-contact-logo .ti-brand-logo-square { width: 40px; height: 40px; max-width: 40px; object-fit: contain; border-radius: 10px; }
+.ti-sheet-contact-logo .ti-brand-monogram { width: 40px; height: 40px; }
+@media print { .ti-brand-monogram { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 .ti-report-letterhead h2 { margin: 0 0 4px; font-size: 1.5rem; }
 .ti-report-letterhead p { margin: 0; color: var(--ink-soft); font-size: .92rem; }
 .ti-report-meta { font-size: .8rem; color: var(--ink-soft); white-space: nowrap; }

@@ -96,11 +96,21 @@ function tiAgencyInitials(a) {
   const words = String(a.name || "").replace(/\b(agence|immobili[eè]re?|immo|sarl|suarl|sas)\b/gi, "").trim().split(/\s+/).filter(Boolean);
   return ((words[0] || "?")[0] + (words[1] ? words[1][0] : "")).toUpperCase();
 }
+/** Adresse de l'image du logo d'une agence, ou "" s'il n'y en a pas.
+ *  absolute = true pour une page ouverte dans une nouvelle fenêtre (affiche). */
+function tiAgencyLogoSrc(a, absolute) {
+  if (!a) return "";
+  if (a.logoDataUrl) return a.logoDataUrl;
+  // Démo : logo fictif tant que l'agence n'a ni envoyé ni retiré de logo ("" = retiré).
+  if (a.logoDataUrl == null && typeof TI_BACKEND !== "undefined" && TI_BACKEND === "local" && TI_DEMO_AGENCY_LOGOS[a.id]) {
+    return (absolute ? location.href.replace(/[^/]*$/, "") : "") + TI_DEMO_AGENCY_LOGOS[a.id];
+  }
+  return "";
+}
 function tiAgencyLogoHtml(a) {
   const alt = tiEscapeHtml(a.name || "");
-  if (a.logoDataUrl) return `<img src="${a.logoDataUrl}" alt="${alt}" class="ti-brand-logo-custom">`;
-  // Démo : logo fictif tant que l'agence n'a ni envoyé ni retiré de logo ("" = retiré).
-  if (a.logoDataUrl == null && typeof TI_BACKEND !== "undefined" && TI_BACKEND === "local" && TI_DEMO_AGENCY_LOGOS[a.id]) return `<img src="${TI_DEMO_AGENCY_LOGOS[a.id]}" alt="${alt}" class="ti-brand-logo-custom ti-brand-logo-square">`;
+  const src = tiAgencyLogoSrc(a);
+  if (src) return `<img src="${src}" alt="${alt}" class="ti-brand-logo-custom${a.logoDataUrl ? "" : " ti-brand-logo-square"}">`;
   return `<span class="ti-brand-monogram" aria-hidden="true">${tiEscapeHtml(tiAgencyInitials(a))}</span>`;
 }
 
@@ -757,12 +767,18 @@ async function tiGeneratePropertySheet(propertyId) {
   const html = `
     <div class="ti-report ti-property-sheet">
       <div class="ti-report-letterhead">
-        <div>
-          <div class="ti-report-brand"><img src="assets/brand/timmo-logo-primary.svg" alt="Timmo" class="ti-report-brand-logo"></div>
-          <h2>${t('property_sheet_title')}</h2>
-          <p>${tiEscapeHtml(agency ? agency.name : '')} · ${t('reference_label')} ${property.reference || '—'}</p>
+        <div class="ti-sheet-agency-head">
+          ${agency ? `<div class="ti-sheet-agency-logo">${tiAgencyLogoHtml(agency)}</div>` : ''}
+          <div>
+            <div class="ti-sheet-agency-name">${tiEscapeHtml(agency ? agency.name : '')}</div>
+            <h2>${t('property_sheet_title')}</h2>
+            <p>${t('reference_label')} ${property.reference || '—'}</p>
+          </div>
         </div>
-        <div class="ti-report-meta">${t('report_generated_on')} ${tiFormatDateTime(new Date().toISOString())}</div>
+        <div class="ti-report-meta">
+          <div class="ti-sheet-published-on">${t('sheet_published_on')} <img src="assets/brand/timmo-logo-primary.svg" alt="Timmo"></div>
+          ${t('report_generated_on')} ${tiFormatDateTime(new Date().toISOString())}
+        </div>
       </div>
 
       ${photos[0] ? `<div class="ti-sheet-hero"><img src="${photos[0]}" alt="" onerror="this.style.display='none'"></div>` : ''}
@@ -800,6 +816,7 @@ async function tiGeneratePropertySheet(propertyId) {
 
       <div class="ti-sheet-footer-row">
         <div class="ti-sheet-contact">
+          ${agency ? `<div class="ti-sheet-contact-logo">${tiAgencyLogoHtml(agency)}</div>` : ''}
           <strong>${tiEscapeHtml(agency ? agency.name : '')}</strong>
           ${agency && agency.phone ? `<div>${tiEscapeHtml(agency.phone)}</div>` : ''}
           ${agency && agency.email ? `<div>${tiEscapeHtml(agency.email)}</div>` : ''}

@@ -67,6 +67,9 @@ async function tiOpenQrPoster(p) {
   .facts { font-size: 5.5mm; color: #5d6773; margin-top: 4mm; }
   .agency { margin-top: 9mm; padding-top: 6mm; border-top: 0.6mm solid #e7e1d8; font-size: 5mm; }
   .agency b { display: block; font-size: 6.5mm; }
+  .agency-id { display: flex; align-items: center; gap: 4mm; }
+  .agency-logo { width: 16mm; height: 16mm; flex-shrink: 0; border-radius: 3mm; object-fit: contain; background: #fff; border: 0.4mm solid #e7e1d8; padding: 1mm; }
+  .agency-mono { width: 16mm; height: 16mm; flex-shrink: 0; border-radius: 3mm; background: #0D1B2A; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 6.5mm; }
   .agency .tel { font-size: 9mm; font-weight: 900; margin-top: 2mm; }
   .qrbox { text-align: center; }
   .qr { width: 80mm; height: 80mm; padding: 4mm; border: 1.2mm solid #0D1B2A; border-radius: 5mm; margin: 0 auto; }
@@ -90,7 +93,7 @@ async function tiOpenQrPoster(p) {
       <p class="title">${esc(p.title)}</p>
       <p class="price"><span>${price}</span><small>${suffix}</small></p>
       ${facts ? `<div class="facts">${esc(facts)}</div>` : ""}
-      ${agency ? `<div class="agency"><b>${esc(agency.name || "")}</b>${agency.phone ? `<div class="tel">${esc(agency.phone)}</div>` : ""}</div>` : ""}
+      ${agency ? `<div class="agency"><div class="agency-id">${tiPosterAgencyLogo(agency)}<b>${esc(agency.name || "")}</b></div>${agency.phone ? `<div class="tel">${esc(agency.phone)}</div>` : ""}</div>` : ""}
     </div>
     <div class="qrbox">
       <div class="qr">${qrSvg}</div>
@@ -110,4 +113,12 @@ async function tiOpenQrPoster(p) {
 function tiKitLinkForPoster(p) {
   if (typeof TI_BACKEND !== "undefined" && TI_BACKEND === "api" && (p.reference || p.id)) return `timmo.sn/p/${p.reference || p.id}`;
   return (location.host || "timmo.sn").replace(/^www\./, "");
+}
+
+/** Logo de l'agence pour l'affiche (adresse absolue : l'affiche s'ouvre dans un nouvel onglet). */
+function tiPosterAgencyLogo(agency) {
+  const src = typeof tiAgencyLogoSrc === "function" ? tiAgencyLogoSrc(agency, true) : "";
+  if (src) return `<img class="agency-logo" src="${src}" alt="">`;
+  const initials = typeof tiAgencyInitials === "function" ? tiAgencyInitials(agency) : "";
+  return initials ? `<div class="agency-mono">${tiEscapeHtml(initials)}</div>` : "";
 }
