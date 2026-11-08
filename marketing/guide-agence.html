@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide de démarrage — Espace Pro Timmo</title>
+<meta name="description" content="Guide pas à pas de l'Espace Pro Timmo pour les agences : connexion, annonces, réservations, dossiers, documents, signature, quittances, visibilité.">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/brand/favicon-32x32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="doc.css">
+<style>
+  .gcover { background: linear-gradient(160deg, var(--navy) 0%, #142a3f 70%, #3a2416 100%); color: #fff; }
+  .gcover h1 { color: #fff; font-size: 30pt; margin: 14mm 0 3mm; letter-spacing: -.03em; }
+  .toc { list-style: none; padding: 0; margin: 12mm 0 0; counter-reset: t; }
+  .toc li { counter-increment: t; display: flex; gap: 4mm; align-items: baseline; padding: 3mm 0; border-bottom: 1px solid rgba(255,255,255,.12); font-size: 11.5pt; }
+  .toc li::before { content: counter(t, decimal-leading-zero); color: var(--sun); font-weight: 900; width: 9mm; }
+  .toc li span { margin-left: auto; color: #9aa6b2; font-size: 9pt; }
+  .sec-num { display: inline-flex; width: 10mm; height: 10mm; border-radius: 10px; background: var(--clay); color: #fff; font-weight: 900; align-items: center; justify-content: center; margin-right: 3mm; font-size: 12pt; }
+  .sec h2 { display: flex; align-items: center; font-size: 17pt; margin-bottom: 3mm; }
+  .sec p { font-size: 10pt; margin: 0 0 3mm; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; align-items: start; }
+  .caption { font-size: 8pt; color: var(--soft); margin-top: 2mm; }
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 4mm 0; }
+  .flow div { background: var(--sand); border-radius: 10px; padding: 3mm; font-size: 9pt; position: relative; }
+  .flow b { display: block; color: var(--clay-dark); font-size: 9.5pt; margin-bottom: 1mm; }
+  .shot.h60 img { height: 60mm; object-fit: cover; object-position: top left; }
+  .shot.h75 img { height: 75mm; object-fit: cover; object-position: top left; }
+  @media screen and (max-width: 720px) { .shot.h60 img, .shot.h75 img { height: auto; } }
+  .hr { height: 1px; background: var(--line); margin: 7mm 0; }
+  @media screen and (max-width: 720px) { .two, .flow { grid-template-columns: 1fr; } .gcover h1 { font-size: 30px; } }
+</style>
+</head>
+<body>
+<div class="doc-bar web-only"><img src="../assets/brand/timmo-logo-white.svg" alt="Timmo"><span class="doc-bar-title">Guide de démarrage — Espace Pro</span><a href="pdf/Timmo-guide-agence.pdf" download>Télécharger le PDF</a></div>
+<main class="doc">
+
+<!-- Couverture -->
+<section class="page gcover">
+  <div class="pad">
+    <img src="../assets/brand/timmo-logo-white.svg" alt="Timmo" style="height:14mm;width:auto">
+    <div class="kicker" style="color:var(--sun);margin-top:20mm">Guide de démarrage · Agences</div>
+    <h1>Votre Espace Pro,<br>pas à pas.</h1>
+    <p class="lead" style="color:#c5ced8">Tout ce qu'il faut savoir pour publier vos biens, traiter les demandes, signer les contrats et suivre les loyers. Comptez 20 minutes de lecture.</p>
+    <ol class="toc">
+      <li>Se connecter et inviter vos agents <span>p. 2</span></li>
+      <li>Lire votre tableau de bord <span>p. 2</span></li>
+      <li>Publier une annonce <span>p. 3</span></li>
+      <li>Gérer et partager vos annonces <span>p. 4</span></li>
+      <li>Du premier contact à la location <span>p. 5</span></li>
+      <li>Envoyer des documents et faire signer <span>p. 6</span></li>
+      <li>Votre logo et votre site dédié <span>p. 6</span></li>
+      <li>Abonnement et bonnes pratiques <span>p. 7</span></li>
+    </ol>
+  </div>
+  <div class="page-foot" style="border:0;color:#9aa6b2"><span>Captures réalisées sur le site de démonstration (agences fictives) · demo.timmo.sn</span><span>Version novembre 2026</span></div>
+</section>
+
+<!-- 1 & 2 -->
+<section class="page">
+  <div class="pad sec">
+    <h2><span class="sec-num">1</span>Se connecter et inviter vos agents</h2>
+    <div class="two">
+      <div>
+        <p>L'Espace Pro a sa propre porte d'entrée : <b>www.timmo.sn/pro.html</b>. Gardez-la dans vos favoris.</p>
+        <ol class="steps">
+          <li>Saisissez votre adresse e-mail et votre mot de passe.</li>
+          <li>Pour votre sécurité, un <b>code à 6 chiffres</b> vous est envoyé par e-mail. Saisissez-le pour entrer.</li>
+          <li>Responsable de l'agence ? Ajoutez vos agents dans <b>Mes agents</b> : chacun a son propre accès et ne voit que les biens qui lui sont attribués.</li>
+        </ol>
+        <div class="tip">Chaque action importante est notée dans le <b>Journal d'activité</b> : vous savez qui a fait quoi, et quand.</div>
+      </div>
+      <div><div class="shot"><img src="shots/pro-login.png" alt="Page de connexion de l'Espace Pro"></div><div class="caption">La page de connexion réservée aux agences.</div></div>
+    </div>
+    <div class="hr"></div>
+    <h2><span class="sec-num">2</span>Lire votre tableau de bord</h2>
+    <div class="shot h60"><img src="shots/pro-stats-c.png" alt="Tableau de bord de l'agence"></div>
+    <div class="grid3" style="margin-top:4mm">
+      <div class="card"><h4>Annonces et vues</h4><p>Combien de biens sont en ligne, combien de fois ils ont été consultés.</p></div>
+      <div class="card"><h4>Demandes à traiter</h4><p>Les réservations en attente de votre réponse : à traiter en priorité, idéalement dans l'heure.</p></div>
+      <div class="card"><h4>Avis et revenus</h4><p>La note moyenne laissée par vos clients et les paiements enregistrés ce mois-ci.</p></div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Guide de démarrage · Espace Pro · 2</span></div>
+</section>
+
+<!-- 3 -->
+<section class="page">
+  <div class="pad sec">
+    <h2><span class="sec-num">3</span>Publier une annonce</h2>
+    <p>Menu <b>Publier une annonce</b>. Un assistant vous guide en quelques étapes ; l'aperçu de la carte s'affiche à droite pendant que vous remplissez.</p>
+    <div class="shot"><img src="shots/pro-new-c.png" alt="Assistant de publication d'une annonce"></div>
+    <div class="two" style="margin-top:5mm">
+      <div>
+        <ol class="steps">
+          <li><b>Informations de base</b> : titre, type de bien, location ou vente, prix, chambres, surface, quartier.</li>
+          <li><b>Photos</b> : jusqu'à 10 photos. Au moins une <b>vraie photo du bien</b> est obligatoire pour publier.</li>
+          <li><b>Description et équipements</b> : climatisation, gardien, groupe électrogène, meublé…</li>
+          <li><b>Visite 3D ou vidéo</b> (facultatif) : collez le lien de votre visite ou de votre vidéo.</li>
+          <li><b>Publier</b> : l'annonce est vérifiée par l'équipe Timmo, puis mise en ligne.</li>
+        </ol>
+      </div>
+      <div>
+        <div class="note" style="margin-bottom:4mm"><b>Les annonces qui marchent le mieux</b><br>Photo de couverture lumineuse prise de jour, prix toujours affiché, quartier précis, 6 photos ou plus, et une phrase qui dit pour qui est le bien (« idéal jeune couple », « proche VDN »).</div>
+        <div class="tip">Vos annonces sont déjà sur Facebook ou WhatsApp ? Envoyez-les à l'équipe Timmo : nous les <b>importons pour vous</b> (textes et photos), vous n'avez plus qu'à vérifier.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Guide de démarrage · Espace Pro · 3</span></div>
+</section>
+
+<!-- 4 -->
+<section class="page">
+  <div class="pad sec">
+    <h2><span class="sec-num">4</span>Gérer et partager vos annonces</h2>
+    <p>Dans <b>Mes annonces</b>, chaque bien a son statut et ses actions : voir, partager, modifier, et le menu ⋮ pour le reste.</p>
+    <div class="shot h60"><img src="shots/pro-listings-c.png" alt="Liste des annonces de l'agence"></div>
+    <div class="grid2" style="margin-top:5mm">
+      <div>
+        <h4>Les statuts</h4>
+        <table class="tbl">
+          <tr><td><b>Disponible</b></td><td>visible et réservable</td></tr>
+          <tr><td><b>Sous compromis</b></td><td>visible, signalé comme en cours</td></tr>
+          <tr><td><b>Loué / Vendu</b></td><td>retiré des recherches ; les clients qui l'avaient en favori sont prévenus</td></tr>
+        </table>
+        <p class="small muted" style="margin-top:3mm">Un bien loué via Timmo passe automatiquement en « Loué ».</p>
+      </div>
+      <div>
+        <h4>Faire connaître le bien</h4>
+        <ul class="check">
+          <li><b>Partager</b> : un lien court qui s'affiche avec photo, prix et quartier dans WhatsApp et Facebook.</li>
+          <li><b>Kit réseaux sociaux</b> : visuel carré, story et texte prêts à publier.</li>
+          <li><b>Affiche QR</b> : une affiche A4 « À louer » à coller sur le panneau ; les passants scannent et voient le bien.</li>
+          <li><b>Fiche technique PDF</b> : à envoyer ou imprimer pour les visites.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="shot h60" style="margin-top:4mm;max-width:110mm"><img src="shots/pro-kit-c.png" alt="Kit réseaux sociaux"></div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Guide de démarrage · Espace Pro · 4</span></div>
+</section>
+
+<!-- 5 -->
+<section class="page">
+  <div class="pad sec">
+    <h2><span class="sec-num">5</span>Du premier contact à la location</h2>
+    <p>Chaque demande suit le même parcours. Vous la retrouvez dans <b>Réservations</b> et, étape par étape, dans <b>Clients</b>.</p>
+    <div class="flow">
+      <div><b>1 · Demande</b>Le client réserve une visite ou un séjour. Acceptez ou refusez.</div>
+      <div><b>2 · Dossier</b>Dès l'acceptation, Timmo demande ses pièces (identité, revenus). Validez-les ou demandez une correction.</div>
+      <div><b>3 · Contrat</b>Envoyez le contrat : le client le signe avec un code reçu par e-mail.</div>
+      <div><b>4 · Client actif</b>Le kit de bienvenue part tout seul et l'échéancier des loyers démarre.</div>
+    </div>
+    <div class="shot h75"><img src="shots/pro-bookings-c.png" alt="Suivi d'une réservation, loyers et dépôt"></div>
+    <div class="two" style="margin-top:5mm">
+      <div>
+        <h4>Loyers et dépôt de garantie</h4>
+        <p>Pour une location au mois, Timmo crée l'échéancier : dépôt, puis un loyer par mois, avec les charges que vous activez (eau, internet…). Quand un paiement est reçu, cliquez sur <b>Marquer comme reçu</b>.</p>
+      </div>
+      <div>
+        <h4>Les quittances se font toutes seules</h4>
+        <p>Chaque paiement marqué reçu produit une <b>quittance PDF</b> à votre logo, rangée dans « Mes documents » du locataire, qui est prévenu par e-mail. En fin de bail, vous proposez la restitution du dépôt depuis la même page.</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Guide de démarrage · Espace Pro · 5</span></div>
+</section>
+
+<!-- 6 & 7 -->
+<section class="page">
+  <div class="pad sec">
+    <h2><span class="sec-num">6</span>Envoyer des documents et faire signer</h2>
+    <div class="shot h60"><img src="shots/pro-documents-c.png" alt="Documents clients"></div>
+    <div class="two" style="margin-top:4mm">
+      <ol class="steps">
+        <li>Menu <b>Documents clients</b>, choisissez le client et le bien.</li>
+        <li>Choisissez le type : contrat ou avenant à signer, reçu, état des lieux, infos pratiques, autre.</li>
+        <li>Ajoutez le fichier (PDF ou photo, 5 Mo maximum) et, si besoin, un message.</li>
+        <li>Envoyez : le client reçoit un e-mail et retrouve le document dans son espace.</li>
+      </ol>
+      <div>
+        <div class="note" style="margin-bottom:3mm"><b>Suivi en temps réel</b> : la liste indique « Lu le… » ou « Non lu », et « Signé » dès que le client a signé. Vous recevez aussi un e-mail.</div>
+        <div class="tip">Un contrat non signé au bout de 3 jours ? Timmo envoie une relance au client.</div>
+      </div>
+    </div>
+    <div class="hr" style="margin:5mm 0"></div>
+    <h2><span class="sec-num">7</span>Votre logo et votre site dédié</h2>
+    <div class="two">
+      <div>
+        <p>Dans <b>Mon logo</b> (réservé au responsable), envoyez le logo de votre agence. Il apparaît sur votre site dédié, sur vos fiches PDF, vos affiches QR et vos quittances.</p>
+        <p>Votre <b>site dédié</b> présente uniquement vos biens, à votre nom, avec une adresse à partager. Demandez son activation à l'équipe Timmo.</p>
+      </div>
+      <div class="shot"><img src="shots/pro-logo-c.png" alt="Envoi du logo de l'agence"></div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Guide de démarrage · Espace Pro · 6</span></div>
+</section>
+
+<!-- 8 -->
+<section class="page">
+  <div class="pad sec">
+    <h2><span class="sec-num">8</span>Abonnement et bonnes pratiques</h2>
+    <div class="two">
+      <div>
+        <p>Dans <b>Abonnement</b>, vous voyez votre formule, le nombre d'annonces et d'utilisateurs inclus, et l'historique de vos factures. Le paiement se fait par Wave, Orange Money ou carte.</p>
+        <table class="tbl" style="margin-top:3mm">
+          <tr><th>Formule</th><th>Utilisateurs</th><th>Annonces</th><th>Prix / mois</th></tr>
+          <tr><td>Standard</td><td>2</td><td>10</td><td>15 000 FCFA</td></tr>
+          <tr><td>Pro</td><td>5</td><td>30</td><td>35 000 FCFA</td></tr>
+          <tr><td>Premium</td><td>15</td><td>100</td><td>75 000 FCFA</td></tr>
+        </table>
+      </div>
+      <div class="shot"><img src="shots/pro-subscription-c.png" alt="Abonnement"></div>
+    </div>
+    <h3 style="margin-top:8mm">Les 8 réflexes des agences qui réussissent sur Timmo</h3>
+    <div class="grid2">
+      <ul class="check">
+        <li>Répondre à chaque demande dans l'heure.</li>
+        <li>Mettre à jour le statut dès qu'un bien est loué ou vendu.</li>
+        <li>Publier au moins 6 photos par bien, prises de jour.</li>
+        <li>Toujours afficher le prix : les annonces sans prix reçoivent moins de demandes sérieuses.</li>
+      </ul>
+      <ul class="check">
+        <li>Partager chaque nouveau bien avec le kit réseaux sociaux.</li>
+        <li>Coller une affiche QR sur chaque panneau « À louer ».</li>
+        <li>Marquer les loyers reçus le jour même : la quittance part tout de suite.</li>
+        <li>Demander un avis au client après la remise des clés.</li>
+      </ul>
+    </div>
+    <div class="cta-box" style="margin-top:8mm;display:flex;gap:6mm;align-items:center;background:var(--navy);color:#fff;border-radius:14px;padding:6mm">
+      <div style="flex:1"><h3 style="color:#fff;margin:0 0 1mm">Besoin d'aide ?</h3><p style="margin:0;color:#c5ced8;font-size:10pt">Écrivez-nous à <b style="color:#fff">contact@timmo.sn</b>. Entraînez-vous sans risque sur le site de démonstration : <b style="color:#fff">demo.timmo.sn</b></p></div>
+      <img src="img/qr-demo.svg" alt="QR code vers la démo" style="width:26mm;background:#fff;border-radius:8px;padding:2mm">
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Guide de démarrage · Espace Pro · 7</span></div>
+</section>
+
+</main>
+</body>
+</html>

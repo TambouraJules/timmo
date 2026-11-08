@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide Timmo — Louer ou acheter en toute confiance</title>
+<meta name="description" content="Le guide Timmo pour les locataires et les acheteurs : chercher, créer une alerte, réserver une visite, constituer son dossier, signer et retrouver ses quittances.">
+<meta property="og:title" content="Le guide Timmo : louer ou acheter en toute confiance">
+<meta property="og:image" content="https://www.timmo.sn/assets/brand/og-image.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/brand/favicon-32x32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="doc.css">
+<style>
+  .ccover { background: linear-gradient(160deg, #F7E3CF 0%, var(--cream) 55%, #fff 100%); }
+  .ccover h1 { font-size: 30pt; letter-spacing: -.03em; margin: 12mm 0 3mm; }
+  .ccover h1 em { font-style: normal; color: var(--clay); }
+  .phones { display: flex; justify-content: center; align-items: flex-end; gap: 6mm; margin-top: 12mm; }
+  .phones .phone:nth-child(2) { width: 58mm; transform: translateY(-6mm); }
+  .row { display: flex; gap: 8mm; align-items: flex-start; }
+  .row .phone { width: 64mm; }
+  .row > div:not(.phone) { flex: 1; min-width: 0; }
+  .sec h2 { font-size: 18pt; }
+  .sec p { font-size: 10.5pt; }
+  .num { color: var(--clay); font-weight: 900; margin-right: 2mm; }
+  .safe { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .safe div { border-radius: 12px; padding: 4mm; background: #EEF6F1; font-size: 9.5pt; }
+  .safe b { display: block; color: var(--green); margin-bottom: 1mm; font-size: 10pt; }
+  @media screen and (max-width: 720px) {
+    .phones { flex-wrap: wrap; } .phones .phone { width: 130px; } .phones .phone:nth-child(2) { width: 150px; transform: none; }
+    .row { flex-direction: column; align-items: center; } .row .phone { width: 190px; }
+    .safe { grid-template-columns: 1fr; } .ccover h1 { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="doc-bar web-only"><img src="../assets/brand/timmo-logo-white.svg" alt="Timmo"><span class="doc-bar-title">Le guide Timmo — locataires et acheteurs</span><a href="pdf/Timmo-guide-client.pdf" download>Télécharger le PDF</a></div>
+<main class="doc">
+
+<section class="page ccover">
+  <div class="pad">
+    <img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo" style="height:14mm;width:auto">
+    <div class="kicker" style="margin-top:14mm">Le guide des locataires et des acheteurs</div>
+    <h1>Trouver, visiter, emménager.<br><em>Sans mauvaise surprise.</em></h1>
+    <p class="lead">Sur Timmo, chaque bien est proposé par une agence identifiée, avec de vraies photos et un prix affiché. Ce guide vous montre comment en profiter, de la recherche jusqu'à la quittance.</p>
+    <div class="phones">
+      <div class="phone"><img src="shots/m-home.png" alt="Accueil de Timmo"></div>
+      <div class="phone"><img src="shots/m-property-phone.png" alt="Fiche d'un bien"></div>
+      <div class="phone"><img src="shots/m-documents.png" alt="Mes documents"></div>
+    </div>
+  </div>
+  <div class="page-foot"><span>www.timmo.sn</span><span>Captures du site de démonstration · biens et agences fictifs</span></div>
+</section>
+
+<section class="page">
+  <div class="pad sec">
+    <div class="kicker">Étape 1</div>
+    <h2>Chercher le bon bien</h2>
+    <div class="row">
+      <div class="phone"><img src="shots/m-listings.png" alt="Résultats de recherche"></div>
+      <div>
+        <p>Choisissez <b>Louer</b> ou <b>Acheter</b>, puis affinez avec les filtres : type de bien, quartier, budget, nombre de chambres.</p>
+        <ul class="check">
+          <li><b>« Titre vérifié uniquement »</b> pour n'afficher que les biens dont l'agence a fourni le titre de propriété.</li>
+          <li><b>Carte</b> pour voir les biens autour de votre travail ou de l'école des enfants.</li>
+          <li><b>♡ Favoris</b> pour garder une sélection ; vous êtes prévenu si un favori est loué ou vendu.</li>
+        </ul>
+        <div class="kicker" style="margin-top:8mm">Astuce</div>
+        <h3 style="font-size:13pt">Rien ne vous convient encore ? Créez une alerte.</h3>
+        <p>En bas des filtres ou à la fin des résultats, <b>Créer une alerte</b> enregistre votre recherche. Chaque nouveau bien correspondant vous est envoyé par e-mail dès sa mise en ligne. Vous pouvez arrêter l'alerte en un clic.</p>
+      </div>
+      <div class="phone hide-sm" style="width:46mm"><img src="shots/m-alert.png" alt="Créer une alerte"></div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Le guide Timmo · 2</span></div>
+</section>
+
+<section class="page">
+  <div class="pad sec">
+    <div class="kicker">Étape 2</div>
+    <h2>Visiter et réserver</h2>
+    <div class="row">
+      <div>
+        <p>La fiche d'un bien réunit tout ce qu'il faut savoir avant d'appeler : photos, prix, charges, équipements, disponibilité, carte et avis des clients précédents. Certaines agences proposent aussi une <b>visite 3D ou vidéo</b>.</p>
+        <ol class="steps">
+          <li>Cliquez sur <b>Faire une réservation</b> et choisissez une date de visite (ou vos dates de séjour).</li>
+          <li>Créez votre compte en 1 minute : vous suivez ensuite tout dans <b>Mon espace</b>.</li>
+          <li>L'agence confirme. Pour une location, elle vous demande quelques pièces : <b>pièce d'identité</b> et <b>justificatif de revenus</b>. Envoyez-les directement depuis votre téléphone.</li>
+          <li>Dossier validé : l'agence vous envoie le contrat à signer en ligne.</li>
+        </ol>
+        <div class="note" style="margin-top:4mm">Une question ? Écrivez à l'agence depuis la fiche du bien : la conversation reste dans votre espace, avec l'historique.</div>
+      </div>
+      <div class="phone"><img src="shots/m-property-phone.png" alt="Fiche d'un bien"></div>
+    </div>
+    <div class="kicker" style="margin-top:10mm">Pendant la location</div>
+    <h3 style="font-size:14pt">Votre espace vous accompagne jusqu'au départ</h3>
+    <div class="grid3">
+      <div class="card"><h4>Mes paiements</h4><p>L'échéancier de vos loyers et charges, mois par mois, avec ce qui est réglé et ce qui reste à venir.</p></div>
+      <div class="card"><h4>Dépôt de garantie</h4><p>En fin de bail, l'agence propose la restitution de votre dépôt dans l'espace. Vous l'acceptez ou vous la contestez.</p></div>
+      <div class="card"><h4>Votre avis compte</h4><p>Après votre séjour ou votre location, laissez un avis : il aide les prochains locataires à choisir.</p></div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Le guide Timmo · 3</span></div>
+</section>
+
+<section class="page">
+  <div class="pad sec">
+    <div class="kicker">Étape 3</div>
+    <h2>Signer et retrouver tous vos documents</h2>
+    <p>Dans <b>Mon espace › Mes documents</b>, tout ce que vous échangez avec votre agence est rangé par bien : contrat, état des lieux, quittances, kit de bienvenue, et les pièces que vous avez envoyées. Vous recevez un e-mail à chaque nouveau document.</p>
+    <div class="phones" style="margin-top:6mm">
+      <div class="phone" style="width:50mm"><img src="shots/m-documents.png" alt="Mes documents"></div>
+      <div class="phone" style="width:50mm;transform:none"><img src="shots/m-sign.png" alt="Signature par code"></div>
+      <div class="phone" style="width:50mm"><img src="shots/m-receipt.png" alt="Quittance de loyer"></div>
+    </div>
+    <div class="grid3" style="margin-top:6mm">
+      <div class="card"><h4><span class="num">1</span>À traiter</h4><p>En haut de la page : les documents à signer et les pièces que l'agence attend de vous.</p></div>
+      <div class="card"><h4><span class="num">2</span>Signer avec un code</h4><p>Lisez le document, cochez « Lu et approuvé », puis saisissez le code à 6 chiffres reçu par e-mail.</p></div>
+      <div class="card"><h4><span class="num">3</span>Lire ou télécharger</h4><p>Chaque document s'ouvre dans la page. Le PDF d'un contrat signé contient son certificat de signature.</p></div>
+    </div>
+    <div class="tip" style="margin-top:4mm">Chaque loyer réglé auprès de votre agence produit une <b>quittance</b> à télécharger : utile pour un dossier de banque, de visa ou un futur bail.</div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Le guide Timmo · 4</span></div>
+</section>
+
+<section class="page">
+  <div class="pad sec">
+    <div class="kicker">Bon à savoir</div>
+    <h2>Timmo sur votre téléphone, comme une application</h2>
+    <div class="row">
+      <div>
+        <ol class="steps">
+          <li><b>Android</b> : ouvrez www.timmo.sn dans Chrome, puis touchez <b>Installer</b> dans le bandeau (ou menu ⋮ › Installer l'application).</li>
+          <li><b>iPhone</b> : ouvrez www.timmo.sn dans Safari, touchez <b>Partager</b> › <b>Sur l'écran d'accueil</b>.</li>
+          <li>Timmo s'ouvre alors en plein écran, avec Accueil, Rechercher, Favoris et Compte en bas de l'écran.</li>
+        </ol>
+      </div>
+      <img src="img/qr-site.svg" alt="QR code vers www.timmo.sn" style="width:34mm;border:1px solid var(--line);border-radius:10px;padding:2mm">
+    </div>
+    <h2 style="margin-top:10mm">Vos réflexes sécurité</h2>
+    <div class="safe">
+      <div><b>Visitez avant de payer</b>Ne versez jamais de dépôt pour un bien que vous n'avez pas visité, ni à une personne qui n'est pas l'agence du bien.</div>
+      <div><b>Exigez un reçu</b>Chaque paiement doit être enregistré par l'agence : votre reçu ou votre quittance apparaît alors dans « Mes documents ».</div>
+      <div><b>Gardez vos codes pour vous</b>Les codes reçus par e-mail servent à vous connecter ou à signer. Personne chez Timmo ne vous les demandera.</div>
+      <div><b>Signalez un doute</b>Une annonce vous paraît suspecte ? Écrivez-nous à contact@timmo.sn avec le lien de l'annonce.</div>
+    </div>
+    <div style="margin-top:10mm;background:var(--navy);color:#fff;border-radius:14px;padding:6mm;display:flex;justify-content:space-between;align-items:center;gap:6mm" class="stack-sm">
+      <div><h3 style="color:#fff;margin:0 0 1mm">Prêt à trouver votre prochain chez-vous ?</h3><p style="margin:0;color:#c5ced8">www.timmo.sn · contact@timmo.sn</p></div>
+      <img src="../assets/brand/timmo-logo-white.svg" alt="Timmo" style="height:12mm;width:auto">
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Le guide Timmo · 5</span></div>
+</section>
+
+</main>
+</body>
+</html>

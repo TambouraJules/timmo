@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo — Présentation agences</title>
+<meta name="description" content="Présentation de Timmo pour les rendez-vous avec les agences immobilières : constat, solution, démonstration, offre partenaires fondateurs.">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/brand/favicon-32x32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="doc.css">
+<style>
+  /* Diapositives 16:9 — toutes les tailles en cqw (% de la largeur de la diapositive) */
+  .deck { padding: 24px 16px 60px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .slide { width: 100%; max-width: 1100px; aspect-ratio: 16 / 9; container-type: inline-size; position: relative; overflow: hidden; background: #fff; box-shadow: 0 12px 40px rgba(13,27,42,.14); border-radius: 10px; }
+  .in { position: absolute; inset: 0; padding: 5cqw 6cqw; display: flex; flex-direction: column; }
+  .slide h2 { font-size: 3.6cqw; letter-spacing: -.03em; margin: 0 0 2cqw; }
+  .slide h1 { font-size: 5.2cqw; letter-spacing: -.035em; margin: 0 0 1.6cqw; line-height: 1.05; }
+  .slide p, .slide li { font-size: 1.55cqw; }
+  .k { font-size: 1.1cqw; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--clay); margin-bottom: 1cqw; }
+  .s-dark { background: var(--navy); color: #fff; }
+  .s-dark h1, .s-dark h2 { color: #fff; }
+  .s-dark p { color: #c5ced8; }
+  .s-num { position: absolute; right: 3cqw; bottom: 2.2cqw; font-size: 1cqw; color: var(--soft); display: flex; gap: 1cqw; align-items: center; }
+  .s-num img { height: 1.8cqw; width: auto; }
+  .cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.2cqw; }
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3cqw; align-items: center; flex: 1; }
+  .box { border-radius: 1.4cqw; padding: 2.2cqw; background: var(--sand); }
+  .box h3 { font-size: 1.9cqw; margin: 0 0 .8cqw; }
+  .box p { margin: 0; color: var(--soft); font-size: 1.4cqw; }
+  .big { font-size: 7cqw; font-weight: 900; color: var(--sun); line-height: 1; letter-spacing: -.03em; }
+  .flowx { display: flex; gap: 1.2cqw; align-items: stretch; margin-top: 2cqw; }
+  .flowx div { flex: 1; background: var(--sand); border-radius: 1.2cqw; padding: 1.8cqw 1.4cqw; position: relative; }
+  .flowx b { display: block; font-size: 1.6cqw; color: var(--navy); margin-bottom: .6cqw; }
+  .flowx span { font-size: 1.25cqw; color: var(--soft); }
+  .flowx i { font-style: normal; display: block; font-size: 2.6cqw; margin-bottom: .8cqw; }
+  .shotx { border-radius: 1cqw; overflow: hidden; box-shadow: 0 1cqw 3cqw rgba(13,27,42,.18); border: 1px solid var(--line); }
+  .phonex { width: 15cqw; border: .6cqw solid var(--navy); border-radius: 2.4cqw; overflow: hidden; box-shadow: 0 1cqw 3cqw rgba(13,27,42,.25); background: #fff; }
+  .gain { display: grid; grid-template-columns: 1fr 1fr; gap: 2cqw 3cqw; }
+  .gain div { display: flex; gap: 1.4cqw; align-items: flex-start; }
+  .gain em { font-style: normal; font-size: 2.6cqw; }
+  .gain b { display: block; font-size: 1.8cqw; color: var(--navy); }
+  .gain span { font-size: 1.4cqw; color: var(--soft); }
+  .plansx { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; }
+  .plansx div { border: 1px solid var(--line); border-radius: 1.2cqw; padding: 1.6cqw; text-align: center; }
+  .plansx b { display: block; font-size: 1.7cqw; }
+  .plansx strong { display: block; font-size: 3cqw; color: var(--navy); margin: .6cqw 0 .2cqw; }
+  .plansx span { font-size: 1.2cqw; color: var(--soft); }
+  .stepsx { counter-reset: q; list-style: none; padding: 0; margin: 0; }
+  .stepsx li { counter-increment: q; display: flex; gap: 1.6cqw; align-items: center; margin-bottom: 1.8cqw; font-size: 1.8cqw; }
+  .stepsx li::before { content: counter(q); flex-shrink: 0; width: 3.6cqw; height: 3.6cqw; border-radius: 50%; background: var(--clay); color: #fff; font-weight: 900; font-size: 1.7cqw; display: flex; align-items: center; justify-content: center; }
+  @media print {
+    @page { size: 338.67mm 190.5mm; margin: 0; }
+    .deck { padding: 0; gap: 0; display: block; }
+    .slide { width: 338.67mm; height: 190.5mm; max-width: none; aspect-ratio: auto; box-shadow: none; border-radius: 0; page-break-after: always; break-after: page; }
+    .slide:last-child { page-break-after: auto; break-after: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="doc-bar web-only"><img src="../assets/brand/timmo-logo-white.svg" alt="Timmo"><span class="doc-bar-title">Timmo — présentation agences</span><a href="pdf/Timmo-presentation-agences.pdf" download>Télécharger le PDF</a></div>
+<main class="deck">
+
+<section class="slide s-dark"><div class="in" style="justify-content:center;background:radial-gradient(90% 90% at 100% 0%, #3a2416 0%, transparent 60%)">
+  <img src="../assets/brand/timmo-logo-white.svg" alt="Timmo — Teranga Immobilière" style="height:7cqw;width:auto;margin-bottom:4cqw">
+  <h1>La plateforme immobilière<br>des agences sénégalaises.</h1>
+  <p style="font-size:2cqw;max-width:60cqw">Publier, qualifier les demandes, signer et encaisser, au même endroit.</p>
+  <p style="margin-top:5cqw;font-size:1.5cqw;color:#9aa6b2">Souleymane Tamboura · Fondateur · contact@timmo.sn</p>
+</div></section>
+
+<section class="slide"><div class="in">
+  <div class="k">Le constat</div>
+  <h2>Une agence fait trois métiers à la fois.</h2>
+  <div class="cols3" style="margin-top:2cqw">
+    <div class="box" style="background:#FDF3EE"><h3>Annonces éparpillées</h3><p>Facebook, statuts WhatsApp, sites d'annonces, panneaux : le même bien publié cinq fois, rarement à jour.</p></div>
+    <div class="box" style="background:#FDF3EE"><h3>Appels non qualifiés</h3><p>« C'est encore libre ? » « C'est combien ? » Beaucoup de messages pour des biens déjà loués ou hors budget.</p></div>
+    <div class="box" style="background:#FDF3EE"><h3>Papiers à la main</h3><p>Contrats imprimés, signatures à distance compliquées, quittances refaites chaque mois.</p></div>
+  </div>
+  <p style="margin-top:auto;font-size:1.8cqw;font-weight:700;color:var(--navy)">Résultat : du temps perdu, et des clients qui ne savent pas à qui faire confiance.</p>
+  <div class="s-num"><img src="../assets/brand/timmo-logo-primary.svg" alt="">2</div>
+</div></section>
+
+<section class="slide s-dark"><div class="in">
+  <div class="k" style="color:var(--sun)">Le marché</div>
+  <h2>Vos clients cherchent déjà sur leur téléphone.</h2>
+  <div class="cols2">
+    <div><div class="big">11,5 M</div><p style="font-size:1.8cqw">d'internautes au Sénégal, 60,6 % de la population</p></div>
+    <div><div class="big">23,3 M</div><p style="font-size:1.8cqw">de connexions mobiles, 122 % de la population</p></div>
+  </div>
+  <p style="font-size:1.1cqw;color:#9aa6b2">Source : DataReportal, Digital 2026 : Sénégal (données fin 2025).</p>
+  <div class="s-num" style="color:#9aa6b2">3</div>
+</div></section>
+
+<section class="slide"><div class="in">
+  <div class="k">La solution</div>
+  <h2>Timmo suit chaque client, du premier clic à la quittance.</h2>
+  <div class="flowx">
+    <div><i>🏠</i><b>Annonce</b><span>Vraies photos, prix, carte, visite 3D. Partagée en un clic.</span></div>
+    <div><i>📅</i><b>Demande</b><span>Le client réserve sa visite en ligne, en connaissant le prix.</span></div>
+    <div><i>📁</i><b>Dossier</b><span>Pièces d'identité et revenus envoyées depuis le téléphone.</span></div>
+    <div><i>✍️</i><b>Contrat</b><span>Signé avec un code reçu par e-mail, certificat joint.</span></div>
+    <div><i>🧾</i><b>Loyers</b><span>Échéancier, quittances automatiques à votre logo.</span></div>
+  </div>
+  <p style="margin-top:auto;font-size:1.6cqw;color:var(--soft)">Le client retrouve tout dans « Mes documents ». Vous voyez ce qui a été lu, signé et payé.</p>
+  <div class="s-num"><img src="../assets/brand/timmo-logo-primary.svg" alt="">4</div>
+</div></section>
+
+<section class="slide"><div class="in">
+  <div class="k">Démonstration · 1</div>
+  <h2>Des annonces qui inspirent confiance.</h2>
+  <div class="cols2" style="grid-template-columns:1.5fr 1fr">
+    <div class="shotx"><img src="shots/web-listings.png" alt="Liste des biens"></div>
+    <ul class="check" style="font-size:1.6cqw">
+      <li>Au moins une vraie photo obligatoire, 10 au maximum</li>
+      <li>Prix, disponibilité et carte toujours visibles</li>
+      <li>Visite 3D ou vidéo quand vous en avez une</li>
+      <li>Filtre « titre vérifié » pour rassurer les acheteurs</li>
+      <li>Alertes envoyées aux visiteurs dès votre publication</li>
+    </ul>
+  </div>
+  <div class="s-num"><img src="../assets/brand/timmo-logo-primary.svg" alt="">5</div>
+</div></section>
+
+<section class="slide"><div class="in">
+  <div class="k">Démonstration · 2</div>
+  <h2>Votre Espace Pro.</h2>
+  <div class="cols2" style="grid-template-columns:1fr 1.5fr">
+    <ul class="check" style="font-size:1.6cqw">
+      <li>Tableau de bord : annonces, demandes, avis, revenus</li>
+      <li>Un accès par agent, biens attribués</li>
+      <li>Kit réseaux sociaux et affiche QR pour vos panneaux</li>
+      <li>Votre logo sur vos documents et votre site dédié</li>
+      <li>Journal d'activité pour le responsable</li>
+    </ul>
+    <div class="shotx"><img src="shots/pro-stats.png" alt="Tableau de bord"></div>
+  </div>
+  <div class="s-num"><img src="../assets/brand/timmo-logo-primary.svg" alt="">6</div>
+</div></section>
+
+<section class="slide"><div class="in">
+  <div class="k">Démonstration · 3</div>
+  <h2>Documents, signature et quittances, sans papier.</h2>
+  <div style="display:flex;gap:3cqw;align-items:flex-start;margin-top:.5cqw">
+    <div class="shotx" style="flex:1;min-width:0"><img src="shots/cli-documents-desk.png" alt="Mes documents du client" style="height:33cqw;width:100%;object-fit:cover;object-position:top left"></div>
+    <div class="phonex" style="width:16cqw"><img src="shots/m-sign.png" alt="Signature par code" style="height:31cqw;width:100%;object-fit:cover;object-position:top"></div>
+  </div>
+  <div class="s-num"><img src="../assets/brand/timmo-logo-primary.svg" alt="">7</div>
+</div></section>
+
+<section class="slide"><div class="in">
+  <div class="k">Ce que vous gagnez</div>
+  <h2>Moins de temps perdu, plus d'affaires conclues.</h2>
+  <div class="gain" style="margin-top:2cqw">
+    <div><em>⏱️</em><p><b>Moins d'appels inutiles</b><span>Les clients voient prix et disponibilité avant d'écrire.</span></p></div>
+    <div><em>🤝</em><p><b>Une image professionnelle</b><span>Annonces soignées, documents à votre logo, site dédié.</span></p></div>
+    <div><em>📄</em><p><b>Zéro papier</b><span>Dossier, contrat et quittances en ligne, avec le suivi de lecture.</span></p></div>
+    <div><em>🔁</em><p><b>Des clients qui reviennent</b><span>Alertes, favoris et avis entretiennent le lien après la location.</span></p></div>
+  </div>
+  <div class="s-num"><img src="../assets/brand/timmo-logo-primary.svg" alt="">8</div>
+</div></section>
+
+<section class="slide"><div class="in">
+  <div class="k">L'offre</div>
+  <h2>Partenaires fondateurs : 20 places.</h2>
+  <div class="cols2" style="grid-template-columns:1fr 1.2fr;align-items:start">
+    <div class="box" style="background:linear-gradient(135deg,var(--clay),#D98A54);color:#fff">
+      <ul style="margin:0;padding-left:2cqw;font-size:1.6cqw;line-height:1.6">
+        <li>Gratuit jusqu'au lancement officiel</li>
+        <li>Puis 3 mois offerts</li>
+        <li>Annonces importées par notre équipe</li>
+        <li>Badge fondateur et mise en avant</li>
+        <li>Votre avis sur les prochaines fonctions</li>
+      </ul>
+    </div>
+    <div>
+      <p style="margin:0 0 1.2cqw;color:var(--soft)">Ensuite, toutes les fonctions incluses :</p>
+      <div class="plansx">
+        <div><b>Standard</b><strong>15 000</strong><span>FCFA / mois<br>2 utilisateurs · 10 annonces</span></div>
+        <div style="border:2px solid var(--clay)"><b>Pro</b><strong>35 000</strong><span>FCFA / mois<br>5 utilisateurs · 30 annonces</span></div>
+        <div><b>Premium</b><strong>75 000</strong><span>FCFA / mois<br>15 utilisateurs · 100 annonces</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="s-num"><img src="../assets/brand/timmo-logo-primary.svg" alt="">9</div>
+</div></section>
+
+<section class="slide s-dark"><div class="in">
+  <div class="k" style="color:var(--sun)">Prochaines étapes</div>
+  <h2>On commence cette semaine ?</h2>
+  <div class="cols2" style="grid-template-columns:1.4fr 1fr">
+    <ol class="stepsx">
+      <li>Création de votre compte agence (5 minutes)</li>
+      <li>Import de vos annonces par notre équipe</li>
+      <li>Prise en main de 15 minutes avec vos agents</li>
+      <li>Vos premiers biens partagés avec le kit réseaux sociaux</li>
+    </ol>
+    <div style="text-align:center">
+      <img src="img/qr-pro.svg" alt="QR code Espace Pro" style="width:16cqw;background:#fff;border-radius:1.2cqw;padding:1cqw;margin:0 auto">
+      <p style="margin-top:1.4cqw;font-size:1.5cqw;color:#fff"><b>www.timmo.sn/pro.html</b><br>contact@timmo.sn</p>
+    </div>
+  </div>
+</div></section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo pour les agences immobilières — Plaquette</title>
+<meta name="description" content="Timmo, la plateforme immobilière sénégalaise pour les agences : annonces vérifiées, demandes qualifiées, contrats signés en ligne, quittances automatiques. Offre partenaires fondateurs.">
+<meta property="og:title" content="Timmo pour les agences immobilières">
+<meta property="og:description" content="Publiez, recevez des demandes qualifiées, signez et encaissez au même endroit. Offre partenaires fondateurs.">
+<meta property="og:image" content="https://www.timmo.sn/assets/brand/og-image.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/brand/favicon-32x32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="doc.css">
+<style>
+  .cover { background: radial-gradient(120% 80% at 90% 0%, #2a1a12 0%, var(--navy) 55%); color: #fff; }
+  .cover h1 { color: #fff; font-size: 30pt; line-height: 1.05; letter-spacing: -.03em; margin: 6mm 0 4mm; }
+  .cover h1 em { font-style: normal; color: var(--sun); }
+  .cover .lead { color: #c5ced8; font-size: 12pt; max-width: 120mm; }
+  .cover-visual { position: relative; margin: 12mm 0 0; padding-right: 34mm; }
+  .cover-visual .phone { position: absolute; right: 2mm; top: -14mm; width: 44mm; }
+  .founder { display: flex; align-items: center; gap: 5mm; margin: 20mm 15mm 0; background: linear-gradient(135deg, var(--clay), #D98A54); border-radius: 14px; padding: 5mm 6mm; color: #fff; }
+  .founder b { font-size: 13pt; display: block; }
+  .founder span { font-size: 9.5pt; opacity: .95; }
+  .founder .seal { width: 22mm; height: 22mm; border-radius: 50%; background: var(--sun); color: var(--navy); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; line-height: 1; flex-shrink: 0; text-align: center; }
+  .founder .seal small { font-size: 6.5pt; letter-spacing: .1em; }
+  .founder .seal strong { font-size: 18pt; }
+  .pain { border-radius: 12px; padding: 4mm; background: #FDF3EE; border: 1px solid #F3D3C2; }
+  .pain h4 { color: #8E3B17; font-size: 11pt; }
+  .pain p { margin: 0; font-size: 9.5pt; color: #6f4a3a; }
+  .arrow { text-align: center; font-size: 18pt; color: var(--clay); margin: 4mm 0; }
+  .stat { display: flex; gap: 6mm; background: var(--navy); color: #fff; border-radius: 14px; padding: 6mm; align-items: center; }
+  .stat b { font-size: 20pt; white-space: nowrap; color: var(--sun); line-height: 1; display: block; }
+  .stat span { font-size: 9pt; color: #c5ced8; }
+  .feat { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; align-items: center; margin-bottom: 7mm; }
+  .feat h3 { font-size: 14pt; margin-bottom: 2mm; }
+  .feat p { font-size: 10pt; color: var(--soft); margin: 0 0 2mm; }
+  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+  .how div { background: var(--sand); border-radius: 12px; padding: 4mm; }
+  .how b { display: block; color: var(--clay); font-size: 18pt; line-height: 1; margin-bottom: 2mm; }
+  .how p { margin: 0; font-size: 9.5pt; }
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .plan { border: 1px solid var(--line); border-radius: 14px; padding: 5mm; text-align: center; }
+  .plan.hot { border: 2px solid var(--clay); box-shadow: 0 8px 26px rgba(191,106,61,.18); }
+  .plan h4 { font-size: 12pt; margin: 0; }
+  .plan .price { font-size: 19pt; font-weight: 900; color: var(--navy); margin: 3mm 0 0; }
+  .plan .per { font-size: 8.5pt; color: var(--soft); }
+  .plan ul { list-style: none; padding: 0; margin: 4mm 0 0; font-size: 9pt; text-align: left; }
+  .plan li { padding: 4px 0; border-top: 1px solid var(--line); }
+  .offer { background: var(--navy); color: #fff; border-radius: 16px; padding: 6mm; display: grid; grid-template-columns: 1fr auto; gap: 6mm; align-items: center; }
+  .offer h3 { color: var(--sun); font-size: 15pt; }
+  .offer ul { margin: 0; padding-left: 18px; font-size: 10pt; color: #e3e8ee; }
+  .qr { width: 30mm; background: #fff; border-radius: 10px; padding: 2mm; }
+  .faq h4 { font-size: 10.5pt; margin: 0 0 1mm; }
+  .faq p { font-size: 9.5pt; color: var(--soft); margin: 0 0 4mm; }
+  .cta { display: flex; gap: 6mm; align-items: center; justify-content: space-between; border: 2px dashed var(--clay); border-radius: 14px; padding: 5mm 6mm; }
+  .cta h3 { margin: 0 0 1mm; font-size: 14pt; }
+  @media screen and (max-width: 720px) {
+    .cover h1 { font-size: 30px; }
+    .cover-visual { padding-right: 0; }
+    .cover-visual .phone { position: static; margin: 14px auto 0; width: 150px; }
+    .founder { margin: 20px 18px 0; flex-direction: column; text-align: center; }
+    .feat, .how, .plans, .offer { grid-template-columns: 1fr; }
+    .stat, .cta { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="doc-bar web-only"><img src="../assets/brand/timmo-logo-white.svg" alt="Timmo"><span class="doc-bar-title">Timmo pour les agences immobilières</span><a href="pdf/Timmo-plaquette-agences.pdf" download>Télécharger le PDF</a></div>
+<main class="doc">
+
+<!-- ============ PAGE 1 : COUVERTURE ============ -->
+<section class="page cover">
+  <div class="pad" style="padding-bottom:0">
+    <img src="../assets/brand/timmo-logo-white.svg" alt="Timmo — Teranga Immobilière" style="height:15mm;width:auto">
+    <div class="kicker" style="color:var(--sun);margin-top:12mm">Pour les agences immobilières du Sénégal</div>
+    <h1>Vos biens méritent mieux qu'un <em>groupe WhatsApp</em>.</h1>
+    <p class="lead">Timmo réunit vos annonces, vos demandes de visite, vos contrats et vos quittances dans un seul espace professionnel. Vous passez moins de temps au téléphone et plus de temps à conclure.</p>
+    <div class="cover-visual">
+      <div class="laptop"><img src="shots/web-listings.png" alt="Annonces sur Timmo"></div><div class="laptop-base"></div>
+      <div class="phone"><img src="shots/m-property-phone.png" alt="Fiche d'un bien sur téléphone"></div>
+    </div>
+  </div>
+  <div class="founder">
+    <div class="seal"><small>LES</small><strong>20</strong><small>PREMIÈRES</small></div>
+    <div><b>Programme partenaires fondateurs</b><span>Gratuit jusqu'au lancement officiel, puis 3 mois offerts. Vos annonces importées pour vous. Une place mise en avant au lancement.</span></div>
+  </div>
+  <div class="page-foot" style="border:0;color:#9aa6b2"><span>www.timmo.sn · contact@timmo.sn</span><span>Teranga Immobilière</span></div>
+</section>
+
+<!-- ============ PAGE 2 : LE CONSTAT ============ -->
+<section class="page">
+  <div class="pad">
+    <div class="kicker">Le constat</div>
+    <h2 style="font-size:18pt">Aujourd'hui, une agence fait trois métiers à la fois.</h2>
+    <div class="grid3" style="margin-top:6mm">
+      <div class="pain"><h4>Des annonces éparpillées</h4><p>Facebook, statuts WhatsApp, sites d'annonces, panneaux… Chaque bien est publié cinq fois, et jamais à jour partout.</p></div>
+      <div class="pain"><h4>Des appels qui font perdre du temps</h4><p>« C'est encore libre ? » « C'est combien ? » Beaucoup de messages pour des biens déjà loués ou hors budget.</p></div>
+      <div class="pain"><h4>Des papiers à la main</h4><p>Contrats imprimés, signatures à distance compliquées, quittances refaites chaque mois, relances de loyers par téléphone.</p></div>
+    </div>
+    <div class="arrow" style="margin:2mm 0">↓</div>
+    <div class="kicker">Ce que Timmo change</div>
+    <h2 style="font-size:18pt">Un seul espace, du premier clic à la remise des clés.</h2>
+    <div class="grid3" style="margin-top:6mm">
+      <div class="card"><div class="ico">🏠</div><h4>Des annonces qui inspirent confiance</h4><p>Photos réelles obligatoires, prix affiché, disponibilité, carte, visite 3D ou vidéo, badge « titre vérifié ».</p></div>
+      <div class="card"><div class="ico">📅</div><h4>Des demandes qualifiées</h4><p>Le client voit tout avant d'écrire, puis réserve sa visite en ligne. Vous recevez moins de messages, mais de meilleurs.</p></div>
+      <div class="card"><div class="ico">✍️</div><h4>Contrats signés en ligne</h4><p>Le locataire signe avec un code reçu par e-mail. Certificat de signature joint au PDF.</p></div>
+      <div class="card"><div class="ico">🧾</div><h4>Quittances automatiques</h4><p>Chaque loyer enregistré produit une quittance à votre logo, envoyée au locataire.</p></div>
+      <div class="card"><div class="ico">📣</div><h4>Visibilité sur les réseaux</h4><p>Visuels prêts pour WhatsApp, Facebook, Instagram, liens avec aperçu photo et prix, affiche QR pour vos panneaux.</p></div>
+      <div class="card"><div class="ico">🔔</div><h4>Des acheteurs qui reviennent</h4><p>Les visiteurs créent des alertes : chaque nouveau bien correspondant leur est envoyé dès sa publication.</p></div>
+    </div>
+    <div class="stat" style="margin-top:6mm;padding:5mm 6mm">
+      <div><b>11,5 millions</b><span>d'internautes au Sénégal, soit 60,6 % de la population</span></div>
+      <div><b>23,3 millions</b><span>de connexions mobiles, 122 % de la population</span></div>
+      <div class="small" style="color:#9aa6b2;max-width:52mm">Vos futurs clients cherchent déjà sur leur téléphone.<br>Source : DataReportal, <em>Digital 2026 : Sénégal</em> (données fin 2025).</div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Plaquette agences · 2</span></div>
+</section>
+
+<!-- ============ PAGE 3 : LE PRODUIT ============ -->
+<section class="page">
+  <div class="pad">
+    <div class="kicker">Votre Espace Pro</div>
+    <h2 style="font-size:20pt;margin-bottom:6mm">Tout ce qu'il faut, rien de compliqué.</h2>
+    <div class="feat">
+      <div class="shot"><img src="shots/pro-stats.png" alt="Tableau de bord de l'agence"></div>
+      <div><span class="pill">TABLEAU DE BORD</span><h3 style="margin-top:2mm">Votre activité d'un coup d'œil</h3><p>Annonces en ligne, demandes en attente, visites, avis clients et revenus du mois. Vos agents ont chacun leur accès, vous gardez la main sur tout.</p></div>
+    </div>
+    <div class="feat">
+      <div><span class="pill">DOCUMENTS ET SIGNATURE</span><h3 style="margin-top:2mm">Le dossier du locataire, sans papier</h3><p>Pièces du dossier, contrat, avenants, état des lieux et quittances arrivent dans « Mes documents » du client. Vous voyez ce qui a été lu et signé.</p></div>
+      <div class="shot"><img src="shots/pro-documents.png" alt="Envoi de documents aux clients"></div>
+    </div>
+    <div class="feat">
+      <div class="shot"><img src="shots/pro-kit.png" alt="Kit réseaux sociaux"></div>
+      <div><span class="pill">VISIBILITÉ</span><h3 style="margin-top:2mm">Un bien publié, partout en un clic</h3><p>Visuels carrés et stories, textes prêts à coller, lien de partage avec photo et prix, affiche « À louer » avec QR code. Et votre propre site, à votre logo.</p></div>
+    </div>
+    <div class="kicker" style="margin-top:2mm">Démarrer en 3 étapes</div>
+    <div class="how">
+      <div><b>1</b><p><strong>15 minutes de démo</strong> en visio ou sur WhatsApp, avec vos propres biens.</p></div>
+      <div><b>2</b><p><strong>Nous importons vos annonces</strong> depuis votre page Facebook ou votre site.</p></div>
+      <div><b>3</b><p><strong>Vous recevez vos premières demandes</strong> et partagez vos biens avec le kit réseaux sociaux.</p></div>
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Plaquette agences · 3</span></div>
+</section>
+
+<!-- ============ PAGE 4 : OFFRE ET TARIFS ============ -->
+<section class="page">
+  <div class="pad">
+    <div class="offer">
+      <div>
+        <div class="kicker" style="color:#F7D98A">Partenaires fondateurs · 20 places</div>
+        <h3>Rejoignez Timmo avant le lancement officiel</h3>
+        <ul>
+          <li>Toutes les fonctions gratuites jusqu'au lancement, puis 3 mois offerts</li>
+          <li>Badge « Partenaire fondateur » et place mise en avant au lancement</li>
+          <li>Import de vos annonces fait par notre équipe</li>
+          <li>Un appel mensuel pour proposer les prochaines fonctions</li>
+        </ul>
+      </div>
+      <div style="text-align:center"><img class="qr" src="img/qr-demo.svg" alt="QR code vers la démo"><div class="small" style="color:#c5ced8;margin-top:2mm">Essayez la démo<br>demo.timmo.sn</div></div>
+    </div>
+
+    <h2 style="font-size:17pt;margin:8mm 0 4mm">Ensuite, une formule adaptée à votre taille</h2>
+    <div class="plans">
+      <div class="plan"><h4>Standard</h4><div class="price">15 000</div><div class="per">FCFA / mois</div><ul><li>2 utilisateurs</li><li>10 annonces actives</li><li>Toutes les fonctions incluses</li></ul></div>
+      <div class="plan hot"><span class="pill">LE PLUS CHOISI</span><h4 style="margin-top:2mm">Pro</h4><div class="price">35 000</div><div class="per">FCFA / mois</div><ul><li>5 utilisateurs</li><li>30 annonces actives</li><li>Toutes les fonctions incluses</li></ul></div>
+      <div class="plan"><h4>Premium</h4><div class="price">75 000</div><div class="per">FCFA / mois</div><ul><li>15 utilisateurs</li><li>100 annonces actives</li><li>Toutes les fonctions incluses</li></ul></div>
+    </div>
+    <p class="small muted" style="margin-top:2mm">Paiement par Wave, Orange Money ou carte. Tarifs en vigueur au moment de l'impression.</p>
+
+    <div class="grid2 faq" style="margin-top:6mm">
+      <div><h4>Faut-il être à l'aise avec l'informatique ?</h4><p>Non. Publier une annonce prend 5 minutes depuis un téléphone, et nous vous accompagnons pour la première.</p>
+           <h4>Mes clients doivent-ils installer une application ?</h4><p>Non. Timmo s'ouvre dans le navigateur et peut s'installer sur l'écran d'accueil en un clic.</p></div>
+      <div><h4>Les documents sont-ils protégés ?</h4><p>Ils restent dans l'espace de chaque client, protégé par mot de passe. Les e-mails ne contiennent jamais de pièce jointe.</p>
+           <h4>Comment se passe la signature ?</h4><p>Le client lit, coche « Lu et approuvé », puis saisit un code reçu par e-mail. Un certificat est joint au PDF signé.</p></div>
+    </div>
+
+    <div class="cta" style="margin-top:4mm">
+      <div><h3>Réservez votre démo de 15 minutes</h3><p class="muted" style="margin:0">Écrivez-nous à <b>contact@timmo.sn</b> ou créez votre compte sur <b>www.timmo.sn/pro.html</b></p></div>
+      <img class="qr" src="img/qr-pro.svg" alt="QR code Espace Pro" style="border:1px solid var(--line)">
+    </div>
+  </div>
+  <div class="page-foot"><img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo"><span>Timmo — Teranga Immobilière · www.timmo.sn</span></div>
+</section>
+
+</main>
+</body>
+</html>

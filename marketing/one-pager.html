@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timmo en une page — pour les agences</title>
+<meta name="description" content="Timmo en une page : la plateforme immobilière sénégalaise qui réunit annonces, demandes, contrats signés en ligne et quittances automatiques.">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/brand/favicon-32x32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="doc.css">
+<style>
+  .op-head { background: var(--navy); color: #fff; padding: 9mm 14mm 26mm; position: relative; }
+  .op-head h1 { color: #fff; font-size: 21pt; letter-spacing: -.02em; margin: 6mm 0 2mm; max-width: 125mm; }
+  .op-head h1 em { font-style: normal; color: var(--sun); }
+  .op-head p { color: #c5ced8; max-width: 115mm; margin: 0; font-size: 10.5pt; }
+  .op-visual { margin: -20mm 24mm 0; position: relative; display: flex; gap: 5mm; align-items: flex-end; }
+  .op-visual .laptop img { height: 58mm; object-fit: cover; object-position: top; width: 100%; }
+  .op-visual .laptop { flex: 1; }
+  .op-visual .phone { width: 33mm; margin-bottom: -4mm; }
+  .op-body { padding: 8mm 14mm 0; }
+  .ben { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm 5mm; }
+  .ben h4 { font-size: 11pt; margin: 0 0 1mm; }
+  .ben p { font-size: 9pt; margin: 0; color: var(--soft); }
+  .ben .ico { margin-bottom: 1.5mm; width: 28px; height: 28px; font-size: 14px; }
+  .op-bottom { display: grid; grid-template-columns: 1fr 1.1fr; gap: 5mm; margin-top: 6mm; }
+  .op-offer { background: linear-gradient(135deg, var(--clay), #D98A54); color: #fff; border-radius: 14px; padding: 5mm; }
+  .op-offer h3 { color: #fff; font-size: 12.5pt; margin: 0 0 2mm; }
+  .op-offer ul { margin: 0; padding-left: 16px; font-size: 9pt; }
+  .op-prices { border: 1px solid var(--line); border-radius: 14px; padding: 4mm 5mm; font-size: 9pt; }
+  .op-prices div { display: flex; justify-content: space-between; padding: 1.6mm 0; border-bottom: 1px solid var(--line); }
+  .op-prices div:last-child { border: 0; }
+  .op-cta { display: flex; align-items: center; gap: 5mm; margin-top: 5mm; border-top: 2px solid var(--navy); padding-top: 5mm; }
+  .op-cta h3 { margin: 0; font-size: 13pt; }
+  .op-cta p { margin: 1mm 0 0; font-size: 9.5pt; color: var(--soft); }
+  @media screen and (max-width: 720px) {
+    .op-head { padding: 22px 18px 60px; } .op-head h1 { font-size: 26px; }
+    .op-visual { margin: -46px 18px 0; } .op-visual .phone { width: 90px; }
+    .op-body { padding: 22px 18px 0; } .ben, .op-bottom { grid-template-columns: 1fr; }
+    .op-cta { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="doc-bar web-only"><img src="../assets/brand/timmo-logo-white.svg" alt="Timmo"><span class="doc-bar-title">Timmo en une page</span><a href="pdf/Timmo-une-page.pdf" download>Télécharger le PDF</a></div>
+<main class="doc">
+<section class="page">
+  <div class="op-head">
+    <img src="../assets/brand/timmo-logo-white.svg" alt="Timmo — Teranga Immobilière" style="height:11mm;width:auto">
+    <h1>Publiez, recevez des demandes sérieuses, <em>signez et encaissez</em> au même endroit.</h1>
+    <p>Timmo est la plateforme immobilière sénégalaise pensée pour les agences : vos biens en ligne en 5 minutes, et tout le suivi client sans papier.</p>
+  </div>
+  <div class="op-visual">
+    <div><div class="laptop"><img src="shots/web-home.png" alt="Accueil de Timmo"></div><div class="laptop-base"></div></div>
+    <div class="phone"><img src="shots/m-documents.png" alt="Mes documents sur téléphone"></div>
+  </div>
+  <div class="op-body">
+    <div class="ben">
+      <div><div class="ico">🏠</div><h4>Des annonces de confiance</h4><p>Vraies photos obligatoires, prix affiché, carte, visite 3D ou vidéo, badge « titre vérifié ».</p></div>
+      <div><div class="ico">📅</div><h4>Des demandes qualifiées</h4><p>Le client voit tout avant d'écrire et réserve sa visite en ligne. Moins d'appels inutiles.</p></div>
+      <div><div class="ico">✍️</div><h4>Zéro papier</h4><p>Dossier du locataire, contrat signé par code e-mail, quittances automatiques à votre logo.</p></div>
+      <div><div class="ico">📣</div><h4>Visible partout</h4><p>Kit réseaux sociaux, liens WhatsApp avec photo et prix, affiche QR pour vos panneaux.</p></div>
+      <div><div class="ico">🔔</div><h4>Des clients qui reviennent</h4><p>Alertes « nouveaux biens » envoyées aux visiteurs dès votre publication.</p></div>
+      <div><div class="ico">👥</div><h4>Toute l'équipe</h4><p>Un accès par agent, des biens attribués, un journal d'activité pour le responsable.</p></div>
+    </div>
+    <div class="op-bottom">
+      <div class="op-offer">
+        <h3>Partenaires fondateurs · 20 places</h3>
+        <ul>
+          <li>Gratuit jusqu'au lancement officiel, puis 3 mois offerts</li>
+          <li>Vos annonces importées par notre équipe</li>
+          <li>Badge fondateur et mise en avant au lancement</li>
+        </ul>
+      </div>
+      <div class="op-prices">
+        <div><b>Standard</b><span>2 utilisateurs · 10 annonces</span><b>15 000 F</b></div>
+        <div><b>Pro</b><span>5 utilisateurs · 30 annonces</span><b>35 000 F</b></div>
+        <div><b>Premium</b><span>15 utilisateurs · 100 annonces</span><b>75 000 F</b></div>
+        <div class="muted" style="justify-content:flex-start">Prix par mois, en FCFA · toutes les fonctions incluses</div>
+      </div>
+    </div>
+    <div class="op-cta">
+      <img src="img/qr-demo.svg" alt="QR code vers la démo" style="width:24mm;border:1px solid var(--line);border-radius:8px;padding:1.5mm">
+      <div style="flex:1"><h3>Essayez la démo, puis réservez 15 minutes avec nous</h3><p>demo.timmo.sn · contact@timmo.sn · www.timmo.sn/pro.html</p></div>
+      <img src="../assets/brand/timmo-logo-primary.svg" alt="Timmo" style="height:10mm;width:auto" class="hide-sm">
+    </div>
+  </div>
+</section>
+</main>
+</body>
+</html>
