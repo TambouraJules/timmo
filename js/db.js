@@ -178,6 +178,69 @@ const TI_SCHEMA_VERSION = "10"; // 10 : exemples de visites 3D / vidéo sur la d
   tiSyncAgenciesFromStorage();
 })();
 
+/* Site de démonstration : une location en cours pour la cliente Awa Diop,
+   pour montrer « Mes documents » (contrat signé, avenant à signer, quittances,
+   état des lieux, kit de bienvenue). Ajoutée une seule fois, sans toucher
+   aux autres données. Les PDF viennent de js/demo-docs.js (documents fictifs). */
+(function tiSeedDemoDocuments() {
+  if (TI_BACKEND !== "local" || typeof TI_DEMO_DOC_FILES === "undefined") return;
+  try {
+    if (localStorage.getItem("ti_demo_docs") === "1") return;
+    const bookings = tiLoad("ti_bookings", []);
+    if (bookings.some(b => b.id === "bk_demo_awa")) { localStorage.setItem("ti_demo_docs", "1"); return; }
+    const now = new Date();
+    const iso = d => d.toISOString();
+    const day = (y, m, d) => new Date(y, m, d, 10, 0, 0);
+    const start = day(now.getFullYear(), now.getMonth() - 2, 1);
+    const ago = n => new Date(now.getTime() - n * 86400000);
+    const methods = ["wave", "orange_money", "wave"];
+    const schedule = [];
+    for (let i = 0; i < 6; i++) {
+      const due = day(start.getFullYear(), start.getMonth() + i, 5);
+      const paid = due <= now;
+      const paidAt = paid ? day(due.getFullYear(), due.getMonth(), 3) : null;
+      schedule.push({ id: `sch_bk_demo_awa_${i}`, dueDate: iso(due).slice(0, 10), rent: 420000, chargesAmount: 30000,
+        status: paid ? "paid" : "pending", paidAt: paidAt ? iso(paidAt) : null, method: paid ? methods[i % 3] : null });
+    }
+    const kit = tiDefaultWelcomeKit().map((d, i) => ({ id: "doc_demo_kit_" + i, title: d.title, titleEn: d.titleEn,
+      content: d.content, contentEn: d.contentEn, createdAt: iso(start) }));
+    const booking = {
+      id: "bk_demo_awa", propertyId: "p001", propertyTitle: "Appartement 3 pièces vue mer — Almadies", agencyId: "ag001",
+      userId: "u_client", name: "Awa Diop", email: "client@demo.sn", phone: "+221 77 000 00 00",
+      checkin: iso(start).slice(0, 10), price: 450000, status: "confirmed", createdAt: iso(day(start.getFullYear(), start.getMonth() - 1, 18)),
+      dossierStatus: "approved", welcomed: true,
+      documentRequests: [
+        { key: "id_card", label: "Pièce d'identité", labelEn: "ID document", status: "approved", fileName: "cni-awa-diop.jpg", fileData: null, submittedAt: iso(day(start.getFullYear(), start.getMonth() - 1, 20)) },
+        { key: "income_proof", label: "Justificatif de revenus", labelEn: "Proof of income", status: "approved", fileName: "bulletin-de-salaire.pdf", fileData: null, submittedAt: iso(day(start.getFullYear(), start.getMonth() - 1, 20)) },
+      ],
+      contracts: [
+        { id: "ctr_demo_bail", title: "Contrat de bail", fileName: "contrat-de-bail-almadies.pdf", mime: "application/pdf", fileData: TI_DEMO_DOC_FILES.bail,
+          sentAt: iso(day(start.getFullYear(), start.getMonth() - 1, 25)), signed: true, signedAt: iso(day(start.getFullYear(), start.getMonth() - 1, 27)),
+          signature: { method: "email_code", signerName: "Awa Diop", email: "cl****@demo.sn", signedAt: iso(day(start.getFullYear(), start.getMonth() - 1, 27)), docHash: "démo", ref: "SIG-7KQ2M9XA31" } },
+        { id: "ctr_demo_avenant", title: "Avenant n°1 — charges 2027", amendment: true, fileName: "avenant-1-charges-2027.pdf", mime: "application/pdf", fileData: TI_DEMO_DOC_FILES.avenant, sentAt: iso(ago(2)) },
+      ],
+      sharedDocs: [
+        { id: "sd_demo_edl", category: "inventory", title: "État des lieux d'entrée", fileName: "etat-des-lieux-entree.pdf", mime: "application/pdf", fileData: TI_DEMO_DOC_FILES.edl, note: "Signé par les deux parties lors de la remise des clés", sentAt: iso(start), sentBy: "Sahel Habitat" },
+      ],
+      documents: kit,
+      docReads: { "ctr:ctr_demo_bail": iso(day(start.getFullYear(), start.getMonth() - 1, 26)), "sd:sd_demo_edl": iso(start), "rc:bk_demo_awa:deposit": iso(start) },
+      rental: {
+        deposit: { amount: 900000, status: "paid", paidAt: iso(day(start.getFullYear(), start.getMonth() - 1, 28)), method: "transfer" },
+        charges: [
+          { key: "water", label: "Eau", labelEn: "Water", amount: 10000, enabled: true },
+          { key: "electricity", label: "Électricité", labelEn: "Electricity", amount: 15000, enabled: false },
+          { key: "internet", label: "Internet", labelEn: "Internet", amount: 20000, enabled: true },
+          { key: "other", label: "Charges de copropriété", labelEn: "Condo fees", amount: 0, enabled: false },
+        ],
+        schedule,
+      },
+    };
+    bookings.unshift(booking);
+    tiSave("ti_bookings", bookings);
+    localStorage.setItem("ti_demo_docs", "1");
+  } catch (e) { /* stockage indisponible : la démo reste sans documents */ }
+})();
+
 /* TI_AGENCIES reste un simple tableau en mémoire (de nombreux utilitaires
    synchrones comme tiAgencyName() le lisent directement), mais son contenu
    est maintenu synchronisé avec la copie persistée pour que les modifications
@@ -202,7 +265,9 @@ function tiComputeBookingStage(b) {
   if (b.status === "pending") return "requests";
   if (b.status !== "confirmed") return null;
   if (["awaiting_documents", "under_review", "changes_needed"].includes(b.dossierStatus)) return "validation";
-  if (b.contracts && b.contracts.length && !b.contracts.every(c => c.signed)) return "signature";
+  // Les avenants (envoyés pendant la location) ne font pas revenir le dossier à l'étape « signature ».
+  const leaseContracts = (b.contracts || []).filter(c => !c.amendment);
+  if (leaseContracts.length && !leaseContracts.every(c => c.signed)) return "signature";
   return "active";
 }
 
@@ -236,6 +301,23 @@ const TI_DEFAULT_SCREENING_DOCS = [
   { key: "id_card", label: "Pièce d'identité", labelEn: "ID document" },
   { key: "income_proof", label: "Justificatif de revenus", labelEn: "Proof of income" },
 ];
+
+/** Titre d'une quittance mensuelle, ex. « Quittance de loyer — novembre 2026 ». */
+function tiReceiptMonthTitle(dueDate) {
+  const d = dueDate ? new Date(dueDate + "T12:00:00") : new Date();
+  return "Quittance de loyer — " + d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+}
+function tiMaskEmailLocal(email) {
+  const [name, domain] = String(email).split("@");
+  if (!domain) return email;
+  return (name.length <= 2 ? name[0] + "*" : name.slice(0, 2) + "*".repeat(Math.min(name.length - 2, 6))) + "@" + domain;
+}
+async function tiSha256Hex(text) {
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(text)));
+    return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, "0")).join("");
+  } catch (e) { return ""; }
+}
 
 const TiDB = {
   async getAmenityCatalog() {
@@ -797,11 +879,13 @@ const TiDB = {
     }
     return b;
   },
-  async sendContract(bookingId, fileName, fileData) {
+  async sendContract(bookingId, fileName, fileData, opts = {}) {
     const b = await this._bookingById(bookingId);
     if (!b) return null;
     b.contracts = b.contracts || [];
-    b.contracts.push({ id: "ctr_" + Date.now(), fileName, fileData: fileData || null, sentAt: new Date().toISOString() });
+    const title = opts.title || (opts.amendment ? "Avenant au contrat" : "Contrat de bail");
+    b.contracts.push({ id: "ctr_" + Date.now(), title, amendment: !!opts.amendment, fileName, fileData: fileData || null, mime: opts.mime || "", sentAt: new Date().toISOString(), sentBy: opts.sentBy || "" });
+    this.notifyClientDocument(b, { kind: "contract", title }).catch(() => {});
     try {
       await this._bookingSave(b);
     } catch (err) {
@@ -918,6 +1002,7 @@ const TiDB = {
     b.rental.deposit.paidAt = new Date().toISOString();
     b.rental.deposit.method = method;
     await this._bookingSave(b);
+    this.notifyClientDocument(b, { kind: "receipt", title: "Reçu — dépôt de garantie" }).catch(() => {});
     return b;
   },
   async payRentalScheduleItem(bookingId, scheduleId, method) {
@@ -926,6 +1011,7 @@ const TiDB = {
     const item = b.rental.schedule.find(s => s.id === scheduleId);
     if (item) { item.status = "paid"; item.paidAt = new Date().toISOString(); item.method = method; }
     await this._bookingSave(b);
+    if (item) this.notifyClientDocument(b, { kind: "receipt", title: tiReceiptMonthTitle(item.dueDate) }).catch(() => {});
     return b;
   },
 
@@ -989,6 +1075,88 @@ const TiDB = {
       userId: b.userId, userName: b.name, from: "agency",
       text: `Bienvenue chez ${agencyName} ! Votre dossier a été validé et votre installation est confirmée. Retrouvez votre kit de bienvenue dans "Mes documents".`,
     });
+    if (b.documents && b.documents.length) this.notifyClientDocument(b, { kind: "info", title: "Kit de bienvenue" }).catch(() => {});
+  },
+
+  /* ---- « Mes documents » : partage, lecture, notifications, signature ---- */
+  /** L'agence remet un document (PDF ou image) au client d'une réservation. */
+  async shareDocument(bookingId, doc) {
+    const b = await this._bookingById(bookingId);
+    if (!b) return null;
+    b.sharedDocs = b.sharedDocs || [];
+    const entry = {
+      id: "sd_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+      category: doc.category || "other", title: doc.title || doc.fileName || "Document",
+      fileName: doc.fileName || "", mime: doc.mime || "", size: doc.size || 0, fileData: doc.fileData || null,
+      note: doc.note || "", sentAt: new Date().toISOString(), sentBy: doc.sentBy || "",
+    };
+    b.sharedDocs.push(entry);
+    try {
+      await this._bookingSave(b);
+    } catch (err) {
+      entry.fileData = null;
+      await this._bookingSave(b);
+      entry._storageFallback = true;
+    }
+    this.notifyClientDocument(b, { kind: "document", title: entry.title }).catch(() => {});
+    return entry;
+  },
+  /** Le client a ouvert un document : accusé de lecture visible par l'agence. */
+  async markDocRead(bookingId, key) {
+    const b = await this._bookingById(bookingId);
+    if (!b) return null;
+    b.docReads = b.docReads || {};
+    if (b.docReads[key]) return b;
+    b.docReads[key] = new Date().toISOString();
+    await this._bookingSave(b);
+    return b;
+  },
+  /** Prévient le client : e-mail (en ligne) ou notification (site de démonstration). */
+  async notifyClientDocument(b, { kind, title }) {
+    if (!b) return;
+    if (TI_BACKEND === "api") {
+      await tiApiFetch(`${TI_API_BASE}/documents/notify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId: b.id, kind, title }) });
+      return;
+    }
+    const all = tiLoad("ti_notifications", []);
+    all.push({ id: "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6), type: "document", kind, userId: b.userId, title, propertyTitle: b.propertyTitle, createdAt: new Date().toISOString(), read: false });
+    tiSave("ti_notifications", all);
+  },
+  /** Signature par code e-mail — étape 1 : envoi du code. */
+  async requestContractSignature(bookingId, contractId) {
+    if (TI_BACKEND === "api") {
+      const res = await fetch(`${TI_API_BASE}/documents/sign/request`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (localStorage.getItem("ti_api_token") || "") }, body: JSON.stringify({ bookingId, contractId }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: data.error || "error" };
+      return data;
+    }
+    const s = tiGetSession();
+    return { challenge: "demo", email: tiMaskEmailLocal((s && s.email) || ""), expiresIn: 600, demo: true };
+  },
+  /** Signature par code e-mail — étape 2 : vérification et enregistrement. */
+  async verifyContractSignature(bookingId, contractId, challenge, code) {
+    if (TI_BACKEND === "api") {
+      const res = await fetch(`${TI_API_BASE}/documents/sign/verify`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (localStorage.getItem("ti_api_token") || "") }, body: JSON.stringify({ challenge, code }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: data.error || "error", triesLeft: data.triesLeft };
+      await this.maybeSendWelcome(bookingId);
+      return data;
+    }
+    if (String(code) !== "123456") return { error: "invalid_code" };
+    const b = await this._bookingById(bookingId);
+    const c = b && (b.contracts || []).find(x => x.id === contractId);
+    if (!c) return { error: "not_found" };
+    const s = tiGetSession();
+    const signedAt = new Date().toISOString();
+    c.signed = true; c.signedAt = signedAt;
+    c.signature = {
+      method: "email_code", signerName: (s && s.name) || b.name, email: tiMaskEmailLocal((s && s.email) || ""),
+      signedAt, docHash: await tiSha256Hex(c.fileData || c.fileName || c.id),
+      ref: "SIG-" + Math.random().toString(16).slice(2, 12).toUpperCase().padEnd(10, "0"),
+    };
+    await this._bookingSave(b);
+    await this.maybeSendWelcome(bookingId);
+    return { ok: true, signature: c.signature };
   },
 
   async getAnnouncements({ agencyId, userId } = {}) {

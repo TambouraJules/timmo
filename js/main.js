@@ -67,6 +67,7 @@ const TI_ICONS = {
   sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h13M21 18h-1" stroke-linecap="round"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="19" cy="18" r="2"/></svg>`,
   document: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 13h6M9 17h6" stroke-linecap="round"/></svg>`,
   upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M7 9l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m4 12 5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-9 0 1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>`,
@@ -229,6 +230,16 @@ async function tiUpdateNotificationBell() {
     </div>` : `<div class="ti-notif-panel-head">${t('notifications_title')}</div><p class="ti-notif-empty">${t('notifications_empty')}</p>`;
 }
 function tiNotifItemHtml(n) {
+  if (n.type === "document") {
+    return `
+      <a href="dashboard-client.html?panel=documents" class="ti-notif-item ti-notif-broadcast ${n.read ? '' : 'unread'}">
+        <span class="ti-notif-broadcast-icon">${TI_ICONS.document}</span>
+        <div>
+          <div class="ti-notif-text"><strong>${tiEscapeHtml(t("notif_doc_" + (n.kind || "document")))}</strong><br>${tiEscapeHtml(n.title || "")}${n.propertyTitle ? ` · ${tiEscapeHtml(n.propertyTitle)}` : ""}</div>
+          <div class="ti-notif-time">${tiFormatDateTime(n.createdAt)}</div>
+        </div>
+      </a>`;
+  }
   if (n.type === "broadcast") {
     return `
       <div class="ti-notif-item ti-notif-broadcast ${n.read ? '' : 'unread'}">

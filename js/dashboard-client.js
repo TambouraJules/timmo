@@ -258,59 +258,9 @@ async function tiRenderMessages() {
     </div>`).join('');
 }
 
-let TI_CLIENT_DOC_BOOKINGS = [];
+/* « Mes documents » : voir js/documents.js */
 async function tiRenderDocuments() {
-  TI_CLIENT_DOC_BOOKINGS = await TiDB.getBookings({ userId: TI_SESSION.id });
-  const mount = document.getElementById("documents-mount");
-  const withDocs = TI_CLIENT_DOC_BOOKINGS.filter(b => (b.contracts && b.contracts.length) || (b.documents && b.documents.length));
-  if (!withDocs.length) { mount.innerHTML = tiEmptyStateHtml(t('documents_empty'), null, null, 'document'); return; }
-  mount.innerHTML = withDocs.map(b => `
-    <div class="ti-list-row" style="align-items:flex-start;flex-direction:column;">
-      <strong>${tiEscapeHtml(b.propertyTitle)}</strong>
-      <span style="color:var(--ink-soft);font-size:.82rem;">${tiEscapeHtml(tiAgencyName(b.agencyId))}</span>
-      <div class="ti-dossier-docs" style="width:100%;margin-top:10px;">
-        ${(b.documents || []).map(d => `
-          <div class="ti-dossier-doc">
-            <div class="ti-dossier-doc-info">
-              <span class="ti-doc-status-dot approved"></span>
-              <span class="ti-dossier-doc-label">${tiEscapeHtml(tiGetLang() === 'en' ? (d.titleEn || d.title) : d.title)}</span>
-              <button type="button" class="ti-doc-view-link" onclick="tiViewWelcomeDoc('${b.id}','${d.id}')">${TI_ICONS.eye} ${t('view_document')}</button>
-            </div>
-            <div style="color:var(--ink-soft);font-size:.78rem;margin-top:4px;">${t('sent_on_label')} ${new Date(d.createdAt).toLocaleDateString(tiGetLang() === 'en' ? 'en-US' : 'fr-FR')}</div>
-          </div>`).join('')}
-        ${(b.contracts || []).map(c => `
-          <div class="ti-dossier-doc">
-            <div class="ti-dossier-doc-info">
-              <span class="ti-doc-status-dot ${c.signed ? 'approved' : 'submitted'}"></span>
-              <span class="ti-dossier-doc-label">${t('contract_document_title')}</span>
-              <span class="ti-doc-filename">${tiEscapeHtml(c.fileName)}</span>
-              ${c.fileData ? `<button type="button" class="ti-doc-view-link" onclick="tiOpenClientContract('${b.id}','${c.id}')">${TI_ICONS.eye} ${t('view_document')}</button>` : ''}
-              ${c.signed ? `<span class="badge badge-paid">${t('contract_signed_label')}</span>` : `<button type="button" class="btn btn-sm btn-primary" onclick="tiSignContract('${b.id}','${c.id}')">${t('sign_contract_action')}</button>`}
-            </div>
-            <div style="color:var(--ink-soft);font-size:.78rem;margin-top:4px;">${t('sent_on_label')} ${new Date(c.sentAt).toLocaleDateString(tiGetLang() === 'en' ? 'en-US' : 'fr-FR')}${c.signed ? ` · ${t('signed_on_label')} ${new Date(c.signedAt).toLocaleDateString(tiGetLang() === 'en' ? 'en-US' : 'fr-FR')}` : ''}</div>
-          </div>`).join('')}
-      </div>
-    </div>`).join('');
-}
-async function tiSignContract(bookingId, contractId) {
-  if (!confirm(t('confirm_sign_contract'))) return;
-  await TiDB.signContract(bookingId, contractId);
-  tiToast(t('contract_signed_toast'));
-  await tiRefreshPanel("documents");
-}
-function tiOpenClientContract(bookingId, contractId) {
-  const booking = TI_CLIENT_DOC_BOOKINGS.find(b => b.id === bookingId);
-  const contract = booking?.contracts?.find(c => c.id === contractId);
-  if (contract?.fileData) tiOpenDocument(contract.fileData, contract.fileName);
-}
-function tiViewWelcomeDoc(bookingId, docId) {
-  const booking = TI_CLIENT_DOC_BOOKINGS.find(b => b.id === bookingId);
-  const doc = booking?.documents?.find(d => d.id === docId);
-  if (!doc) return;
-  const isEn = tiGetLang() === "en";
-  document.getElementById("view-text-doc-title").textContent = isEn ? (doc.titleEn || doc.title) : doc.title;
-  document.getElementById("view-text-doc-body").innerHTML = tiRenderMiniMarkdown(isEn ? (doc.contentEn || doc.content) : doc.content, {});
-  tiOpenModal("modal-view-text-doc");
+  await tiRenderClientDocuments();
 }
 
 async function tiRenderPayments() {

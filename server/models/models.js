@@ -154,7 +154,20 @@ const AlertSchema = new Schema({
   lastSentAt: Date,
 }, { timestamps: true });
 
+// Signature électronique des contrats : code à 6 chiffres envoyé par e-mail.
+// Seules des empreintes sont stockées ; le document expire tout seul (index TTL).
+const SignCodeSchema = new Schema({
+  challengeHash: { type: String, index: true },
+  codeHash: String,
+  bookingId: String,
+  contractId: String,
+  userId: String,
+  tries: { type: Number, default: 0 },
+  expiresAt: { type: Date, index: { expires: 0 } },
+}, { timestamps: true });
+
 module.exports = {
+  SignCode: mongoose.model("SignCode", SignCodeSchema),
   Alert: mongoose.model("Alert", AlertSchema),
   Property: mongoose.model("Property", PropertySchema),
   User: mongoose.model("User", UserSchema),

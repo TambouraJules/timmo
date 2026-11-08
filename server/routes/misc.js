@@ -355,13 +355,54 @@ router.get("/bookings", async (req, res, next) => {
   }
   res.json(await Booking.find(filter).sort({ createdAt: -1 }));
 });
+/** Champs d'une réservation que seule une partie précise peut modifier.
+ *  - signatures des contrats : uniquement la route de signature par code (routes/documents.js) ;
+ *  - paiements du loyer et du dépôt : uniquement l'agence (ils produisent les quittances) ;
+ *  - documents partagés : uniquement l'agence ; accusés de lecture : uniquement le client. */
+function tiProtectBookingFields(user, existing, data) {
+  if (user.role === "admin") return data;
+  const out = { ...data };
+  const prev = existing ? (existing.toObject ? existing.toObject() : existing) : null;
+  const isAgency = !!(user.agencyId && user.agencyId === (prev ? prev.agencyId : data.agencyId));
+  const unsign = c => { const { signed, signedAt, signature, reminderSentAt, ...rest } = c || {}; return { ...rest, signed: false }; };
+
+  if (!prev) {                                   // nouvelle réservation
+    if (Array.isArray(out.contracts)) out.contracts = out.contracts.map(unsign);
+    if (!isAgency) { delete out.rental; delete out.sharedDocs; }
+    return out;
+  }
+  if ("contracts" in out) {
+    const prevC = prev.contracts || [];
+    if (!isAgency) out.contracts = prevC;
+    else if (Array.isArray(out.contracts)) {
+      out.contracts = out.contracts.map(c => {
+        const p = prevC.find(x => x.id === c.id);
+        if (!p) return unsign(c);
+        return { ...unsign(c), signed: !!p.signed, signedAt: p.signedAt, signature: p.signature, reminderSentAt: p.reminderSentAt };
+      });
+    }
+  }
+  if (!isAgency && "sharedDocs" in out) out.sharedDocs = prev.sharedDocs || [];
+  if (isAgency && "docReads" in out) out.docReads = prev.docReads || {};
+  if (!isAgency && "rental" in out) {
+    if (!prev.rental) delete out.rental;
+    else if (out.rental) {
+      const keep = (to, from) => { if (to && from) { to.status = from.status; to.paidAt = from.paidAt; to.method = from.method; } };
+      keep(out.rental.deposit, prev.rental.deposit);
+      (out.rental.schedule || []).forEach(item => keep(item, (prev.rental.schedule || []).find(x => x.id === item.id)));
+      if (Array.isArray(out.rental.schedule)) out.rental.schedule = out.rental.schedule.filter(item => (prev.rental.schedule || []).some(x => x.id === item.id));
+    }
+  }
+  return out;
+}
+
 router.post("/bookings", authenticate, async (req, res) => {
   const data = req.body;
   const existing = data.id ? await Booking.findOne({ id: data.id }) : null;
   const target = existing || data; // ownership check against the existing record when updating, else the new data
   const owns = req.user.role === "admin" || req.user.id === target.userId || (req.user.agencyId && req.user.agencyId === target.agencyId);
   if (!owns) return res.status(403).json({ error: "forbidden" });
-  const saved = await Booking.findOneAndUpdate({ id: data.id }, data, { upsert: true, new: true, setDefaultsOnInsert: true });
+  const saved = await Booking.findOneAndUpdate({ id: data.id }, tiProtectBookingFields(req.user, existing, data), { upsert: true, new: true, setDefaultsOnInsert: true });
   res.json(saved);
 });
 // Lecture d'une seule réservation par identifiant : le client concerné, l'agence
@@ -380,7 +421,7 @@ router.patch("/bookings/:id", authenticate, async (req, res) => {
   if (!existing) return res.status(404).json({ error: "not_found" });
   const owns = req.user.role === "admin" || req.user.id === existing.userId || (req.user.agencyId && req.user.agencyId === existing.agencyId);
   if (!owns) return res.status(403).json({ error: "forbidden" });
-  const saved = await Booking.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  const saved = await Booking.findOneAndUpdate({ id: req.params.id }, tiProtectBookingFields(req.user, existing, req.body), { new: true });
   res.json(saved);
 });
 
@@ -702,4 +743,6 @@ router.post("/payment-gateway/ipn", require("express").urlencoded({ extended: tr
 });
 
 module.exports = router;
-module.exports.tiSendEmail = tiSendEmail; // réutilisé par les alertes (routes/alerts.js)
+module.exports.tiSendEmail = tiSendEmail; // réutilisé par les alertes (routes/alerts.js) et les documents
+module.exports.tiMaskEmail = tiMaskEmail;
+module.exports.tiProtectBookingFields = tiProtectBookingFields;

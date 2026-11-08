@@ -1927,3 +1927,143 @@ body.ti-has-tabbar .ti-burger { display: none; }
   .ti-brand-logo { height: 34px; }
   .ti-brand { min-width: 0; flex-shrink: 1; }
 }
+
+/* ============================================================
+   « Mes documents » (client) et « Documents clients » (agence)
+   ============================================================ */
+.ti-docs-layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 22px; align-items: start; }
+.ti-docs-main { min-width: 0; }
+.ti-docs-intro h3 { margin: 0 0 4px; }
+.ti-docs-intro p { color: var(--ink-soft); font-size: .88rem; margin: 0 0 16px; line-height: 1.5; }
+.ti-docs-grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ti-docs-grow b { font-size: .9rem; color: var(--deep); overflow-wrap: anywhere; }
+.ti-docs-grow span { font-size: .77rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+.ti-docs-none { color: var(--ink-soft); font-size: .88rem; padding: 18px 4px; }
+
+.ti-doc-ico { width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: .62rem; font-weight: 800; letter-spacing: .02em; }
+.ti-doc-ico.sm { width: 28px; height: 28px; border-radius: 8px; font-size: .52rem; vertical-align: middle; }
+.ti-doc-ico.cat-contract { background: #FDE8E1; color: #B4441E; }
+.ti-doc-ico.cat-receipt { background: #E3F4EA; color: #1E7A46; }
+.ti-doc-ico.cat-inventory { background: #EDE7FB; color: #5B3FA8; }
+.ti-doc-ico.cat-dossier { background: #E6EEF8; color: #24518A; }
+.ti-doc-ico.cat-info { background: #FFF4D6; color: #8A6400; }
+.ti-doc-ico.cat-other { background: #EEF0F2; color: #4b5563; }
+
+.ti-doc-tag { font-size: .7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.ti-doc-tag.tag-ok { background: #E3F4EA; color: #1E7A46; }
+.ti-doc-tag.tag-new { background: var(--clay); color: #fff; }
+.ti-doc-tag.tag-sign { background: #FFF0D1; color: #8A5A00; }
+.ti-doc-tag.tag-paid { background: #E6EEF8; color: #24518A; }
+.ti-doc-tag.tag-wait { background: #EEF0F2; color: #4b5563; }
+
+.ti-docs-todo { background: var(--paper-raised); border: 1px solid #EBD3B8; border-left: 5px solid var(--clay); border-radius: var(--radius-m); padding: 14px 16px; margin-bottom: 18px; }
+.ti-docs-todo h4 { margin: 0 0 8px; font-size: .95rem; }
+.ti-docs-todo-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #f1e7da; }
+.ti-docs-todo-row:first-of-type { border-top: 0; }
+.ti-docs-todo-row .btn, .ti-docs-todo-row .ti-upload-btn { flex-shrink: 0; }
+
+.ti-docs-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 170px) minmax(0, 150px); gap: 10px; margin-bottom: 12px; }
+.ti-docs-toolbar select { width: 100%; min-width: 0; }
+.ti-docs-search { min-width: 0; display: flex; align-items: center; gap: 8px; background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 0 12px; }
+.ti-docs-search svg { width: 17px; height: 17px; color: var(--ink-soft); flex-shrink: 0; }
+.ti-docs-search input { border: 0; background: transparent; padding: 11px 0; box-shadow: none; outline: none; }
+.ti-docs-chips { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.ti-docs-chip { border: 1px solid var(--line); background: var(--paper-raised); border-radius: 999px; padding: 7px 13px; font: inherit; font-size: .8rem; font-weight: 600; color: var(--deep); cursor: pointer; }
+.ti-docs-chip i { font-style: normal; color: var(--ink-soft); margin-left: 3px; }
+.ti-docs-chip.on { background: var(--deep); border-color: var(--deep); color: #fff; }
+.ti-docs-chip.on i { color: var(--gold, #F3C64B); }
+
+.ti-docs-folder { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); margin-bottom: 16px; overflow: hidden; }
+.ti-docs-folder-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.ti-docs-folder-logo .ti-brand-logo-custom, .ti-docs-folder-logo .ti-brand-logo-square, .ti-docs-folder-logo .ti-brand-monogram { width: 40px; height: 40px; max-width: 40px; border-radius: 10px; object-fit: contain; }
+.ti-docs-folder-head .ti-docs-grow b { font-size: .97rem; }
+.ti-docs-cat { padding: 10px 16px 2px; font-size: .68rem; font-weight: 800; letter-spacing: .08em; color: var(--ink-soft); text-transform: uppercase; }
+.ti-docs-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background .15s; }
+.ti-docs-row:hover, .ti-docs-row:focus-visible { background: #FBF6EF; outline: none; }
+.ti-docs-row.sel { background: #FBF6EF; box-shadow: inset 3px 0 0 var(--clay); }
+.ti-docs-row.is-new .ti-docs-grow b::after { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--clay); margin-left: 7px; vertical-align: middle; }
+.ti-docs-date { color: var(--ink-soft); font-size: .76rem; width: 92px; text-align: right; flex-shrink: 0; }
+.ti-docs-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.ti-docs-ib { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--line); background: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--deep); font-size: 1rem; }
+.ti-docs-ib:hover { border-color: var(--clay); color: var(--clay); }
+.ti-docs-ib svg { width: 16px; height: 16px; }
+.ti-docs-unavailable { font-size: .72rem; color: var(--ink-soft); }
+
+.ti-docs-viewer { position: sticky; top: calc(var(--header-h, 68px) + 16px); background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 16px; display: flex; flex-direction: column; max-height: calc(100vh - var(--header-h, 68px) - 32px); min-height: 360px; }
+.ti-docs-viewer-empty { margin: auto; text-align: center; color: var(--ink-soft); font-size: .88rem; padding: 40px 10px; }
+.ti-docs-viewer-empty svg { width: 42px; height: 42px; opacity: .45; }
+.ti-docs-viewer-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.ti-docs-back { display: none; border: 0; background: none; font-size: 1.4rem; cursor: pointer; color: var(--deep); padding: 0 4px; }
+.ti-docs-sign-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #FFF0D1; color: #6b4600; border-radius: 10px; padding: 10px 12px; font-size: .84rem; font-weight: 600; margin-bottom: 10px; }
+.ti-docs-paper { flex: 1; min-height: 200px; overflow: auto; background: #f3f1ed; border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.ti-docs-loading { margin: auto; color: var(--ink-soft); font-size: .85rem; }
+.ti-docs-canvas { background: #fff; box-shadow: 0 3px 14px rgba(0,0,0,.1); max-width: 100%; height: auto; }
+.ti-docs-img { max-width: 100%; height: auto; background: #fff; box-shadow: 0 3px 14px rgba(0,0,0,.1); }
+.ti-docs-page { background: #fff; width: 100%; box-shadow: 0 3px 14px rgba(0,0,0,.08); padding: 22px; font-size: .8rem; color: #333; line-height: 1.55; }
+.ti-docs-page p { margin: 0 0 8px; }
+.ti-docs-letterhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 2px solid var(--deep); padding-bottom: 10px; margin-bottom: 14px; }
+.ti-docs-letterhead-id { display: flex; align-items: center; gap: 8px; color: var(--deep); }
+.ti-docs-letterhead-id .ti-brand-logo-custom, .ti-docs-letterhead-id .ti-brand-logo-square, .ti-docs-letterhead-id .ti-brand-monogram { width: 32px; height: 32px; max-width: 32px; border-radius: 8px; object-fit: contain; font-size: .75rem; }
+.ti-docs-receipt-no { font-size: .74rem; color: var(--ink-soft); }
+.ti-docs-page-title { margin: 0 0 8px; font-size: 1.05rem; color: var(--deep); }
+.ti-docs-receipt-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.ti-docs-receipt-table td { border-bottom: 1px solid #eee; padding: 7px 0; }
+.ti-docs-receipt-table td:last-child { text-align: right; font-weight: 700; }
+.ti-docs-receipt-table tr.total td { font-weight: 800; color: var(--deep); }
+.ti-docs-receipt-text { font-size: .76rem; }
+.ti-docs-stamp { display: inline-block; border: 2px solid #1E7A46; color: #1E7A46; font-weight: 800; padding: 3px 12px; border-radius: 6px; transform: rotate(-6deg); margin: 6px 0 4px; }
+.ti-docs-receipt-foot { margin-top: 14px !important; color: #8a93a0; font-size: .66rem; }
+.ti-docs-page-text ul, .ti-docs-page-text ol { padding-left: 18px; }
+.ti-docs-cert { width: 100%; background: #F0F8F3; border: 1px solid #BFE3CD; border-radius: 10px; padding: 12px 14px; font-size: .78rem; color: #1E5A3A; }
+.ti-docs-cert p { margin: 6px 0 0; line-height: 1.5; }
+.ti-docs-viewer-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.ti-docs-viewer-actions .btn { flex: 1 1 auto; justify-content: center; }
+.ti-docs-viewer-actions .btn svg { width: 16px; height: 16px; }
+.ti-docs-history { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: .74rem; color: var(--ink-soft); line-height: 1.55; }
+.ti-docs-sig-line { color: #1E7A46; font-weight: 600; }
+
+@media (max-width: 1180px) {
+  .ti-docs-layout { grid-template-columns: minmax(0, 1fr); }
+  .ti-docs-viewer { display: none; position: fixed; inset: 0; z-index: 120; border-radius: 0; max-height: none; border: 0; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .ti-docs-viewer.open { display: flex; }
+  .ti-docs-back { display: inline-block; }
+  .ti-docs-close { display: none; }
+  body.ti-docs-viewer-open { overflow: hidden; }
+}
+@media (max-width: 640px) {
+  .ti-docs-date { display: none; }
+  .ti-docs-row { padding: 10px 12px; gap: 10px; }
+  .ti-docs-row .ti-doc-tag { display: none; }
+  .ti-docs-row.is-new .ti-doc-tag.tag-new, .ti-docs-row .ti-doc-tag.tag-sign { display: inline-block; }
+  .ti-docs-actions .ti-docs-ib:first-child { display: none; }
+  .ti-docs-todo-row { flex-wrap: wrap; }
+  .ti-docs-todo-row .btn, .ti-docs-todo-row .ti-upload-btn { width: 100%; justify-content: center; }
+  .ti-docs-toolbar { grid-template-columns: 1fr 1fr; }
+  .ti-docs-search { grid-column: 1 / -1; }
+  .ti-docs-folder-head { flex-wrap: wrap; }
+}
+
+/* Signature */
+.ti-sign-modal { text-align: center; max-width: 440px; }
+.ti-sign-step-icon { width: 54px; height: 54px; border-radius: 50%; background: #FBF1E6; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 10px; }
+.ti-sign-doc { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: .85rem; color: var(--ink-soft); margin: 10px 0 16px; }
+.ti-sign-doc b { color: var(--deep); }
+.ti-sign-consent { display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: .88rem; font-weight: 600; margin-bottom: 10px; cursor: pointer; }
+.ti-sign-consent input { width: auto; margin-top: 3px; flex-shrink: 0; }
+.ti-sign-help { font-size: .83rem; color: var(--ink-soft); margin: 0 0 14px; text-align: left; }
+.ti-sign-demo { background: #FFF4D6; color: #6b4f00; border-radius: 8px; padding: 8px 10px; font-size: .8rem; margin: 0 0 12px; }
+.ti-sign-code { text-align: center; font-size: 1.6rem; letter-spacing: 10px; font-weight: 800; margin-bottom: 12px; }
+.ti-sign-resend { background: none; border: 0; color: var(--clay); font-weight: 700; margin-top: 12px; cursor: pointer; font: inherit; font-size: .84rem; }
+
+/* Espace agence */
+.ti-agency-docs-grid { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 1000px) { .ti-agency-docs-grid { grid-template-columns: 1fr; } }
+.ti-agency-docs-form, .ti-agency-docs-list { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px; }
+.ti-agency-docs-form h4, .ti-agency-docs-list h4 { margin: 0 0 14px; }
+.ti-adoc-hint { display: block; color: var(--ink-soft); font-size: .76rem; margin-top: 6px; line-height: 1.45; }
+.ti-adoc-sign-note { background: #FFF0D1; color: #6b4600; border-radius: 8px; padding: 8px 10px; font-size: .8rem; margin: 0 0 12px; }
+.ti-adoc-count { background: var(--deep); color: #fff; border-radius: 999px; font-size: .72rem; padding: 2px 9px; margin-left: 6px; vertical-align: middle; }
+.ti-adoc-table td { vertical-align: middle; font-size: .84rem; }
+.ti-adoc-table small { color: var(--ink-soft); }
+.ti-adoc-read { display: inline-block; color: #1E7A46; font-size: .76rem; font-weight: 600; margin-left: 4px; }
+.ti-adoc-unread { display: inline-block; color: var(--ink-soft); font-size: .76rem; margin-left: 4px; }

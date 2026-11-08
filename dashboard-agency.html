@@ -40,6 +40,7 @@
       <a data-panel="clients" onclick="tiShowPanel('clients')" data-i18n="dash_agency_clients"></a>
       <a data-panel="messages" onclick="tiShowPanel('messages')" data-i18n="dash_messages"></a>
       <a data-panel="reviews" onclick="tiShowPanel('reviews')" data-i18n="dash_agency_reviews"></a>
+      <a data-panel="documents" onclick="tiShowPanel('documents')" data-i18n="adoc_nav"></a>
       <a data-panel="welcomekit" onclick="tiShowPanel('welcomekit')" data-i18n="dash_welcomekit"></a>
       <div class="ti-dash-nav-section" data-i18n="nav_sec_agency"></div>
       <a data-panel="branding" id="nav-branding" onclick="tiShowPanel('branding')" data-i18n="dash_agency_branding" style="display:none;"></a>
@@ -309,6 +310,14 @@
       <button type="button" class="btn btn-outline" style="margin-top:16px;" onclick="tiOpenWelcomeKitModal()" data-i18n="welcomekit_add"></button>
     </section>
 
+    <section class="ti-dash-panel" id="panel-documents">
+      <div class="ti-dash-head" style="margin-bottom:18px;">
+        <h3 style="margin:0;" data-i18n="adoc_nav"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="adoc_sub"></p>
+      </div>
+      <div id="agency-docs-mount"></div>
+    </section>
+
     <section class="ti-dash-panel" id="panel-branding">
       <div class="ti-dash-head" style="margin-bottom:18px;">
         <h3 style="margin:0;" data-i18n="dash_agency_branding"></h3>
@@ -529,12 +538,14 @@
 <script src="js/currency.js"></script>
 <script src="js/data.js"></script>
 <script src="js/firebase-config.js"></script>
+<script src="js/demo-docs.js"></script>
 <script src="js/db.js"></script>
 <script src="https://unpkg.com/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/main.js"></script>
 <script src="js/social-kit.js"></script>
 <script src="js/qr-poster.js"></script>
+<script src="js/documents.js"></script>
 <script src="js/dashboard-agency.js"></script>
 </body>
 </html>

@@ -45,6 +45,8 @@ async function tiRefreshPanel(panelName) {
     await tiRenderAgencyMessages();
   } else if (panelName === "favorites") {
     await tiRenderFavorites();
+  } else if (panelName === "documents") {
+    await tiRenderAgencyDocuments();
   } else if (panelName === "branding") {
     if (isSupervisor) await tiRenderBranding();
   } else if (panelName === "subscription") {
@@ -1706,7 +1708,7 @@ async function tiSendContract(e, bookingId) {
     tooLarge = true;
   }
   const ctrBooking = TI_AGENCY_ALL_BOOKINGS.find(b => b.id === bookingId);
-  const result = await TiDB.sendContract(bookingId, file.name, fileData);
+  const result = await TiDB.sendContract(bookingId, file.name, fileData, { title: t('contract_document_title'), mime: file.type, sentBy: TI_SESSION.name });
   const fallback = tooLarge || result?._storageFallback;
   tiToast(t('contract_sent_toast') + (fallback ? ` (${t('file_too_large_note')})` : ''));
   tiLogAgencyAction("contract_sent", "booking", bookingId, ctrBooking ? ctrBooking.propertyTitle : bookingId, file.name);
@@ -2239,12 +2241,12 @@ async function tiInitAgencyDashboard() {
   await tiLoadAgentsCache();
   tiPopulateAssignAgentSelect();
   await new Promise(r => setTimeout(r, 350));
-  const tasks = [tiRenderStats(), tiRenderAgencyListings(), tiRenderAgencyBookings(), tiRenderAgencyMessages(), tiRenderAgencyReviews(), tiRenderAnnouncementsPage(), tiRenderWelcomeKit()];
+  const tasks = [tiRenderStats(), tiRenderAgencyListings(), tiRenderAgencyBookings(), tiRenderAgencyMessages(), tiRenderAgencyReviews(), tiRenderAnnouncementsPage(), tiRenderWelcomeKit(), tiRenderAgencyDocuments()];
   if (isSupervisor) { tasks.push(tiRenderBranding()); tasks.push(tiRenderAgents()); tasks.push(tiRenderAudit()); tasks.push(tiRenderSubscription()); }
   await Promise.all(tasks);
   await tiRenderClientsPipeline();
   await tiRenderFavorites();
-  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "announcements", "welcomekit", "branding", "messages", "reviews", "agents", "audit", "reports", "subscription", "favorites"]);
+  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "announcements", "documents", "welcomekit", "branding", "messages", "reviews", "agents", "audit", "reports", "subscription", "favorites"]);
   await tiHandleSubscriptionReturn();
 }
 if (TI_SESSION) tiInitAgencyDashboard();
