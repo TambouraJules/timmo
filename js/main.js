@@ -1848,6 +1848,8 @@ function tiShareUrl(p, via) {
   if (TI_BACKEND === "api" && (p.reference || p.id)) {
     return `https://www.timmo.sn/p/${encodeURIComponent(p.reference || p.id)}${via ? `?via=${via}` : ""}`;
   }
+  // Site de démonstration en ligne : lien court avec aperçu détaillé (photo, prix, quartier).
+  if (/^demo\./i.test(location.hostname) && p.id) return `${location.origin}/p/${encodeURIComponent(p.id)}${via ? `?via=${via}` : ""}`;
   return `${location.origin}${location.pathname.replace(/[^/]*$/, "")}property.html?id=${encodeURIComponent(p.id)}`;
 }
 function tiShareText(p) {

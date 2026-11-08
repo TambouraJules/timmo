@@ -1,19 +1,73 @@
 {
   "rewrites": [
-    { "source": "/p/:ref/image", "destination": "https://timmo-api.onrender.com/api/share/:ref/image" },
-    { "source": "/p/:ref", "destination": "https://timmo-api.onrender.com/api/share/:ref" }
+    {
+      "source": "/p/:ref/card.jpg",
+      "has": [
+        {
+          "type": "host",
+          "value": "demo.timmo.sn"
+        }
+      ],
+      "destination": "https://timmo-api.onrender.com/api/share/demo/:ref/card.jpg"
+    },
+    {
+      "source": "/p/:ref",
+      "has": [
+        {
+          "type": "host",
+          "value": "demo.timmo.sn"
+        }
+      ],
+      "destination": "https://timmo-api.onrender.com/api/share/demo/:ref"
+    },
+    {
+      "source": "/p/:ref/card.jpg",
+      "destination": "https://timmo-api.onrender.com/api/share/:ref/card.jpg"
+    },
+    {
+      "source": "/p/:ref/image",
+      "destination": "https://timmo-api.onrender.com/api/share/:ref/image"
+    },
+    {
+      "source": "/p/:ref",
+      "destination": "https://timmo-api.onrender.com/api/share/:ref"
+    }
   ],
   "headers": [
-    { "source": "/sw.js", "headers": [
-      { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-      { "key": "Service-Worker-Allowed", "value": "/" }
-    ] },
-    { "source": "/manifest.webmanifest", "headers": [
-      { "key": "Content-Type", "value": "application/manifest+json" },
-      { "key": "Cache-Control", "value": "public, max-age=3600" }
-    ] },
-    { "source": "/.well-known/assetlinks.json", "headers": [
-      { "key": "Content-Type", "value": "application/json" }
-    ] }
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    }
   ]
 }
