@@ -263,6 +263,38 @@ async function tiRenderDocuments() {
   await tiRenderClientDocuments();
 }
 
+/** Échéancier du plus récent au plus ancien (comme un relevé bancaire). */
+function tiScheduleNewestFirst(schedule) {
+  return (schedule || []).slice().sort((a, b) => b.dueDate.localeCompare(a.dueDate));
+}
+/** Carte « Prochain loyer » : la première échéance non réglée, en retard ou à venir. */
+function tiNextRentHtml(b, today) {
+  const next = (b.rental.schedule || []).filter(s => s.status !== 'paid').sort((a, c) => a.dueDate.localeCompare(c.dueDate))[0];
+  const lastPaid = tiScheduleNewestFirst(b.rental.schedule).find(s => s.status === 'paid');
+  if (!next && !lastPaid) return '';
+  let nextHtml = `<div class="ti-next-rent-main"><span class="ti-next-rent-label">${t('rent_all_paid')}</span></div>`;
+  if (next) {
+    const total = next.rent + next.chargesAmount;
+    const days = Math.round((new Date(next.dueDate + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000);
+    const when = days < 0 ? t('rent_overdue_days').replace('{n}', -days) : (days === 0 ? t('rent_due_today') : t('rent_due_in_days').replace('{n}', days));
+    nextHtml = `<div class="ti-next-rent-main">
+        <span class="ti-next-rent-label">${t('rent_next_title')} · ${tiFormatMonth(next.dueDate)}</span>
+        <strong data-price-xof="${total}">${tiFormatPrice(total)}</strong>
+        <span class="ti-next-rent-when ${days < 0 ? 'late' : ''}">${t('rent_due_on')} ${new Date(next.dueDate + 'T12:00:00').toLocaleDateString(tiGetLang() === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long' })} · ${when}</span>
+      </div>`;
+  }
+  return `<div class="ti-next-rent ${next && next.dueDate < today ? 'late' : ''}">
+    ${nextHtml}
+    ${lastPaid ? `<button type="button" class="btn btn-outline btn-sm" onclick="tiOpenReceiptDoc('rc:${b.id}:${lastPaid.id}')">${TI_ICONS.document} ${t('rent_last_receipt')}</button>` : ''}
+  </div>`;
+}
+/** Ouvre la quittance d'un mois dans « Mes documents ». */
+async function tiOpenReceiptDoc(key) {
+  tiShowPanel('documents');
+  if (!TI_DOCS_STATE.docs.some(d => d.key === key)) await tiRenderClientDocuments();
+  tiDocsOpen(key);
+}
+
 async function tiRenderPayments() {
   const bookings = await TiDB.getBookings({ userId: TI_SESSION.id });
   const rentalBookings = bookings.filter(b => b.rental);
@@ -293,6 +325,7 @@ async function tiRenderPayments() {
         </div>
       </div>
       <div class="ti-dossier ti-rental-ledger">
+        ${tiNextRentHtml(b, today)}
         <div class="ti-rental-monthly-summary">
           <span>${t('monthly_payment_label')}</span>
           <strong data-price-xof="${monthlyRent + monthlyCharges}">${tiFormatPrice(monthlyRent + monthlyCharges)}</strong>
@@ -307,13 +340,15 @@ async function tiRenderPayments() {
             : `<span class="badge badge-pending">${t('status_pending')}</span>`}
         </div>
         ${b.rental.deposit.status === 'paid' ? tiDepositEscrowStatusHtml(b) : ''}
-        <div class="ti-month-list">
-          ${b.rental.schedule.map((item, idx) => {
+        ${(() => {
+          const rowHtml = (item, idx, arr) => {
             const total = item.rent + item.chargesAmount;
             const overdue = item.status === 'pending' && item.dueDate < today;
             const rowId = `${b.id}-${item.id}`;
-            return `
-            <div class="ti-month-card">
+            const year = item.dueDate.slice(0, 4);
+            const yearHead = (idx === 0 || arr[idx - 1].dueDate.slice(0, 4) !== year) ? `<div class="ti-month-year">${year}</div>` : '';
+            return `${yearHead}
+            <div class="ti-month-card ${overdue ? 'is-overdue' : ''} ${item.status !== 'paid' && !overdue ? 'is-upcoming' : ''}">
               <button type="button" class="ti-month-card-head" onclick="tiToggleMonthBreakdown('${rowId}')">
                 <span class="ti-month-name">${tiFormatMonth(item.dueDate)}</span>
                 <span class="ti-month-total" data-price-xof="${total}">${tiFormatPrice(total)}</span>
@@ -322,6 +357,7 @@ async function tiRenderPayments() {
                   : overdue ? `<span class="badge badge-cancelled">${t('rental_status_overdue')}</span>` : `<span class="badge badge-pending">${t('status_pending')}</span>`}
                 <span class="ti-month-chevron" id="chev-${rowId}">${TI_ICONS.chevronDown}</span>
               </button>
+              ${item.status === 'paid' ? `<button type="button" class="ti-month-receipt" onclick="tiOpenReceiptDoc('rc:${b.id}:${item.id}')">${TI_ICONS.document} ${t('rent_see_receipt')}</button>` : ''}
               <div class="ti-month-breakdown" id="breakdown-${rowId}" style="display:none;">
                 <div class="ti-charge-status-box">
                   <span class="ti-charge-status-label">${t('rent_label')}</span>
@@ -336,7 +372,14 @@ async function tiRenderPayments() {
                 </div>`).join('')}
               </div>
             </div>`;
-          }).join('')}
+          };
+          const all = tiScheduleNewestFirst(b.rental.schedule);
+          const history = all.filter(i => i.status === 'paid' || i.dueDate <= today);
+          const upcoming = all.filter(i => !(i.status === 'paid' || i.dueDate <= today)).reverse();
+          return `<div class="ti-month-list-head">${t('rent_history_title')} <span>${t('rent_history_sort')}</span></div>
+            <div class="ti-month-list">${history.length ? history.map(rowHtml).join('') : `<p class="ti-rental-no-charges">${t('rent_history_empty')}</p>`}</div>
+            ${upcoming.length ? `<details class="ti-month-upcoming"><summary>${t('rent_upcoming_title')} (${upcoming.length})</summary><div class="ti-month-list">${upcoming.map(rowHtml).join('')}</div></details>` : ''}`;
+        })()}
         </div>
       </div>
     </div>`;
