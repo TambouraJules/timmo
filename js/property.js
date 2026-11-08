@@ -242,7 +242,7 @@ document.addEventListener("keydown", (e) => {
 /* ---------- Favori ---------- */
 async function tiTogglePropertyFav() {
   const s = tiGetSession();
-  if (!s) { tiGoToLogin(); return; }
+  if (!s) { tiGoToLogin({ type: "fav", propertyId: TI_PROPERTY.id }); return; }
   const nowFav = await TiDB.toggleFavorite(s.id, TI_PROPERTY.id);
   const btn = document.getElementById("ti-fav-btn");
   btn.classList.toggle("active", nowFav);

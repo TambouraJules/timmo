@@ -1045,7 +1045,7 @@ function tiApplyFavoritesFilter() {
 async function tiHandleFavClickRemovable(evt, propertyId, btn) {
   evt.preventDefault();
   const s = tiGetSession();
-  if (!s) { tiGoToLogin(); return; }
+  if (!s) { tiGoToLogin({ type: "fav", propertyId }); return; }
   const nowFav = await TiDB.toggleFavorite(s.id, propertyId);
   if (nowFav) {
     btn.classList.add("active");
@@ -1135,7 +1135,7 @@ function tiPropertyCardHtml(p, favIds = [], removeOnUnfav = false) {
 async function tiHandleFavClick(evt, propertyId, btn) {
   evt.preventDefault();
   const s = tiGetSession();
-  if (!s) { tiGoToLogin(); return; }
+  if (!s) { tiGoToLogin({ type: "fav", propertyId }); return; }
   const nowFav = await TiDB.toggleFavorite(s.id, propertyId);
   btn.classList.toggle("active", nowFav);
   btn.innerHTML = nowFav ? TI_ICONS.heartFilled : TI_ICONS.heart;
@@ -2033,3 +2033,35 @@ document.addEventListener("DOMContentLoaded", () => {
     if (now !== snapshot) location.reload();
   });
 })();
+
+
+/* ---------- Action interrompue par la connexion ----------
+   Un visiteur clique sur ♡ sans être connecté : on le connecte, on le ramène
+   sur la même page, et le bien est ajouté à ses favoris automatiquement. */
+async function tiResumePendingAction() {
+  let pending = null;
+  try { pending = JSON.parse(sessionStorage.getItem("ti_pending_action") || "null"); } catch (e) { return; }
+  if (!pending) return;
+  const s = typeof tiGetSession === "function" ? tiGetSession() : null;
+  if (!s) return;                                                     // pas encore connecté : on garde l'action
+  try { sessionStorage.removeItem("ti_pending_action"); } catch (e) { /* ignoré */ }
+  if (Date.now() - (pending.at || 0) > 30 * 60 * 1000) return;       // action trop ancienne
+  if (pending.type === "fav" && pending.propertyId) {
+    try {
+      const favs = await TiDB.getFavorites(s.id);
+      if (!favs.some(f => f.propertyId === pending.propertyId)) await TiDB.toggleFavorite(s.id, pending.propertyId);
+      tiToast(t("fav_added_after_login"));
+      const mark = () => {
+        document.querySelectorAll(`.ti-card[data-prop-id="${pending.propertyId}"] .ti-card-fav`).forEach(b => { b.classList.add("active"); b.innerHTML = TI_ICONS.heartFilled; });
+        const pill = document.getElementById("ti-fav-btn");
+        if (pill && typeof TI_PROPERTY !== "undefined" && TI_PROPERTY && TI_PROPERTY.id === pending.propertyId) {
+          pill.classList.add("active");
+          const ic = pill.querySelector(".ti-fav-pill-icon"); if (ic) ic.innerHTML = TI_ICONS.heartFilled;
+          const lb = document.getElementById("ti-fav-btn-label"); if (lb) lb.textContent = t("saved_fav");
+        }
+      };
+      mark(); setTimeout(mark, 800); setTimeout(mark, 2000);          // les listes s'affichent parfois après
+    } catch (e) { /* favori non enregistré : rien de bloquant */ }
+  }
+}
+document.addEventListener("DOMContentLoaded", () => { if (!/login\.html|register\.html/.test(location.pathname)) tiResumePendingAction(); });

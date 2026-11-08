@@ -364,7 +364,11 @@ function tiRequireRole(role) {
 
 /** Envoie vers la connexion des particuliers, puis ramène sur la page en cours
  *  (ex. après avoir cliqué « Favoris » ou « Réserver » sans être connecté). */
-function tiGoToLogin() {
+/** Envoie vers la connexion puis ramène sur la page courante.
+ *  pending : action à terminer automatiquement après la connexion,
+ *  ex. { type: "fav", propertyId: "p001" } (comme Airbnb ou SeLoger). */
+function tiGoToLogin(pending) {
+  if (pending) { try { sessionStorage.setItem("ti_pending_action", JSON.stringify({ ...pending, at: Date.now() })); } catch (e) { /* ignoré */ } }
   const here = (location.pathname.split("/").pop() || "index.html") + location.search;
-  location.href = "login.html?next=" + encodeURIComponent(here);
+  location.href = "login.html?next=" + encodeURIComponent(here) + (pending ? "&reason=" + encodeURIComponent(pending.type) : "");
 }

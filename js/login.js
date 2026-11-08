@@ -59,6 +59,7 @@ function tiLoginNotices() {
   const q = new URLSearchParams(location.search);
   const box = document.getElementById("login-error");
   if (q.get("expired") === "1") box.innerHTML = `<div class="ti-success">${t("login_expired")}</div>`;
+  if (q.get("reason") === "fav") box.innerHTML = `<div class="ti-success">${t("login_reason_fav")}</div>`;
   if (q.get("reset") === "1") {
     box.innerHTML = `<div class="ti-success">${t("login_after_reset")}</div>`;
     try {
