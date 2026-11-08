@@ -1995,3 +1995,30 @@ document.addEventListener("DOMContentLoaded", () => {
   tiRenderAppTabBar();
   setTimeout(tiMaybeShowInstallBanner, 1500);
 });
+
+/* ---------- Session synchronisée entre onglets et au retour arrière ----------
+   Si l'on se déconnecte (ou change de compte) dans un autre onglet, ou si le
+   navigateur réaffiche une page gardée en mémoire avec le bouton Retour,
+   la page pouvait montrer un état périmé (ex. « Dans mes favoris » d'Awa
+   alors que plus personne n'est connecté). On recharge alors la page pour
+   qu'elle reflète la session réelle ; les pages privées redirigent
+   d'elles-mêmes vers la connexion. */
+(function tiSessionSync() {
+  let snapshot = null;
+  try { snapshot = localStorage.getItem("ti_session"); } catch (e) { return; }
+  window.addEventListener("storage", e => {
+    if (e.storageArea !== localStorage) return;
+    if (e.key === "ti_session" || e.key === null) {             // null = stockage vidé (réinitialisation de la démo)
+      if (e.newValue !== snapshot) location.reload();
+    }
+  });
+  window.addEventListener("pagehide", () => {
+    try { snapshot = localStorage.getItem("ti_session"); } catch (e) { /* ignoré */ }
+  });
+  window.addEventListener("pageshow", e => {
+    if (!e.persisted) return;
+    let now = null;
+    try { now = localStorage.getItem("ti_session"); } catch (err) { return; }
+    if (now !== snapshot) location.reload();
+  });
+})();
