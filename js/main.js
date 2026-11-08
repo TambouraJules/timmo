@@ -2023,9 +2023,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.newValue !== snapshot) location.reload();
     }
   });
-  window.addEventListener("pagehide", () => {
-    try { snapshot = localStorage.getItem("ti_session"); } catch (e) { /* ignoré */ }
-  });
+  // La référence reste la session avec laquelle la page a été AFFICHÉE : si l'on se
+  // déconnecte puis qu'on revient en arrière, la page gardée en mémoire est périmée.
   window.addEventListener("pageshow", e => {
     if (!e.persisted) return;
     let now = null;
