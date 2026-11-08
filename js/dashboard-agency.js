@@ -38,13 +38,17 @@ async function tiRefreshPanel(panelName) {
     if (isSupervisor) await tiRenderAudit();
   } else if (panelName === "bookings" || panelName === "clients") {
     await tiRenderAgencyBookings();
-    await Promise.all([tiRenderClientsPipeline(), tiRenderStats()]);
+    await Promise.all([tiRenderClientsPipeline(), tiRenderStats(), tiRenderRentRoll()]);
   } else if (panelName === "reviews") {
     await tiRenderAgencyReviews();
   } else if (panelName === "messages") {
     await tiRenderAgencyMessages();
   } else if (panelName === "favorites") {
     await tiRenderFavorites();
+  } else if (panelName === "rents") {
+    await tiRenderRentRoll();
+  } else if (panelName === "verification") {
+    await tiRenderOwnerVerification();
   } else if (panelName === "documents") {
     await tiRenderAgencyDocuments();
   } else if (panelName === "branding") {
@@ -2210,7 +2214,7 @@ function tiUpdateRoleLabel() {
   const roleLabel = document.querySelector(".ti-dash-role");
   if (!roleLabel) return;
   roleLabel.removeAttribute("data-i18n"); // prevent tiApplyLang() from resetting this dynamic label
-  roleLabel.textContent = (TI_SESSION.agentRole === "agent") ? t("role_agent") : t("role_agency");
+  roleLabel.textContent = (typeof tiIsOwnerAccount === "function" && tiIsOwnerAccount()) ? t("role_owner") : ((TI_SESSION.agentRole === "agent") ? t("role_agent") : t("role_agency"));
 }
 document.addEventListener("ti:langchange", () => { if (typeof TI_SESSION !== "undefined" && TI_SESSION) tiUpdateRoleLabel(); });
 
@@ -2238,15 +2242,17 @@ async function tiInitAgencyDashboard() {
   if (navSubscription) navSubscription.style.display = isSupervisor ? "" : "none";
   const assignWrap = document.getElementById("nl-assign-wrap");
   if (assignWrap) assignWrap.style.display = isSupervisor ? "" : "none";
+  await tiApplyAccountMode();
+  tiCheckDepositRule();
   await tiLoadAgentsCache();
   tiPopulateAssignAgentSelect();
   await new Promise(r => setTimeout(r, 350));
-  const tasks = [tiRenderStats(), tiRenderAgencyListings(), tiRenderAgencyBookings(), tiRenderAgencyMessages(), tiRenderAgencyReviews(), tiRenderAnnouncementsPage(), tiRenderWelcomeKit(), tiRenderAgencyDocuments()];
+  const tasks = [tiRenderStats(), tiRenderAgencyListings(), tiRenderAgencyBookings(), tiRenderAgencyMessages(), tiRenderAgencyReviews(), tiRenderAnnouncementsPage(), tiRenderWelcomeKit(), tiRenderAgencyDocuments(), tiRenderRentRoll(), tiRenderOwnerVerification()];
   if (isSupervisor) { tasks.push(tiRenderBranding()); tasks.push(tiRenderAgents()); tasks.push(tiRenderAudit()); tasks.push(tiRenderSubscription()); }
   await Promise.all(tasks);
   await tiRenderClientsPipeline();
   await tiRenderFavorites();
-  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "announcements", "documents", "welcomekit", "branding", "messages", "reviews", "agents", "audit", "reports", "subscription", "favorites"]);
+  tiApplyPanelFromUrl(["stats", "listings", "new", "bookings", "clients", "rents", "verification", "announcements", "documents", "welcomekit", "branding", "messages", "reviews", "agents", "audit", "reports", "subscription", "favorites"]);
   await tiHandleSubscriptionReturn();
 }
 if (TI_SESSION) tiInitAgencyDashboard();

@@ -2098,3 +2098,71 @@ body.ti-docs-viewer-open .ti-modal-backdrop { z-index: 140; }
 .ti-month-upcoming { margin-top: 14px; }
 .ti-month-upcoming summary { cursor: pointer; font-weight: 700; font-size: .86rem; color: var(--deep); padding: 8px 0; }
 .ti-month-upcoming .ti-month-list { margin-top: 4px; }
+
+/* ============================================================
+   Propriétaires particuliers, loyers du mois, vérification
+   ============================================================ */
+.ti-seller-tag { display: inline-flex; align-items: center; gap: 3px; font-size: .66rem; font-weight: 800; letter-spacing: .02em; padding: 3px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; white-space: nowrap; text-transform: none; }
+.ti-seller-tag.agency { background: #EEF0F2; color: #4b5563; }
+.ti-seller-tag.owner { background: #FFF4D6; color: #7A5600; }
+.ti-seller-tag.owner.verified { background: #E3F4EA; color: #1E7A46; }
+.ti-owner-safety { margin-top: 12px; font-size: .78rem; line-height: 1.45; color: #5d4a1f; background: #FFF8E6; border-radius: 10px; padding: 10px 12px; }
+.ti-reg-owner-note { background: #FBF1E6; border: 1px solid #EBD3B8; border-radius: 12px; padding: 12px 14px; margin: -8px 0 16px; font-size: .84rem; line-height: 1.45; display: flex; flex-direction: column; gap: 3px; }
+.ti-reg-owner-note b { color: var(--deep); }
+.ti-deposit-rule { font-size: .78rem; line-height: 1.45; color: var(--ink-soft); margin-top: 8px; }
+.ti-deposit-rule:empty { display: none; }
+.ti-deposit-rule.warn { color: #8a3a12; background: #FDF0E8; border-radius: 8px; padding: 8px 10px; font-weight: 600; }
+.ti-deposit-rule.ok { color: #1E7A46; }
+
+.ti-rents-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.ti-rents-month { display: flex; align-items: center; gap: 10px; }
+.ti-rents-month b { font-size: 1.05rem; text-transform: capitalize; min-width: 140px; text-align: center; }
+.ti-rents-kpis { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.ti-rents-kpi { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+.ti-rents-kpi span { font-size: .74rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
+.ti-rents-kpi b { font-size: 1.4rem; color: var(--deep); }
+.ti-rents-kpi small { font-size: .8rem; color: var(--ink-soft); }
+.ti-rents-kpi.bad { border-color: #F2C4C4; background: #FDF2F2; }
+.ti-rents-kpi.bad b { color: #B03A2E; }
+.ti-rents-bar { height: 8px; border-radius: 999px; background: #EEE8DF; overflow: hidden; margin-top: 8px; }
+.ti-rents-bar i { display: block; height: 100%; background: linear-gradient(90deg, #1E7A46, #3BA36A); border-radius: 999px; }
+.ti-rents-table td { vertical-align: middle; font-size: .86rem; }
+.ti-rents-table small { color: var(--ink-soft); }
+.ti-rents-table tr.st-late td:first-child { box-shadow: inset 3px 0 0 #C0392B; }
+.ti-rents-actions { white-space: nowrap; text-align: right; }
+.ti-rents-actions .btn { margin-left: 4px; }
+.ti-rents-receipt { font-size: .78rem; color: #1E7A46; font-weight: 600; }
+.ti-doc-tag.tag-late { background: #FDECEC; color: #B03A2E; }
+.ti-rents-note { font-size: .78rem; color: var(--ink-soft); margin-top: 10px; }
+.ti-rents-empty { background: var(--paper-raised); border: 1px dashed var(--line); border-radius: var(--radius-m); padding: 28px; text-align: center; color: var(--ink-soft); }
+@media (max-width: 760px) {
+  .ti-rents-kpis { grid-template-columns: 1fr 1fr; }
+  .ti-rents-kpi.main { grid-column: 1 / -1; }
+  .ti-rents-table thead { display: none; }
+  .ti-rents-table, .ti-rents-table tbody, .ti-rents-table tr, .ti-rents-table td { display: block; width: 100%; }
+  .ti-rents-table tr { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: var(--paper-raised); }
+  .ti-rents-table td { border: 0; padding: 3px 0; }
+  .ti-rents-table td[data-label]::before { content: attr(data-label) " · "; color: var(--ink-soft); font-size: .74rem; }
+  .ti-rents-table tr.st-late td:first-child { box-shadow: none; }
+  .ti-rents-table tr.st-late { border-left: 4px solid #C0392B; }
+  .ti-rents-actions { text-align: left; white-space: normal; padding-top: 8px !important; }
+  .ti-rents-actions .btn { margin: 4px 6px 0 0; }
+}
+
+.ti-verif-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .ti-verif-grid { grid-template-columns: 1fr; } }
+.ti-verif-status { border-radius: var(--radius-m); padding: 14px 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 4px; font-size: .88rem; }
+.ti-verif-status b { font-size: 1rem; }
+.ti-verif-status.st-none { background: #FBF1E6; border: 1px solid #EBD3B8; }
+.ti-verif-status.st-pending { background: #EEF2FA; border: 1px solid #C9D6EE; }
+.ti-verif-status.st-approved { background: #E3F4EA; border: 1px solid #BFE3CD; color: #1E5A3A; }
+.ti-verif-status.st-rejected { background: #FDECEC; border: 1px solid #F2C4C4; color: #8a2a20; }
+.ti-verif-form { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px; }
+.ti-verif-why { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px; }
+.ti-verif-why h4 { margin: 0 0 10px; }
+.ti-verif-list { padding-left: 18px; margin: 0 0 14px; font-size: .86rem; color: var(--ink-soft); line-height: 1.55; }
+.ti-verif-badge-demo { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.ti-verif-badge-demo .ti-seller-tag { margin: 0; font-size: .78rem; padding: 5px 12px; }
+.ti-verif-badge-demo small { color: var(--ink-soft); font-size: .76rem; }
+.ti-role-tabs button { white-space: nowrap; }
+#owner-verif-mount .btn svg { width: 16px; height: 16px; }

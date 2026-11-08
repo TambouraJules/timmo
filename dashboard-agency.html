@@ -38,11 +38,13 @@
       <a data-panel="bookings" onclick="tiShowPanel('bookings')" data-i18n="nav_bookings"></a>
       <div class="ti-dash-nav-section" data-i18n="nav_sec_clients"></div>
       <a data-panel="clients" onclick="tiShowPanel('clients')" data-i18n="dash_agency_clients"></a>
+      <a data-panel="rents" onclick="tiShowPanel('rents')" data-i18n="dash_rents"></a>
       <a data-panel="messages" onclick="tiShowPanel('messages')" data-i18n="dash_messages"></a>
       <a data-panel="reviews" onclick="tiShowPanel('reviews')" data-i18n="dash_agency_reviews"></a>
       <a data-panel="documents" onclick="tiShowPanel('documents')" data-i18n="adoc_nav"></a>
       <a data-panel="welcomekit" onclick="tiShowPanel('welcomekit')" data-i18n="dash_welcomekit"></a>
       <div class="ti-dash-nav-section" data-i18n="nav_sec_agency"></div>
+      <a data-panel="verification" id="nav-verification" onclick="tiShowPanel('verification')" data-i18n="dash_verification" style="display:none;"></a>
       <a data-panel="branding" id="nav-branding" onclick="tiShowPanel('branding')" data-i18n="dash_agency_branding" style="display:none;"></a>
       <a data-panel="agents" id="nav-agents" onclick="tiShowPanel('agents')" data-i18n="dash_agency_agents" style="display:none;"></a>
       <a data-panel="audit" id="nav-audit" onclick="tiShowPanel('audit')" data-i18n="dash_agency_audit" style="display:none;"></a>
@@ -105,7 +107,7 @@
                 </select>
               </div>
               <div class="field"><label>Type</label>
-                <select id="nl-listing-kind" onchange="tiToggleAvailabilityFields();tiUpdateListingPreview()">
+                <select id="nl-listing-kind" onchange="tiToggleAvailabilityFields();tiUpdateListingPreview();tiCheckDepositRule()">
                   <option value="rent" data-i18n="nav_rent"></option>
                   <option value="sale" data-i18n="nav_buy"></option>
                   <option value="short" data-i18n="tab_short"></option>
@@ -113,7 +115,7 @@
               </div>
             </div>
             <div class="field-row">
-              <div class="field"><label data-i18n="field_price"></label><input type="number" id="nl-price" required oninput="tiUpdateListingPreview()"></div>
+              <div class="field"><label data-i18n="field_price"></label><input type="number" id="nl-price" required oninput="tiUpdateListingPreview();tiCheckDepositRule()"></div>
               <div class="field"><label data-i18n="field_area"></label><input type="number" id="nl-area" required oninput="tiUpdateListingPreview()"></div>
             </div>
             <div class="field-row">
@@ -122,8 +124,9 @@
             </div>
             <div class="field">
               <label data-i18n="field_deposit_amount"></label>
-              <input type="number" id="nl-deposit" placeholder="0">
+              <input type="number" id="nl-deposit" placeholder="0" oninput="tiCheckDepositRule()">
               <p style="font-size:.8rem;color:var(--ink-soft);margin:6px 0 0;" data-i18n="field_deposit_amount_hint"></p>
+              <div id="nl-deposit-rule" class="ti-deposit-rule"></div>
             </div>
           </div>
 
@@ -308,6 +311,22 @@
       </div>
       <div id="welcomekit-mount"></div>
       <button type="button" class="btn btn-outline" style="margin-top:16px;" onclick="tiOpenWelcomeKitModal()" data-i18n="welcomekit_add"></button>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-rents">
+      <div class="ti-dash-head" style="margin-bottom:14px;">
+        <h3 style="margin:0;" data-i18n="dash_rents"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="rents_sub"></p>
+      </div>
+      <div id="rents-mount"></div>
+    </section>
+
+    <section class="ti-dash-panel" id="panel-verification">
+      <div class="ti-dash-head" style="margin-bottom:14px;">
+        <h3 style="margin:0;" data-i18n="dash_verification"></h3>
+        <p style="color:var(--ink-soft);font-size:.88rem;margin:4px 0 0;" data-i18n="verif_sub"></p>
+      </div>
+      <div id="verification-mount"></div>
     </section>
 
     <section class="ti-dash-panel" id="panel-documents">
@@ -546,6 +565,7 @@
 <script src="js/social-kit.js"></script>
 <script src="js/qr-poster.js"></script>
 <script src="js/documents.js"></script>
+<script src="js/owner.js"></script>
 <script src="js/dashboard-agency.js"></script>
 </body>
 </html>

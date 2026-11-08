@@ -41,7 +41,7 @@ function tiOptionalUser(req) {
 }
 
 router.post("/auth/register", async (req, res) => {
-  const { name, email, password, role, agencyId, agentRole, agencyName, acceptTerms } = req.body;
+  const { name, email, password, role, agencyId, agentRole, agencyName, acceptTerms, accountKind } = req.body;
   const caller = tiOptionalUser(req);
 
   // Le rôle n'est jamais pris tel quel dans la requête :
@@ -57,6 +57,15 @@ router.post("/auth/register", async (req, res) => {
       && caller.agencyId === agencyId && agentRole === "agent";
     if (!adminOk && !supervisorOk) return res.status(403).json({ error: "forbidden" });
     finalRole = "agency"; finalAgencyId = agencyId; finalAgentRole = agentRole === "supervisor" ? "supervisor" : "agent";
+  } else if (role === "agency" && accountKind === "owner") {
+    // Propriétaire particulier : un compte « agence d'une personne », sans abonnement pour l'instant.
+    if (!name) return res.status(400).json({ error: "name_required" });
+    finalRole = "agency"; finalAgentRole = "supervisor";
+    finalAgencyId = "ow_" + Date.now();
+    newAgency = {
+      id: finalAgencyId, kind: "owner", name: String(name).slice(0, 80), email, phone: "", verified: false, status: "active",
+      tier: "owner", subscriptionStatus: "active", subscribedSince: new Date().toISOString().slice(0, 10),
+    };
   } else if (role === "agency") {
     if (!agencyName) return res.status(400).json({ error: "agency_name_required" });
     finalRole = "agency"; finalAgentRole = "supervisor";

@@ -38,8 +38,10 @@
 
     <div class="ti-role-tabs" id="reg-role-tabs">
       <button data-role="client" class="active" data-i18n="role_client"></button>
+      <button data-role="owner" data-i18n="role_owner"></button>
       <button data-role="agency" data-i18n="role_agency"></button>
     </div>
+    <div class="ti-reg-owner-note" id="reg-owner-note" style="display:none;"><b data-i18n="reg_owner_note_title"></b><span data-i18n="reg_owner_note"></span></div>
 
     <div id="register-error"></div>
     <form id="form-register" onsubmit="return tiHandleRegister(event)">
@@ -87,12 +89,14 @@
       document.querySelectorAll('#reg-role-tabs button').forEach(x => x.classList.toggle('active', x === b));
       document.getElementById('reg-agency-field').style.display = TI_REG_ROLE === 'agency' ? 'block' : 'none';
       document.getElementById('reg-agency-name').required = TI_REG_ROLE === 'agency';
+      document.getElementById('reg-owner-note').style.display = TI_REG_ROLE === 'owner' ? '' : 'none';
     });
   });
 
-  if (new URLSearchParams(location.search).get('role') === 'agency') {
-    const agencyTab = document.querySelector('#reg-role-tabs [data-role=agency]');
-    if (agencyTab) agencyTab.click();
+  const TI_REG_ROLE_FROM_URL = new URLSearchParams(location.search).get('role');
+  if (TI_REG_ROLE_FROM_URL === 'agency' || TI_REG_ROLE_FROM_URL === 'owner') {
+    const tab = document.querySelector(`#reg-role-tabs [data-role=${TI_REG_ROLE_FROM_URL}]`);
+    if (tab) tab.click();
   }
 
   async function tiHandleRegister(e) {
@@ -108,6 +112,8 @@
     let res;
     if (TI_REG_ROLE === 'agency') {
       res = await tiRegisterAgency({ name, agencyName: document.getElementById('reg-agency-name').value, email, password, acceptTerms: true });
+    } else if (TI_REG_ROLE === 'owner') {
+      res = await tiRegisterOwner({ name, email, password, acceptTerms: true });
     } else {
       res = await tiRegisterClient({ name, email, password, acceptTerms: true });
     }
@@ -116,7 +122,7 @@
       errBox.innerHTML = `<div class="ti-error">Un compte existe déjà avec cet email. / An account already exists with this email.</div>`;
       return false;
     }
-    window.location.href = TI_REG_ROLE === 'client' ? 'index.html' : `dashboard-${TI_REG_ROLE}.html`;
+    window.location.href = TI_REG_ROLE === 'client' ? 'index.html' : (TI_REG_ROLE === 'owner' ? 'dashboard-agency.html?panel=verification' : `dashboard-${TI_REG_ROLE}.html`);
     return false;
   }
 </script>

@@ -241,6 +241,54 @@ const TI_SCHEMA_VERSION = "10"; // 10 : exemples de visites 3D / vidéo sur la d
   } catch (e) { /* stockage indisponible : la démo reste sans documents */ }
 })();
 
+/* Site de démonstration : un propriétaire particulier (Moussa Ndiaye) qui gère
+   lui-même deux logements à Mermoz, dont un loué avec un loyer en retard. */
+(function tiSeedDemoOwner() {
+  if (TI_BACKEND !== "local") return;
+  try {
+    const users = tiLoad("ti_users", []);
+    if (!users.some(u => u.id === "u_owner")) users.push({ id: "u_owner", role: "agency", agentRole: "supervisor", name: "Moussa Ndiaye", agencyId: "ow_demo1", email: "proprio@demo.sn", password: "demo1234" });
+    tiSave("ti_users", users);
+    const agencies = tiLoad("ti_agencies", []);
+    if (!agencies.some(a => a.id === "ow_demo1")) agencies.push({ id: "ow_demo1", kind: "owner", name: "Moussa Ndiaye", code: "MN", email: "proprio@demo.sn", phone: "+221 77 555 12 34", tier: "owner", verified: true, status: "active", subscriptionStatus: "active", subscribedSince: "2026-07-01", verification: { status: "approved", proofType: "titre_foncier", submittedAt: "2026-07-02T10:00:00.000Z", reviewedAt: "2026-07-03T10:00:00.000Z" } });
+    tiSave("ti_agencies", agencies);
+    const props = tiLoad("ti_properties", []);
+    const base = props.find(p => p.id === "p007") || TI_PROPERTIES.find(p => p.id === "p007");
+    const now = new Date();
+    if (base && !props.some(p => p.id === "pw01")) {
+      props.push({ ...base, id: "pw01", reference: "MN-2026-00001", agencyId: "ow_demo1", title: "Studio meublé lumineux — Mermoz", titleEn: "Bright furnished studio — Mermoz",
+        neighborhood: "mermoz", price: 175000, bedrooms: 1, bathrooms: 1, area: 35, furnished: true, rating: 4.6, reviews: 5, listingStatus: "active", views: 64,
+        desc: "Studio meublé au 1er étage d'un immeuble familial calme, proche de la VDN. Climatisation, eau chaude, gardien. Loué directement par le propriétaire.",
+        descEn: "Furnished studio on the 1st floor of a quiet family building near the VDN. Air conditioning, hot water, caretaker. Let directly by the owner.",
+        createdAt: new Date(now.getTime() - 10 * 86400000).toISOString(), tourUrl: "", tourSample: false });
+      props.push({ ...base, id: "pw02", reference: "MN-2026-00002", agencyId: "ow_demo1", title: "Appartement 2 pièces, 2e étage — Mermoz", titleEn: "2-room flat, 2nd floor — Mermoz",
+        neighborhood: "mermoz", price: 250000, bedrooms: 1, bathrooms: 1, area: 60, furnished: false, rating: 4.4, reviews: 3, listingStatus: "rented", views: 120,
+        createdAt: new Date(now.getTime() - 120 * 86400000).toISOString(), tourUrl: "", tourSample: false });
+      tiSave("ti_properties", props);
+    }
+    const bookings = tiLoad("ti_bookings", []);
+    if (!bookings.some(b => b.id === "bk_demo_owner")) {
+      const day = (y, m, d) => new Date(y, m, d, 10, 0, 0);
+      const start = day(now.getFullYear(), now.getMonth() - 2, 1);
+      const schedule = [];
+      for (let i = 0; i < 6; i++) {
+        const due = day(start.getFullYear(), start.getMonth() + i, 5);
+        const paid = i < 2;
+        schedule.push({ id: `sch_bk_demo_owner_${i}`, dueDate: due.toISOString().slice(0, 10), rent: 250000, chargesAmount: 0,
+          status: paid ? "paid" : "pending", paidAt: paid ? day(due.getFullYear(), due.getMonth(), 4).toISOString() : null, method: paid ? "wave" : null });
+      }
+      bookings.push({ id: "bk_demo_owner", propertyId: "pw02", propertyTitle: "Appartement 2 pièces, 2e étage — Mermoz", agencyId: "ow_demo1",
+        userId: "u_tenant_demo", name: "Fatou Sarr", email: "fatou@exemple.sn", phone: "+221 76 000 00 00", checkin: start.toISOString().slice(0, 10), price: 250000,
+        status: "confirmed", dossierStatus: "approved", welcomed: true, createdAt: day(start.getFullYear(), start.getMonth() - 1, 20).toISOString(),
+        contracts: [{ id: "ctr_demo_owner", title: "Contrat de bail", fileName: "bail-mermoz.pdf", mime: "application/pdf", fileData: null, sentAt: day(start.getFullYear(), start.getMonth() - 1, 25).toISOString(), signed: true, signedAt: day(start.getFullYear(), start.getMonth() - 1, 26).toISOString() }],
+        rental: { deposit: { amount: 250000, status: "paid", paidAt: day(start.getFullYear(), start.getMonth() - 1, 28).toISOString(), method: "cash" },
+          charges: [{ key: "water", label: "Eau", labelEn: "Water", amount: 0, enabled: false }], schedule } });
+      tiSave("ti_bookings", bookings);
+    }
+    tiSyncAgenciesFromStorage();
+  } catch (e) { /* stockage indisponible */ }
+})();
+
 /* TI_AGENCIES reste un simple tableau en mémoire (de nombreux utilitaires
    synchrones comme tiAgencyName() le lisent directement), mais son contenu
    est maintenu synchronisé avec la copie persistée pour que les modifications
@@ -302,6 +350,23 @@ const TI_DEFAULT_SCREENING_DOCS = [
   { key: "income_proof", label: "Justificatif de revenus", labelEn: "Proof of income" },
 ];
 
+/* Index léger des annonceurs (agence ou propriétaire particulier, vérifié ou non),
+   chargé une fois et utilisé par les cartes d'annonces et les filtres. */
+let TI_AGENCY_INDEX = {};
+let TI_AGENCY_INDEX_PROMISE = null;
+function tiEnsureAgencyIndex(force) {
+  if (!TI_AGENCY_INDEX_PROMISE || force) {
+    TI_AGENCY_INDEX_PROMISE = TiDB.getAgencies().then(list => {
+      const idx = {};
+      (list || []).forEach(a => { idx[a.id] = { kind: a.kind === "owner" ? "owner" : "agency", verified: !!a.verified, name: a.name, phone: a.phone }; });
+      TI_AGENCY_INDEX = idx;
+      return idx;
+    }).catch(() => TI_AGENCY_INDEX);
+  }
+  return TI_AGENCY_INDEX_PROMISE;
+}
+function tiAdvertiser(agencyId) { return TI_AGENCY_INDEX[agencyId] || { kind: "agency", verified: false }; }
+
 /** Titre d'une quittance mensuelle, ex. « Quittance de loyer — novembre 2026 ». */
 function tiReceiptMonthTitle(dueDate) {
   const d = dueDate ? new Date(dueDate + "T12:00:00") : new Date();
@@ -342,6 +407,7 @@ const TiDB = {
   },
 
   async getProperties() {
+    await tiEnsureAgencyIndex();
     if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/properties`)).json();
     if (TI_BACKEND === "firebase") return tiFirestoreGetAll("properties");
     return tiLoad("ti_properties", TI_PROPERTIES);
@@ -1157,6 +1223,35 @@ const TiDB = {
     await this._bookingSave(b);
     await this.maybeSendWelcome(bookingId);
     return { ok: true, signature: c.signature };
+  },
+
+  /* ---- Propriétaires particuliers : vérification d'identité et de propriété ---- */
+  async submitOwnerVerification(agencyId, v) {
+    if (TI_BACKEND === "api") {
+      const saved = await this.saveAgency({ id: agencyId, verification: v });
+      tiEnsureAgencyIndex(true);
+      return saved;
+    }
+    await this.saveAgency({ id: agencyId, verified: false, verification: { ...v, status: "pending", submittedAt: new Date().toISOString() } });
+    tiEnsureAgencyIndex(true);
+    return this.getAgency(agencyId);
+  },
+  async getOwnerVerification(agencyId) {
+    if (TI_BACKEND === "api") return (await tiApiFetch(`${TI_API_BASE}/agencies/${encodeURIComponent(agencyId)}/verification`)).json();
+    const a = await this.getAgency(agencyId);
+    return (a && a.verification) || null;
+  },
+  async reviewOwnerVerification(agencyId, approve, note) {
+    const status = approve ? "approved" : "rejected";
+    const reviewedAt = new Date().toISOString();
+    if (TI_BACKEND === "api") {
+      await tiApiFetch(`${TI_API_BASE}/agencies`, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: agencyId, verified: !!approve, "verification.status": status, "verification.reviewedAt": reviewedAt, "verification.note": note || "" }) });
+    } else {
+      const a = await this.getAgency(agencyId);
+      await this.saveAgency({ id: agencyId, verified: !!approve, verification: { ...((a && a.verification) || {}), status, reviewedAt, note: note || "" } });
+    }
+    tiEnsureAgencyIndex(true);
   },
 
   async getAnnouncements({ agencyId, userId } = {}) {

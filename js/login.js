@@ -12,7 +12,7 @@ const TI_PORTAL = document.body.dataset.portal || "client";
 const TI_PORTAL_ROLE = { client: "client", pro: "agency", admin: "admin" }[TI_PORTAL];
 const TI_PORTAL_DEMO = {
   client: [["role_client", "client@demo.sn"]],
-  pro: [["role_agency", "agence@demo.sn"], ["role_agent", "agent@demo.sn"]],
+  pro: [["role_agency", "agence@demo.sn"], ["role_agent", "agent@demo.sn"], ["role_owner", "proprio@demo.sn"]],
   admin: [["role_admin", "admin@demo.sn"]],
 }[TI_PORTAL];
 

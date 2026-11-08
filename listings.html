@@ -85,6 +85,14 @@
         </div>
 
         <div class="ti-filter-section">
+          <h4 data-i18n="filter_seller"></h4>
+          <div class="ti-chip-group" id="f-seller-chips">
+            <span class="ti-chip" data-val="agency" data-i18n="filter_seller_agency"></span>
+            <span class="ti-chip" data-val="owner" data-i18n="filter_seller_owner"></span>
+          </div>
+        </div>
+
+        <div class="ti-filter-section">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.88rem;">
             <input type="checkbox" id="f-verified-only" onchange="tiRenderListings()">
             <span data-i18n="filter_verified_only"></span>
@@ -156,7 +164,7 @@
   let TI_FAVS = [];
   let TI_DATA_READY = false;
   let TI_SUBSITE_AGENCY = null;
-  const TI_FILTER = { type: null, beds: null, hood: '', minPrice: null, maxPrice: null };
+  const TI_FILTER = { type: null, beds: null, hood: '', minPrice: null, maxPrice: null, seller: null };
   let tiPriceDebounce = null;
 
   /* ---------- Interactive map search ---------- */
@@ -283,7 +291,7 @@
   }
 
   function tiResetFilters() {
-    TI_FILTER.type = null; TI_FILTER.beds = null; TI_FILTER.hood = ''; TI_FILTER.minPrice = null; TI_FILTER.maxPrice = null;
+    TI_FILTER.type = null; TI_FILTER.beds = null; TI_FILTER.hood = ''; TI_FILTER.minPrice = null; TI_FILTER.maxPrice = null; TI_FILTER.seller = null;
     document.querySelectorAll('.ti-chip').forEach(c => c.classList.remove('active'));
     document.getElementById('f-hood').value = '';
     if (document.getElementById('f-verified-only')) document.getElementById('f-verified-only').checked = false;
@@ -296,7 +304,10 @@
   }
 
   function tiRemoveFilter(key) {
-    if (key === 'type' || key === 'beds') {
+    if (key === 'seller') {
+      TI_FILTER.seller = null;
+      document.querySelectorAll('#f-seller-chips .ti-chip').forEach(c => c.classList.remove('active'));
+    } else if (key === 'type' || key === 'beds') {
       TI_FILTER[key] = null;
       document.querySelectorAll(`#f-${key === 'type' ? 'type' : 'bed'}-chips .ti-chip`).forEach(c => c.classList.remove('active'));
     } else if (key === 'hood') {
@@ -322,6 +333,7 @@
     if (TI_FILTER.type) pills.push({ key: 'type', label: tiTypeLabel(TI_FILTER.type) });
     if (TI_FILTER.beds) pills.push({ key: 'beds', label: `${TI_FILTER.beds}+ ${t('bedrooms')}` });
     if (TI_FILTER.hood) pills.push({ key: 'hood', label: tiNeighborhoodName(TI_FILTER.hood) });
+    if (TI_FILTER.seller) pills.push({ key: 'seller', label: t(TI_FILTER.seller === 'owner' ? 'filter_seller_owner' : 'filter_seller_agency') });
     if (TI_FILTER.minPrice != null || TI_FILTER.maxPrice != null) {
       const min = TI_FILTER.minPrice != null ? tiFormatPrice(TI_FILTER.minPrice) : '';
       const max = TI_FILTER.maxPrice != null ? tiFormatPrice(TI_FILTER.maxPrice) : '';
@@ -366,6 +378,7 @@
     if (TI_FILTER.type) list = list.filter(p => p.type === TI_FILTER.type);
     if (TI_FILTER.beds) list = list.filter(p => p.bedrooms >= parseInt(TI_FILTER.beds));
     if (TI_FILTER.hood) list = list.filter(p => p.neighborhood === TI_FILTER.hood);
+    if (TI_FILTER.seller) list = list.filter(p => tiAdvertiser(p.agencyId).kind === TI_FILTER.seller);
     if (document.getElementById('f-verified-only')?.checked) list = list.filter(p => p.titleVerification && p.titleVerification.status === 'verified');
     if (q) list = list.filter(p => tiNeighborhoodName(p.neighborhood).toLowerCase().includes(q.toLowerCase()) || tiPropertyTitle(p).toLowerCase().includes(q.toLowerCase()) || (p.reference || '').toLowerCase().includes(q.toLowerCase()));
     if (budget) list = list.filter(p => p.price <= parseFloat(budget));
@@ -411,6 +424,7 @@
     document.querySelectorAll(".ti-chip-icon[data-icon]").forEach(el => { el.innerHTML = TI_ICONS[el.dataset.icon] || ""; });
     tiChipToggle('f-type-chips', 'type');
     tiChipToggle('f-bed-chips', 'beds');
+    tiChipToggle('f-seller-chips', 'seller');
 
     const params = new URLSearchParams(window.location.search);
     const agencySlug = params.get('agency');

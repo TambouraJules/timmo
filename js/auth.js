@@ -348,6 +348,33 @@ async function tiRegisterAgency({ name, agencyName, email, password, acceptTerms
   return { ok: true, user };
 }
 
+/** Propriétaire particulier : un compte « agence d'une personne » (kind: "owner"). */
+async function tiRegisterOwner({ name, email, password, acceptTerms }) {
+  if (TI_BACKEND === "api") {
+    const res = await fetch(`${TI_API_BASE}/auth/register`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role: "agency", accountKind: "owner", acceptTerms: !!acceptTerms }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { ok: false, error: body.error || "exists" };
+    }
+    const data = await res.json();
+    localStorage.setItem("ti_api_token", data.token);
+    tiSetSession({ id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role, agencyId: data.user.agencyId, agentRole: data.user.agentRole });
+    return { ok: true, user: data.user };
+  }
+  const existing = await TiDB.findUserByEmail(email);
+  if (existing) return { ok: false, error: "exists" };
+  const agencyId = "ow_" + Date.now();
+  await TiDB.saveAgency({ id: agencyId, kind: "owner", name, email, phone: "", tier: "owner", verified: false, status: "active", subscriptionStatus: "active" });
+  const user = { id: "u_" + Date.now(), role: "agency", agentRole: "supervisor", name, agencyId, email };
+  await tiSetUserPassword(user, password);
+  await TiDB.createUser(user);
+  tiSetSession({ id: user.id, name: user.name, email: user.email, role: user.role, agencyId, agentRole: "supervisor" });
+  return { ok: true, user };
+}
+
 /** Protège une page de tableau de bord : redirige vers la connexion si
  *  l'utilisateur n'est pas authentifié avec le rôle requis. À appeler en
  *  haut de chaque page de tableau de bord. */

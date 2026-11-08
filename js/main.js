@@ -707,6 +707,8 @@ const TI_PANEL_ICONS = {
   announcements: "bell", broadcasts: "bell",
   welcomekit: "sparkle",
   branding: "buildingCheck",
+  rents: "wallet",
+  verification: "shield",
   messages: "mail",
   reviews: "star", moderation: "shield",
   audit: "clock",
@@ -1102,6 +1104,13 @@ function tiTourEmbed(raw) {
   return null;
 }
 
+/** Étiquette « Particulier » / « Agence » (et vérifié) d'une annonce. */
+function tiSellerTagHtml(agencyId) {
+  const a = typeof tiAdvertiser === "function" ? tiAdvertiser(agencyId) : { kind: "agency" };
+  if (a.kind === "owner") return `<span class="ti-seller-tag owner ${a.verified ? "verified" : ""}" title="${tiEscapeHtml(t("seller_owner_tip"))}">${a.verified ? "✓ " + t("seller_owner_verified") : t("seller_owner")}</span>`;
+  return `<span class="ti-seller-tag agency">${t("seller_agency")}</span>`;
+}
+
 function tiPropertyCardHtml(p, favIds = [], removeOnUnfav = false) {
   const isFav = favIds.includes(p.id);
   const favClickFn = removeOnUnfav ? "tiHandleFavClickRemovable" : "tiHandleFavClick";
@@ -1116,7 +1125,7 @@ function tiPropertyCardHtml(p, favIds = [], removeOnUnfav = false) {
       <button class="ti-card-fav ${isFav ? 'active' : ''}" onclick="${favClickFn}(event,'${p.id}',this)">${isFav ? TI_ICONS.heartFilled : TI_ICONS.heart}</button>
     </a>
     <div class="ti-card-body">
-      <div class="ti-card-hood">${tiNeighborhoodName(p.neighborhood)} ${p.titleVerification && p.titleVerification.status === 'verified' ? `<span class="ti-verified-badge">${TI_ICONS.shield}${t('title_verified_badge')}</span>` : ''}</div>
+      <div class="ti-card-hood">${tiNeighborhoodName(p.neighborhood)} ${p.titleVerification && p.titleVerification.status === 'verified' ? `<span class="ti-verified-badge">${TI_ICONS.shield}${t('title_verified_badge')}</span>` : ''}${tiSellerTagHtml(p.agencyId)}</div>
       <h3 class="ti-card-title"><a href="property.html?id=${p.id}">${tiPropertyTitle(p)}</a></h3>
       ${p.reference ? `<div class="ti-card-ref">${t('reference_label')} ${p.reference}</div>` : ''}
       <div class="ti-card-meta">

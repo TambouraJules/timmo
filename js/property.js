@@ -149,10 +149,11 @@ async function tiRenderPropertyContent() {
         <div class="ti-agency-strip">
           <div class="ti-agency-avatar">${tiAgencyName(p.agencyId).split(' ').map(w => w[0]).slice(0, 2).join('')}</div>
           <div>
-            <strong>${tiAgencyName(p.agencyId)}</strong>
+            <strong>${tiAgencyName(p.agencyId)}</strong> ${tiSellerTagHtml(p.agencyId)}
             <div style="color:var(--ink-soft);font-size:.82rem;">${TI_AGENCIES.find(a => a.id === p.agencyId)?.phone || ''}</div>
           </div>
         </div>
+        ${tiAdvertiser(p.agencyId).kind === 'owner' ? `<div class="ti-owner-safety">${tiAdvertiser(p.agencyId).verified ? t('owner_safety_verified') : t('owner_safety_unverified')}</div>` : ''}
       </div>
     </div>
 

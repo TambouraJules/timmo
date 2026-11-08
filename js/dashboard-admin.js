@@ -271,7 +271,7 @@ function tiApplyAgenciesFilter() {
     <div class="ti-list-row" style="flex-wrap:wrap;">
       <div class="ti-agency-avatar" style="flex-shrink:0;cursor:pointer;" onclick="tiOpenAgencyDetail('${a.id}')">${a.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</div>
       <div class="ti-list-row-body" style="cursor:pointer;" onclick="tiOpenAgencyDetail('${a.id}')">
-        <strong>${tiEscapeHtml(a.name)}</strong>
+        <strong>${tiEscapeHtml(a.name)}</strong>${a.kind === 'owner' ? ` <span class="ti-seller-tag owner ${a.verified ? 'verified' : ''}">${t('seller_owner')}</span>${a.verification && a.verification.status === 'pending' ? ` <span class="badge badge-pending">${t('verif_admin_pending')}</span>` : ''}` : ''}
         <span class="badge ${a.verified ? 'badge-confirmed' : 'badge-pending'}" style="margin-left:8px;">${a.verified ? '✓ ' + t('verified_label') : t('status_pending')}</span>
         <span class="badge ${suspended ? 'badge-cancelled' : 'badge-confirmed'}" style="margin-left:4px;">${suspended ? t('status_suspended') : t('status_active')}</span>
         ${tier ? `<span class="badge badge-paid" style="margin-left:4px;">${tiGetLang() === 'en' ? tier.labelEn : tier.label}</span>` : ''}
@@ -395,6 +395,8 @@ async function tiOpenAgencyDetail(id) {
       <div class="ti-stat-card"><span class="ti-stat-icon">${TI_ICONS.user}</span><b>${agents.length}/${agency.maxAgents ?? '—'}</b><span>${t('agents_label')}</span></div>
     </div>
 
+    ${agency.kind === 'owner' ? `<div class="ti-agency-detail-section"><h4 class="ti-form-section-title">${t('verif_admin_title')}</h4><div id="owner-verif-mount"><p style="color:var(--ink-soft)">…</p></div></div>` : ''}
+
     <div class="ti-agency-detail-section">
       <h4 class="ti-form-section-title">${t('subsite_section_title')}</h4>
       <p style="color:var(--ink-soft);font-size:.85rem;margin:-6px 0 14px;">${t('subsite_section_sub')}</p>
@@ -439,6 +441,7 @@ async function tiOpenAgencyDetail(id) {
 
   tiFilterAgencyDetailAgents();
   tiShowPanel("agency-detail");
+  if (agency.kind === 'owner') tiRenderAdminOwnerVerification(agency.id);
 }
 
 function tiAgencyDetailPersonRowHtml(user, isSupervisor) {
@@ -1564,3 +1567,36 @@ async function tiInitAdminDashboard() {
   tiApplyPanelFromUrl(["overview", "users", "agencies", "listings", "amenities", "payments", "moderation", "deletions", "audit", "broadcasts", "reports", "favorites"]);
 }
 if (TI_SESSION) tiInitAdminDashboard();
+
+
+/* ---------- Vérification des propriétaires particuliers ---------- */
+let TI_ADMIN_VERIF = null;
+async function tiRenderAdminOwnerVerification(agencyId) {
+  const mount = document.getElementById("owner-verif-mount");
+  if (!mount) return;
+  const v = await TiDB.getOwnerVerification(agencyId).catch(() => null);
+  TI_ADMIN_VERIF = { agencyId, v };
+  if (!v) { mount.innerHTML = `<p style="color:var(--ink-soft)">${t('verif_admin_none')}</p>`; return; }
+  const st = { pending: ['badge-pending', 'verif_admin_pending'], approved: ['badge-confirmed', 'verif_approved_title'], rejected: ['badge-cancelled', 'verif_rejected_title'] }[v.status] || ['badge-pending', 'verif_admin_pending'];
+  mount.innerHTML = `
+    <p><span class="badge ${st[0]}">${t(st[1])}</span> <span style="color:var(--ink-soft);font-size:.85rem;">${v.submittedAt ? t('verif_admin_submitted') + ' ' + tiFormatDateTime(v.submittedAt) : ''}${v.phone ? ' · ' + tiEscapeHtml(v.phone) : ''}</span></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;">
+      ${v.idDoc && v.idDoc.fileData ? `<button type="button" class="btn btn-outline btn-sm" onclick="tiOpenDocument(TI_ADMIN_VERIF.v.idDoc.fileData)">${TI_ICONS.eye} ${t('verif_id_label')}</button>` : ''}
+      ${v.proofDoc && v.proofDoc.fileData ? `<button type="button" class="btn btn-outline btn-sm" onclick="tiOpenDocument(TI_ADMIN_VERIF.v.proofDoc.fileData)">${TI_ICONS.eye} ${t('proof_' + (v.proofType || 'autre'))}</button>` : ''}
+    </div>
+    ${v.note ? `<p style="color:var(--ink-soft);font-size:.85rem;">${tiEscapeHtml(v.note)}</p>` : ''}
+    <p style="color:var(--ink-soft);font-size:.82rem;">${t('verif_admin_check')}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button type="button" class="btn btn-primary btn-sm" onclick="tiReviewOwner(true)">${t('verif_admin_approve')}</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="tiReviewOwner(false)">${t('verif_admin_reject')}</button>
+    </div>`;
+}
+async function tiReviewOwner(approve) {
+  if (!TI_ADMIN_VERIF) return;
+  let note = "";
+  if (!approve) { note = prompt(t('verif_admin_reject_reason')) || ""; if (!note.trim()) return; }
+  await TiDB.reviewOwnerVerification(TI_ADMIN_VERIF.agencyId, approve, note.trim());
+  if (typeof tiLogAdminAction === "function") tiLogAdminAction(approve ? "owner_verified" : "owner_rejected", "agency", TI_ADMIN_VERIF.agencyId, TI_ADMIN_VERIF.agencyId);
+  tiToast(approve ? t('verif_admin_approved_toast') : t('verif_admin_rejected_toast'));
+  await tiOpenAgencyDetail(TI_ADMIN_VERIF.agencyId);
+}
